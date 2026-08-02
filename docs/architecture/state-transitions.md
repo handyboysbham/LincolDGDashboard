@@ -1,0 +1,184 @@
+# State Transitions
+
+## General transition service
+
+Every transition must:
+
+1. Lock the record when concurrency matters.
+2. Confirm current state.
+3. Confirm permission.
+4. Evaluate readiness.
+5. Validate related records.
+6. Apply the state change.
+7. Write Audit Events.
+8. Write outbox events.
+9. Create tasks and notifications.
+10. Commit atomically.
+
+## Lead
+
+```text
+New → Contacting → Qualified → Estimating → Quoted → Accepted
+```
+
+Terminal alternatives:
+
+```text
+Lost | Cancelled | Duplicate | Disqualified
+```
+
+## Estimate
+
+```text
+Draft → In Analysis → Pending Approval → Approved → Quote Generated
+```
+
+Revision creates a new Estimate Version; it does not overwrite an approved version.
+
+## Quote Version
+
+```text
+Draft → Pending Approval → Ready to Send → Sent → Viewed → Accepted
+```
+
+Alternatives:
+
+```text
+Declined | Expired | Withdrawn | Superseded
+```
+
+Accepted, sent, and terminal Quote Versions are immutable.
+
+## Project
+
+```text
+Pending Setup
+→ Pending Contract or Pending Deposit
+→ Ready for Planning
+→ Planning
+→ Active
+→ Operationally Complete
+→ Financially Complete
+→ Completed
+→ Closed
+```
+
+`On Hold` may interrupt nonterminal states. Reopening is controlled and audited.
+
+## Shared Job
+
+```text
+New
+→ Planning
+→ Needs Scheduling
+→ Scheduled
+→ Dispatch Ready
+→ Active
+→ Operationally Complete
+→ Awaiting Final Invoice
+→ Invoiced
+→ Financially Complete
+→ Closed
+```
+
+Alternatives:
+
+```text
+On Hold | Cancelled
+```
+
+## Material Load
+
+```text
+Planned
+→ Ready for Loading
+→ At Supplier
+→ Loading
+→ Loaded
+→ En Route
+→ At Customer
+→ Unloading
+→ Delivered
+→ Reconciling
+→ Reconciled
+```
+
+Partial delivery is a nonterminal state requiring remaining-quantity disposition.
+
+## Rental operational state
+
+```text
+Scheduled for Drop-Off
+→ Drop-Off Preparing
+→ En Route for Drop-Off
+→ At Customer for Drop-Off
+→ Delivered
+→ On Rent
+→ Pickup Scheduled
+→ Pickup Preparing
+→ En Route for Pickup
+→ At Customer for Pickup
+→ Picked Up
+→ Awaiting Disposal
+→ At Facility
+→ Unloading
+→ Inspection Required
+→ Returned
+→ Complete
+```
+
+The rental cannot complete while the trailer remains loaded.
+
+## Job Charge
+
+```text
+Draft
+→ Calculating
+→ Evidence or Responsibility Review
+→ Customer Authorization and/or Internal Approval
+→ Approved
+→ Ready to Invoice
+→ Invoiced
+→ Resolved
+```
+
+Alternatives:
+
+```text
+Rejected | Waived | Disputed | Credited | Reversed | Cancelled
+```
+
+## Invoice
+
+```text
+Draft
+→ Review Required
+→ Ready to Post
+→ Posted
+→ Sent
+→ Partially Paid or Paid
+→ Resolved
+```
+
+Additional states:
+
+```text
+Past Due | Disputed | Collection Hold | Adjusted | Credited | Written Off | Voided | Replaced
+```
+
+## Payment
+
+```text
+Draft or Pending
+→ Verification Required or Processing
+→ Verified
+→ Settled
+→ Partially Allocated or Fully Allocated
+→ Resolved
+```
+
+Alternatives:
+
+```text
+Failed | Reversed | Disputed | On Hold | Partially Refunded | Refunded
+```
