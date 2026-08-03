@@ -41,12 +41,13 @@ Sprint 1.3.0 owns these explicit intake commands:
 
 Every terminal command requires a reason. The API locks the Lead, validates the source state and
 permission, and writes the state change, Audit Event, outbox event, and idempotency result in one
-transaction. Quoted and Accepted remain owned by later pricing and quote sprints.
+transaction. Sprint 1.4.0 moves Estimating to Quoted when an approved Quote Version is sent and
+moves Quoted to Accepted inside the Quote-acceptance transaction.
 
 ## Estimate
 
 ```text
-Draft → In Analysis → Pending Approval → Approved → Quote Generated
+Draft → Pending Approval → Approved → Quote Generated
 ```
 
 Revision creates a new Estimate Version; it does not overwrite an approved version.
@@ -54,7 +55,7 @@ Revision creates a new Estimate Version; it does not overwrite an approved versi
 ## Quote Version
 
 ```text
-Draft → Pending Approval → Ready to Send → Sent → Viewed → Accepted
+Draft → Ready to Send → Sent → Viewed → Accepted
 ```
 
 Alternatives:
@@ -63,7 +64,9 @@ Alternatives:
 Declined | Expired | Withdrawn | Superseded
 ```
 
-Accepted, sent, and terminal Quote Versions are immutable.
+Approval records the approver and prepares the exact commercial snapshot for sending. Sent, viewed,
+accepted, and terminal Quote Version content and child line items/terms are immutable. Revision
+supersedes the prior nonaccepted version and creates a new Draft; terminal versions cannot accept.
 
 ## Project
 

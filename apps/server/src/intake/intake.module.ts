@@ -7,6 +7,7 @@ import { IntakeService } from "./intake.service.js";
 
 @Module({
   controllers: [IntakeController, CustomersController, LeadsController],
+  exports: [IntakeService],
   imports: [DocumentsModule, IdempotencyModule],
   providers: [IntakeService],
 })

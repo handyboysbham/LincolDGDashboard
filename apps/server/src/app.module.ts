@@ -4,6 +4,7 @@ import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { AuthModule } from "./auth/auth.module.js";
 import { DevelopmentAuthGuard } from "./auth/development-auth.guard.js";
 import { PermissionsGuard } from "./auth/permissions.guard.js";
+import { CommercialModule } from "./commercial/commercial.module.js";
 import { ConfigurationModule } from "./config/configuration.module.js";
 import { ContextModule } from "./context/context.module.js";
 import { DatabaseModule } from "./database/database.module.js";
@@ -27,6 +28,7 @@ import { ObjectStorageModule } from "./object-storage/object-storage.module.js";
     ObjectStorageModule,
     DocumentsModule,
     IntakeModule,
+    CommercialModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },

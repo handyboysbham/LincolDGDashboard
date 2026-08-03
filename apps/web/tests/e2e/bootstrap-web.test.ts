@@ -40,8 +40,14 @@ describe("BOOT-E2E-001 web startup", () => {
     ["/leads", "Every request from first call"],
     ["/leads/new", "Capture a complete Lead"],
     ["/leads/00000000-0000-4000-8000-000000000999", "Loading Lead"],
+    ["/pricing", "Loading pricing"],
+    ["/estimates", "Loading Estimates"],
+    ["/estimates/00000000-0000-4000-8000-000000000999", "Loading Estimate"],
+    ["/quotes", "Loading Quotes"],
+    ["/quotes/00000000-0000-4000-8000-000000000999", "Loading Quote"],
     ["/driver", "Your road is clear."],
     ["/customer/documents/not-a-token", "Checking your link"],
+    ["/customer/quotes/not-a-token", "Checking your offer"],
   ])("serves %s", async (path, expected) => {
     const response = await fetch(`${origin}${path}`);
     expect(response.status).toBe(200);

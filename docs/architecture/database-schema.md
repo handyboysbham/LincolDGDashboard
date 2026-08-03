@@ -71,6 +71,7 @@ RFD-2026-00001
 - supplier_locations
 - supplier_materials
 - supplier_cost_versions
+- delivery_zones
 - disposal_facilities
 - disposal_rate_versions
 - assets
@@ -98,6 +99,7 @@ Account. Service Locations belong to a Customer Account through a tenant-aware f
 - quote_line_items
 - quote_terms
 - quote_deliveries
+- quote_public_links
 - quote_acceptances
 - contracts
 - contract_signatures
@@ -107,6 +109,13 @@ database check requires either complete Material Delivery fields or complete Dum
 fields—never both. Quantities use `NUMERIC(12,3)`, rental dates are date-only, and rental end cannot
 precede rental start. Lead Notes and Tasks are intake-owned collaboration records; uploaded file
 metadata remains in `documents` and links to a Lead through `document_links`.
+
+Pricing, Estimate, Quote, and minimal Project identity tables are implemented by migration `0003`.
+Every rate, cost, calculation, commercial line, and deposit uses integer cents; material quantities
+use `NUMERIC(12,3)`. Active Pricing Versions preserve an allowlisted rule snapshot. Database
+triggers protect active/retired pricing content, approved Estimate content and children, sent or
+terminal Quote content and children, and all Quote Acceptance evidence. `quote_public_links` stores
+only token hashes, purpose-bound creation hashes, expiration, and revocation metadata.
 
 ### Projects and operations
 
@@ -173,9 +182,11 @@ metadata remains in `documents` and links to a Lead through `document_links`.
 - One primary Contact is allowed per Customer Account.
 - Public document-link tokens are stored only as hashes and every link has a purpose, expiration,
   and optional revocation timestamp.
+- Quote-link tokens are Quote-Version scoped, expiring, revocable, and stored only as hashes.
 
-Every implemented intake table has forced Row-Level Security. Runtime policies compare `tenant_id`
-with `app.current_tenant_id`; duplicate lookups are subject to the same tenant boundary.
+Every implemented tenant table has forced Row-Level Security. Runtime policies compare `tenant_id`
+with `app.current_tenant_id`; duplicate lookups and all pricing, Estimate, Quote, acceptance, and
+Project queries are subject to the same tenant boundary.
 
 ## Derived values
 

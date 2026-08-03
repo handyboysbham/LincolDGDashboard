@@ -101,7 +101,8 @@ pnpm check
 
 Use `pnpm install` without `--frozen-lockfile` only when intentionally updating dependencies. The
 database, NestJS API and worker, OpenAPI artifact, typed API client, responsive Next.js web
-application, private document workflow, and Customer Intake vertical slice are implemented.
+application, private document workflow, Customer Intake, and Pricing-to-Quote acceptance vertical
+slices are implemented.
 
 ## Local infrastructure
 
@@ -148,3 +149,12 @@ command creates or reuses the Customer Account, Contact, and Service Location at
 tenant-scoped duplicate candidates; and rejects requests that mix both service types. Lead detail
 supports controlled lifecycle commands, internal notes, follow-up tasks, validated documents, and an
 audit-backed timeline. Browse Customers at `/customers` and the intake pipeline at `/leads`.
+
+## Pricing, Estimates, and Quotes
+
+Staff configure versioned, controlled rates at `/pricing`, create server-calculated Estimates from
+Estimating Leads, approve immutable Estimate Versions at `/estimates`, and manage customer offers at
+`/quotes`. Sending creates a scoped, expiring Quote link whose secret is stored only as a hash.
+Customers can review, decline, or accept the exact commercial snapshot; acceptance records evidence
+and creates one Project idempotently. Customer Quote pages never expose supplier cost, margin,
+pricing-rule detail, or internal assessments.

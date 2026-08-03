@@ -1,8 +1,11 @@
 import {
   CalendarDays,
+  Calculator,
   ChevronDown,
   CircleHelp,
+  CircleDollarSign,
   ClipboardList,
+  FileCheck2,
   FileText,
   Inbox,
   LayoutDashboard,
@@ -27,6 +30,9 @@ const primaryNavigation = [
 ];
 
 const businessNavigation = [
+  { href: "/pricing", icon: CircleDollarSign, label: "Pricing" },
+  { href: "/estimates", icon: Calculator, label: "Estimates" },
+  { href: "/quotes", icon: FileCheck2, label: "Quotes" },
   { href: "/documents", icon: FileText, label: "Documents" },
   { href: "/billing", icon: Receipt, label: "Billing" },
 ];
@@ -119,6 +125,17 @@ export function StaffShell({
         <Link className={active.startsWith("/leads") ? "is-active" : undefined} href="/leads">
           <ClipboardList aria-hidden="true" size={20} />
           <span>Leads</span>
+        </Link>
+        <Link
+          className={active.startsWith("/estimates") ? "is-active" : undefined}
+          href="/estimates"
+        >
+          <Calculator aria-hidden="true" size={20} />
+          <span>Estimates</span>
+        </Link>
+        <Link className={active.startsWith("/quotes") ? "is-active" : undefined} href="/quotes">
+          <FileCheck2 aria-hidden="true" size={20} />
+          <span>Quotes</span>
         </Link>
         <Link
           className={active.startsWith("/customers") ? "is-active" : undefined}

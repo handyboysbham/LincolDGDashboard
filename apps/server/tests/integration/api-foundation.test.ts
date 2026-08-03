@@ -96,7 +96,7 @@ describe("API foundation", () => {
     const response = await fastify.inject({ method: "GET", url: "/api/docs/openapi.json" });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({ info: { version: "1.3.0" }, openapi: "3.0.0" });
+    expect(response.json()).toMatchObject({ info: { version: "1.4.0" }, openapi: "3.0.0" });
   });
 
   it("allows the configured web origin without exposing tenant headers", async () => {

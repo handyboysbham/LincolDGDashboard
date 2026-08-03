@@ -133,6 +133,9 @@ Amount Due                  $235
 - Missing supplier receipt blocks Invoice Readiness.
 - Second Deposit Application is rejected transactionally.
 - Duplicate Quote acceptance does not create another Project.
+- Sent Quote content and line items reject direct mutation.
+- A superseded link returns Gone and cannot accept.
+- A declined Quote remains terminal and cannot accept later.
 
 ---
 

@@ -324,6 +324,310 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/pricing/configurations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPricingConfigurations"];
+    put?: never;
+    post: operations["createPricingConfiguration"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/pricing/versions/{id}/actions/activate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["activatePricingVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/estimates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstimates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/estimate-versions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEstimateVersion"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads/{id}/estimate-versions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createEstimateVersionForLead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/estimates/{id}/actions/revise": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reviseEstimate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/estimate-versions/{id}/actions/submit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["submitEstimateVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/estimate-versions/{id}/actions/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["approveEstimateVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/estimate-versions/{id}/actions/create-quote": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createQuoteFromEstimateVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/quotes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listQuotes"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/quotes/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getQuote"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/quotes/{id}/actions/revise": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reviseQuote"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/quote-versions/{id}/actions/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["approveQuoteVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/quote-versions/{id}/actions/send": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["sendQuoteVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/quote-versions/{id}/actions/withdraw": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["withdrawQuoteVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/quote-versions/{id}/actions/expire": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["expireQuoteVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/quotes/{token}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPublicQuote"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/quotes/{token}/actions/accept": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["acceptPublicQuote"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/quotes/{token}/actions/decline": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["declinePublicQuote"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -685,6 +989,333 @@ export interface components {
     };
     TransitionLeadDto: {
       reason?: string;
+    };
+    PricingRuleDto: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      label: string;
+      calculationType: string;
+      sequence: number;
+      parameters: {
+        [key: string]: unknown;
+      };
+    };
+    PricingVersionDto: {
+      /** Format: uuid */
+      id: string;
+      versionNumber: number;
+      /** @enum {string} */
+      status: "draft" | "active" | "retired";
+      /** Format: date-time */
+      effectiveAt?: string | null;
+      rules: components["schemas"]["PricingRuleDto"][];
+    };
+    PricingPolicyDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      /** @enum {string} */
+      serviceType: "material_delivery" | "dump_trailer_rental";
+      /** @enum {string} */
+      status: "draft" | "active" | "retired";
+      versions: components["schemas"]["PricingVersionDto"][];
+    };
+    SupplierCostDto: {
+      /** Format: uuid */
+      id: string;
+      materialName: string;
+      supplierName: string;
+      supplierLocationName: string;
+      /** @enum {string} */
+      unit: "tons" | "cubic_yards" | "loads";
+      unitCostCents: number;
+      /** @enum {string} */
+      status: "active" | "superseded";
+    };
+    DeliveryZoneDto: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      name: string;
+      baseFeeCents: number;
+    };
+    PricingConfigurationListDto: {
+      policies: components["schemas"]["PricingPolicyDto"][];
+      supplierCosts: components["schemas"]["SupplierCostDto"][];
+      deliveryZones: components["schemas"]["DeliveryZoneDto"][];
+    };
+    MaterialPricingReferenceInputDto: {
+      materialName: string;
+      /** @enum {string} */
+      unit: "tons" | "cubic_yards" | "loads";
+      supplierName: string;
+      supplierLocationName: string;
+      supplierAddressSummary?: string;
+      unitCostCents: number;
+    };
+    DeliveryZoneInputDto: {
+      code: string;
+      name: string;
+      baseFeeCents: number;
+    };
+    MaterialPricingConfigurationInputDto: {
+      materials: components["schemas"]["MaterialPricingReferenceInputDto"][];
+      deliveryZone: components["schemas"]["DeliveryZoneInputDto"];
+      markupBasisPoints: number;
+      additionalSupplierStopCents: number;
+      separatePlacementCents: number;
+      depositMinimumCents: number;
+      depositRoundUpToCents: number;
+    };
+    RentalPricingConfigurationInputDto: {
+      packageAmountCents: number;
+      includedDays: number;
+      additionalDayCents: number;
+      includedWeightPounds: number;
+      overageRateCentsPerPound: number;
+      securityDepositCents: number;
+    };
+    CreatePricingConfigurationDto: {
+      policyName: string;
+      /** @enum {string} */
+      serviceType: "material_delivery" | "dump_trailer_rental";
+      materialDelivery?: components["schemas"]["MaterialPricingConfigurationInputDto"];
+      dumpTrailerRental?: components["schemas"]["RentalPricingConfigurationInputDto"];
+    };
+    CreatePricingConfigurationResponseDto: {
+      policy: components["schemas"]["PricingPolicyDto"];
+      supplierCosts: components["schemas"]["SupplierCostDto"][];
+      deliveryZone?: components["schemas"]["DeliveryZoneDto"] | null;
+    };
+    EstimateListItemDto: {
+      /** Format: uuid */
+      estimateId: string;
+      /** Format: uuid */
+      estimateVersionId: string;
+      estimateNumber: string;
+      /** Format: uuid */
+      leadId: string;
+      leadNumber: string;
+      customerName: string;
+      /** @enum {string} */
+      serviceType: "material_delivery" | "dump_trailer_rental";
+      status: string;
+      versionNumber: number;
+      recommendedPriceCents: number;
+      updatedAt: string;
+    };
+    EstimateListResponseDto: {
+      items: components["schemas"]["EstimateListItemDto"][];
+    };
+    EstimateCostItemDto: {
+      /** Format: uuid */
+      id: string;
+      description: string;
+      quantity: string;
+      unit: string;
+      unitCostCents: number;
+      totalCostCents: number;
+    };
+    PricingCalculationResultDto: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      label: string;
+      calculationType: string;
+      amountCents: number;
+      details: {
+        [key: string]: unknown;
+      };
+    };
+    EstimateVersionDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estimateId: string;
+      estimateNumber: string;
+      /** Format: uuid */
+      leadId: string;
+      leadNumber: string;
+      customerName: string;
+      /** @enum {string} */
+      serviceType: "material_delivery" | "dump_trailer_rental";
+      versionNumber: number;
+      /** @enum {string} */
+      status: "draft" | "pending_approval" | "approved" | "quote_generated" | "superseded";
+      pricingPolicyName: string;
+      /** Format: uuid */
+      pricingVersionId: string;
+      pricingVersionNumber: number;
+      readiness: string;
+      operationalAssessment?: string | null;
+      riskAssessment?: string | null;
+      purchaseCostCents: number;
+      recommendedPriceCents: number;
+      approvedQuotePriceCents?: number | null;
+      depositCents: number;
+      marginCents: number;
+      contentHash: string;
+      inputSnapshot: {
+        [key: string]: unknown;
+      };
+      costItems: components["schemas"]["EstimateCostItemDto"][];
+      calculations: components["schemas"]["PricingCalculationResultDto"][];
+      createdAt: string;
+    };
+    MaterialEstimateItemInputDto: {
+      /** Format: uuid */
+      supplierCostVersionId: string;
+      /** @description Positive decimal with at most three fractional digits */
+      quantity: string;
+    };
+    MaterialEstimateInputDto: {
+      items: components["schemas"]["MaterialEstimateItemInputDto"][];
+      /** Format: uuid */
+      deliveryZoneId: string;
+      additionalSupplierStops: number;
+      separatePlacements: number;
+    };
+    CreateEstimateVersionDto: {
+      /** Format: uuid */
+      pricingVersionId: string;
+      materialDelivery?: components["schemas"]["MaterialEstimateInputDto"];
+      operationalAssessment?: string;
+      riskAssessment?: string;
+    };
+    QuoteLineItemDto: {
+      /** Format: uuid */
+      id: string;
+      description: string;
+      quantity: string;
+      unit: string;
+      unitPriceCents: number;
+      totalCents: number;
+    };
+    QuoteTermDto: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      body: string;
+    };
+    QuoteDeliveryDto: {
+      /** Format: uuid */
+      id: string;
+      channel: string;
+      recipient: string;
+      sentAt: string;
+    };
+    QuoteVersionDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      quoteId: string;
+      quoteNumber: string;
+      versionNumber: number;
+      /** @enum {string} */
+      status:
+        | "draft"
+        | "ready_to_send"
+        | "sent"
+        | "viewed"
+        | "accepted"
+        | "declined"
+        | "expired"
+        | "withdrawn"
+        | "superseded";
+      serviceType: string;
+      customerName: string;
+      customerEmail: string;
+      locationLabel: string;
+      scope: string;
+      subtotalCents: number;
+      adjustmentCents: number;
+      taxCents: number;
+      totalCents: number;
+      requiredDepositCents: number;
+      contentHash: string;
+      /** Format: date-time */
+      issuedAt?: string | null;
+      /** Format: date-time */
+      expiresAt?: string | null;
+      /** Format: date-time */
+      viewedAt?: string | null;
+      lineItems: components["schemas"]["QuoteLineItemDto"][];
+      terms: components["schemas"]["QuoteTermDto"][];
+      deliveries: components["schemas"]["QuoteDeliveryDto"][];
+    };
+    QuoteListItemDto: {
+      /** Format: uuid */
+      quoteId: string;
+      /** Format: uuid */
+      quoteVersionId: string;
+      quoteNumber: string;
+      customerName: string;
+      serviceType: string;
+      status: string;
+      versionNumber: number;
+      totalCents: number;
+      /** Format: date-time */
+      expiresAt?: string | null;
+      updatedAt: string;
+    };
+    QuoteListResponseDto: {
+      items: components["schemas"]["QuoteListItemDto"][];
+    };
+    SendQuoteDto: {
+      /** @enum {string} */
+      channel: "email" | "text" | "link";
+      recipient: string;
+      /** @default 10 */
+      expiresInDays: number;
+    };
+    SendQuoteResponseDto: {
+      quote: components["schemas"]["QuoteVersionDto"];
+      /** @description Plaintext capability returned only by the send command */
+      token: string;
+      customerPath: string;
+    };
+    PublicQuoteDto: {
+      quoteNumber: string;
+      versionNumber: number;
+      status: string;
+      customerName: string;
+      serviceType: string;
+      locationSummary: string;
+      scope: string;
+      subtotalCents: number;
+      adjustmentCents: number;
+      taxCents: number;
+      totalCents: number;
+      requiredDepositCents: number;
+      contentHash: string;
+      /** Format: date-time */
+      expiresAt: string;
+      lineItems: components["schemas"]["QuoteLineItemDto"][];
+      terms: components["schemas"]["QuoteTermDto"][];
+    };
+    AcceptQuoteDto: {
+      acceptedName: string;
+      contentHash: string;
+      consentText: string;
+    };
+    ProjectDto: {
+      /** Format: uuid */
+      id: string;
+      projectNumber: string;
+      status: string;
+      serviceType: string;
+      outcomeStatement: string;
+    };
+    AcceptQuoteResponseDto: {
+      /** Format: uuid */
+      acceptanceId: string;
+      /** Format: date-time */
+      acceptedAt: string;
+      project: components["schemas"]["ProjectDto"];
+    };
+    DeclineQuoteDto: {
+      reason: string;
     };
   };
   responses: never;
@@ -1166,6 +1797,466 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["LeadDetailDto"];
+        };
+      };
+    };
+  };
+  listPricingConfigurations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PricingConfigurationListDto"];
+        };
+      };
+    };
+  };
+  createPricingConfiguration: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePricingConfigurationDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreatePricingConfigurationResponseDto"];
+        };
+      };
+    };
+  };
+  activatePricingVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PricingVersionDto"];
+        };
+      };
+    };
+  };
+  listEstimates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstimateListResponseDto"];
+        };
+      };
+    };
+  };
+  getEstimateVersion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstimateVersionDto"];
+        };
+      };
+    };
+  };
+  createEstimateVersionForLead: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateEstimateVersionDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstimateVersionDto"];
+        };
+      };
+    };
+  };
+  reviseEstimate: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateEstimateVersionDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstimateVersionDto"];
+        };
+      };
+    };
+  };
+  submitEstimateVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstimateVersionDto"];
+        };
+      };
+    };
+  };
+  approveEstimateVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstimateVersionDto"];
+        };
+      };
+    };
+  };
+  createQuoteFromEstimateVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuoteVersionDto"];
+        };
+      };
+    };
+  };
+  listQuotes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuoteListResponseDto"];
+        };
+      };
+    };
+  };
+  getQuote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuoteVersionDto"];
+        };
+      };
+    };
+  };
+  reviseQuote: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuoteVersionDto"];
+        };
+      };
+    };
+  };
+  approveQuoteVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuoteVersionDto"];
+        };
+      };
+    };
+  };
+  sendQuoteVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SendQuoteDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SendQuoteResponseDto"];
+        };
+      };
+    };
+  };
+  withdrawQuoteVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuoteVersionDto"];
+        };
+      };
+    };
+  };
+  expireQuoteVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuoteVersionDto"];
+        };
+      };
+    };
+  };
+  getPublicQuote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicQuoteDto"];
+        };
+      };
+    };
+  };
+  acceptPublicQuote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AcceptQuoteDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AcceptQuoteResponseDto"];
+        };
+      };
+    };
+  };
+  declinePublicQuote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeclineQuoteDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicQuoteDto"];
         };
       };
     };

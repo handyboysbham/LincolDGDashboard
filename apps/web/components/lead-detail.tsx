@@ -31,6 +31,7 @@ import {
   type LeadIntakeAction,
 } from "../lib/intake-state";
 import { DocumentUploadCard } from "./document-upload-card";
+import { EstimateBuilder } from "./estimate-builder";
 
 type Lead = components["schemas"]["LeadDetailDto"];
 
@@ -287,6 +288,19 @@ export function LeadDetail({ leadId }: { leadId: string }) {
               </div>
             )}
           </section>
+
+          {lead.status === "estimating" && (
+            <section className="panel lead-overview-panel">
+              <div className="panel-heading compact">
+                <div>
+                  <span className="panel-kicker">Commercial</span>
+                  <h2>Build Estimate</h2>
+                </div>
+                <ClipboardCheck size={19} />
+              </div>
+              <EstimateBuilder lead={lead} />
+            </section>
+          )}
 
           <section className="panel lead-activity-panel">
             <div className="panel-heading compact">

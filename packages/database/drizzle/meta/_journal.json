@@ -22,6 +22,13 @@
       "when": 1785766537806,
       "tag": "0002_customer_intake",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785773382850,
+      "tag": "0003_pricing_estimates_quotes",
+      "breakpoints": true
     }
   ]
 }

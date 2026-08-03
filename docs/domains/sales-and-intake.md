@@ -84,6 +84,12 @@ Supported V1 calculation types:
 
 Do not execute arbitrary code or user-provided formulas.
 
+Sprint 1.4.0 implements a controlled subset for the two current services: quantity-by-rate supplier
+costs, basis-point material markup, fixed delivery/stop/placement charges, greater-of deposit with
+controlled rounding, rental package and additional-day pricing, preserved weight-overage rates, and
+a fixed security deposit. New calculation types require reviewed application logic; Pricing Rule
+rows never contain executable expressions.
+
 ## Quote
 
 The Quote parent owns the customer-offer lifecycle. Quote Versions preserve the exact
@@ -122,3 +128,9 @@ Acceptance requires:
 - content hash
 
 Acceptance creates one Project idempotently.
+
+Sending creates a Quote-Version-scoped capability with a ten-day default expiration. The database
+stores only its purpose-separated secret hash. Viewing a current offer records Viewed atomically;
+withdrawn, expired, revoked, and superseded links fail closed. Acceptance locks the link and Quote,
+checks the content hash and current state, stores consent and request evidence, transitions the
+Lead, and creates one minimal Pending Setup Project in the same transaction.

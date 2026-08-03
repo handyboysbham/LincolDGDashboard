@@ -95,6 +95,24 @@ local development, never expose it through `NEXT_PUBLIC_` configuration, and exp
 invalidate existing customer document links. The database stores only link hashes. Signed URLs,
 capability tokens, and MinIO credentials must not be copied into logs or support messages.
 
+## Pricing and Quote development
+
+Open `/pricing` to create and activate a controlled Material Delivery or Dump Trailer Rental Pricing
+Version. An Estimating Lead exposes its Estimate builder; all authoritative costs, totals, deposits,
+and margins are returned by the API. Continue approval at `/estimates`, then approve and send the
+commercial snapshot from `/quotes`. The send response contains the only recoverable customer token;
+the database stores its hash. Do not put customer Quote tokens in logs, tickets, or screenshots.
+
+The owner role can perform all Sprint 1.4.0 actions. Operational roles should be granted only the
+needed `pricing:*`, `estimates:*`, and `quotes:*` permissions; approval permissions are
+intentionally separate from write/send permissions. Reusing an `Idempotency-Key` is valid only for
+an identical retry. Acceptance itself uses the Quote Version and evidence hash as its natural
+idempotency boundary.
+
+The PostgreSQL integration suite exercises the canonical $184 cost, $420 Quote, and $185 deposit,
+immutable accepted content, tenant isolation, supersession/decline terminal states, and repeated
+acceptance producing one Project.
+
 ## Local state
 
 All generated state is ignored by Git and stored beneath `.local/`:

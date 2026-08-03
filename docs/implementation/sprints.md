@@ -141,6 +141,8 @@ Capture a complete, tenant-isolated service opportunity for either supported ser
 
 ## Sprint 1.4.0 — Pricing, Estimates, and Quotes
 
+Implementation status: complete in the 1.4.0 workspace change set.
+
 ### Goal
 
 Turn a qualified Lead into a versioned, customer-visible offer with authoritative server-side

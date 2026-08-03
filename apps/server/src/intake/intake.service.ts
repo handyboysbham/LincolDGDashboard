@@ -84,6 +84,48 @@ export const leadTransitionActions = [
 
 export type LeadTransitionAction = (typeof leadTransitionActions)[number];
 
+export interface CommercialLeadContext {
+  customer: {
+    customerType: string;
+    displayName: string;
+    id: string;
+    preferredContactMethod: string | null;
+  };
+  id: string;
+  leadNumber: string;
+  materialDelivery: {
+    deliveryInstructions: string | null;
+    estimatedQuantity: string;
+    materialDescription: string;
+    quantityUnit: string;
+  } | null;
+  ownerUserId: string;
+  primaryContact: {
+    displayName: string;
+    email: string | null;
+    id: string;
+    phone: string | null;
+  };
+  rental: {
+    debrisType: string;
+    deliveryInstructions: string | null;
+    rentalEndDate: string;
+    rentalStartDate: string;
+  } | null;
+  serviceLocation: {
+    addressLine1: string;
+    addressLine2: string | null;
+    city: string;
+    id: string;
+    label: string;
+    postalCode: string;
+    region: string;
+  };
+  serviceType: string;
+  status: string;
+  summary: string;
+}
+
 const transitionDefinitions: Record<
   LeadTransitionAction,
   { commandName: string; eventType: string; from: string[]; reasonRequired: boolean; to: string }
@@ -377,6 +419,131 @@ export class IntakeService {
     return withTenantTransaction(this.database, actor.tenantId, (transaction) =>
       this.loadLeadDetail(transaction, actor.tenantId, leadId),
     );
+  }
+
+  public async getCommercialLead(
+    transaction: TenantTransaction,
+    tenantId: string,
+    leadId: string,
+    lock = false,
+  ): Promise<CommercialLeadContext> {
+    const record = await this.findLead(transaction, tenantId, leadId, lock);
+    const detail = await this.loadLeadDto(transaction, tenantId, leadId);
+    return {
+      customer: {
+        customerType: detail.customer.customerType,
+        displayName: detail.customer.displayName,
+        id: detail.customer.id,
+        preferredContactMethod: detail.customer.preferredContactMethod,
+      },
+      id: record.id,
+      leadNumber: record.leadNumber,
+      materialDelivery: detail.materialDelivery
+        ? {
+            deliveryInstructions: detail.materialDelivery.deliveryInstructions ?? null,
+            estimatedQuantity: detail.materialDelivery.estimatedQuantity,
+            materialDescription: detail.materialDelivery.materialDescription,
+            quantityUnit: detail.materialDelivery.quantityUnit,
+          }
+        : null,
+      ownerUserId: record.ownerUserId,
+      primaryContact: {
+        displayName: detail.primaryContact.displayName,
+        email: detail.primaryContact.email,
+        id: detail.primaryContact.id,
+        phone: detail.primaryContact.phone,
+      },
+      rental: detail.dumpTrailerRental
+        ? {
+            debrisType: detail.dumpTrailerRental.debrisType,
+            deliveryInstructions: detail.dumpTrailerRental.deliveryInstructions ?? null,
+            rentalEndDate: detail.dumpTrailerRental.rentalEndDate,
+            rentalStartDate: detail.dumpTrailerRental.rentalStartDate,
+          }
+        : null,
+      serviceLocation: {
+        addressLine1: detail.serviceLocation.addressLine1,
+        addressLine2: detail.serviceLocation.addressLine2,
+        city: detail.serviceLocation.city,
+        id: detail.serviceLocation.id,
+        label: detail.serviceLocation.label,
+        postalCode: detail.serviceLocation.postalCode,
+        region: detail.serviceLocation.region,
+      },
+      serviceType: record.serviceType,
+      status: record.status,
+      summary: record.summary,
+    };
+  }
+
+  public async markLeadQuoted(
+    transaction: TenantTransaction,
+    input: {
+      actorUserId: string;
+      leadId: string;
+      quoteVersionId: string;
+      tenantId: string;
+    },
+  ): Promise<void> {
+    const record = await this.findLead(transaction, input.tenantId, input.leadId, true);
+    if (record.status === "quoted") return;
+    if (record.status !== "estimating") {
+      throw invalidState(
+        "LEAD_NOT_READY_FOR_QUOTE",
+        `A Lead in ${record.status} cannot be marked Quoted`,
+      );
+    }
+    await transaction
+      .update(leads)
+      .set({ status: "quoted", updatedBy: input.actorUserId })
+      .where(and(eq(leads.tenantId, input.tenantId), eq(leads.id, input.leadId)));
+    await this.recordChange(transaction, {
+      actorUserId: input.actorUserId,
+      after: { status: "quoted" },
+      before: { status: record.status },
+      commandName: "MarkLeadQuoted",
+      entityId: input.leadId,
+      entityType: "Lead",
+      eventType: "lead.quoted",
+      metadata: { quoteVersionId: input.quoteVersionId },
+      tenantId: input.tenantId,
+    });
+  }
+
+  public async markLeadAccepted(
+    transaction: TenantTransaction,
+    input: {
+      acceptanceId: string;
+      leadId: string;
+      quoteVersionId: string;
+      tenantId: string;
+    },
+  ): Promise<void> {
+    const record = await this.findLead(transaction, input.tenantId, input.leadId, true);
+    if (record.status === "accepted") return;
+    if (record.status !== "quoted") {
+      throw invalidState(
+        "LEAD_NOT_READY_FOR_ACCEPTANCE",
+        `A Lead in ${record.status} cannot be marked Accepted`,
+      );
+    }
+    await transaction
+      .update(leads)
+      .set({ status: "accepted" })
+      .where(and(eq(leads.tenantId, input.tenantId), eq(leads.id, input.leadId)));
+    await this.recordChange(transaction, {
+      after: { status: "accepted" },
+      before: { status: record.status },
+      commandName: "AcceptLeadQuote",
+      entityId: input.leadId,
+      entityType: "Lead",
+      eventType: "lead.accepted",
+      metadata: {
+        acceptanceId: input.acceptanceId,
+        quoteVersionId: input.quoteVersionId,
+      },
+      tenantId: input.tenantId,
+    });
   }
 
   public async addNote(
@@ -1092,7 +1259,7 @@ export class IntakeService {
   private async recordChange(
     transaction: TenantTransaction,
     input: {
-      actorUserId: string;
+      actorUserId?: string;
       after: unknown;
       before?: unknown;
       commandName: string;
