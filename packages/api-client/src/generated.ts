@@ -324,6 +324,342 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/projects": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listProjects"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getProject"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{id}/actions/generate-contract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["generateProjectContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{id}/actions/confirm-deposit-readiness": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["confirmProjectDepositReadiness"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionProject"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{id}/actions/sign-business": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["signContractAsBusiness"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/contracts/{id}/actions/send": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["sendContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listJobs"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getJob"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/actions/evaluate-readiness": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["evaluateJobReadiness"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionJob"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/route-stops": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createJobRouteStop"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/checklists": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createJobChecklist"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/checklist-items/{id}/actions/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["completeChecklistItem"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssets"];
+    put?: never;
+    post: operations["createAsset"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedule/calendar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getScheduleCalendar"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedule/queue": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getSchedulingQueue"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/schedule-blocks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createJobScheduleBlock"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/schedule-blocks/{id}/actions/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["cancelScheduleBlock"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/contracts/{token}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPublicContract"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/contracts/{token}/actions/sign": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["signPublicContract"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/pricing/configurations": {
     parameters: {
       query?: never;
@@ -989,6 +1325,253 @@ export interface components {
     };
     TransitionLeadDto: {
       reason?: string;
+    };
+    ProjectSummaryDto: {
+      /** Format: uuid */
+      id: string;
+      projectNumber: string;
+      customerName: string;
+      serviceType: string;
+      status: string;
+      contractStatus: string;
+      depositStatus: string;
+      acceptedValueCents: number;
+      requiredDepositCents: number;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    ProjectListResponseDto: {
+      items: components["schemas"]["ProjectSummaryDto"][];
+    };
+    SignatureDto: {
+      /** Format: uuid */
+      id: string;
+      signerRole: string;
+      typedName: string;
+      /** Format: date-time */
+      signedAt: string;
+    };
+    ContractDto: {
+      /** Format: uuid */
+      id: string;
+      contractNumber: string;
+      versionNumber: number;
+      status: string;
+      contentHash: string;
+      content: {
+        [key: string]: unknown;
+      };
+      signatures: components["schemas"]["SignatureDto"][];
+    };
+    JobSummaryDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      projectId: string;
+      jobNumber: string;
+      projectNumber: string;
+      customerName: string;
+      serviceType: string;
+      status: string;
+      readiness: string;
+      /** Format: date-time */
+      scheduledStartAt?: string | null;
+      /** Format: date-time */
+      scheduledEndAt?: string | null;
+    };
+    ProjectDetailDto: {
+      /** Format: uuid */
+      id: string;
+      projectNumber: string;
+      customerName: string;
+      serviceType: string;
+      status: string;
+      contractStatus: string;
+      depositStatus: string;
+      acceptedValueCents: number;
+      requiredDepositCents: number;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: uuid */
+      customerAccountId: string;
+      contactName: string;
+      serviceLocation: string;
+      outcomeStatement: string;
+      contract?: components["schemas"]["ContractDto"] | null;
+      jobs: components["schemas"]["JobSummaryDto"][];
+      activeHolds: string[];
+    };
+    ConfirmDepositReadinessDto: {
+      evidenceReference: string;
+    };
+    LifecycleActionDto: {
+      reason?: string;
+    };
+    SignContractDto: {
+      typedName: string;
+      consentText: string;
+      contentHash: string;
+    };
+    SendContractDto: {
+      recipient: string;
+      /** @default 10 */
+      expiresInDays: number;
+    };
+    SendContractResponseDto: {
+      contract: components["schemas"]["ContractDto"];
+      customerPath: string;
+      token: string;
+    };
+    JobListResponseDto: {
+      items: components["schemas"]["JobSummaryDto"][];
+    };
+    ScheduleBlockDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      jobNumber: string;
+      blockType: string;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      status: string;
+      assetIds: string[];
+      userIds: string[];
+    };
+    RouteStopDto: {
+      /** Format: uuid */
+      id: string;
+      sequence: number;
+      stopType: string;
+      label: string;
+      status: string;
+    };
+    ChecklistItemDto: {
+      /** Format: uuid */
+      id: string;
+      sequence: number;
+      label: string;
+      status: string;
+      response?: string | null;
+    };
+    ChecklistDto: {
+      /** Format: uuid */
+      id: string;
+      templateCode: string;
+      name: string;
+      required: boolean;
+      status: string;
+      items: components["schemas"]["ChecklistItemDto"][];
+    };
+    JobEventDto: {
+      /** Format: uuid */
+      id: string;
+      eventType: string;
+      summary: string;
+      /** Format: date-time */
+      occurredAt: string;
+    };
+    JobDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      projectId: string;
+      jobNumber: string;
+      projectNumber: string;
+      customerName: string;
+      serviceType: string;
+      status: string;
+      readiness: string;
+      /** Format: date-time */
+      scheduledStartAt?: string | null;
+      /** Format: date-time */
+      scheduledEndAt?: string | null;
+      scheduleBlocks: components["schemas"]["ScheduleBlockDto"][];
+      routeStops: components["schemas"]["RouteStopDto"][];
+      checklists: components["schemas"]["ChecklistDto"][];
+      events: components["schemas"]["JobEventDto"][];
+      activeHolds: string[];
+    };
+    EvaluateReadinessDto: {
+      /** @enum {string} */
+      readinessType: "planning" | "schedule" | "dispatch" | "completion" | "invoice" | "closure";
+    };
+    ReadinessEvaluationDto: {
+      readinessType: string;
+      result: string;
+      blockers: string[];
+      warnings: string[];
+      /** Format: date-time */
+      evaluatedAt: string;
+    };
+    CreateRouteStopDto: {
+      sequence: number;
+      /** @enum {string} */
+      stopType:
+        "supplier" | "customer" | "dropoff" | "pickup" | "disposal" | "inspection" | "other";
+      label: string;
+      locationSnapshot: {
+        [key: string]: unknown;
+      };
+      instructions?: string;
+    };
+    ChecklistItemInputDto: {
+      label: string;
+    };
+    CreateChecklistDto: {
+      templateCode: string;
+      name: string;
+      items: components["schemas"]["ChecklistItemInputDto"][];
+    };
+    CompleteChecklistItemDto: {
+      response?: string;
+    };
+    AssetDto: {
+      /** Format: uuid */
+      id: string;
+      assetNumber: string;
+      name: string;
+      assetType: string;
+      status: string;
+      capacityWeight?: string | null;
+    };
+    AssetListResponseDto: {
+      items: components["schemas"]["AssetDto"][];
+    };
+    CreateAssetDto: {
+      assetNumber: string;
+      name: string;
+      /** @enum {string} */
+      assetType: "truck" | "trailer" | "equipment";
+      capacityWeight?: string;
+    };
+    ScheduleCalendarResponseDto: {
+      items: components["schemas"]["ScheduleBlockDto"][];
+    };
+    CreateScheduleBlockDto: {
+      /** @enum {string} */
+      blockType: "service" | "dropoff" | "pickup" | "disposal" | "inspection" | "other";
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      assetIds: string[];
+      userIds: string[];
+      notes?: string;
+    };
+    PublicContractDto: {
+      contractNumber: string;
+      status: string;
+      contentHash: string;
+      customerName: string;
+      serviceLocation: string;
+      scope: string;
+      acceptedValueCents: number;
+      requiredDepositCents: number;
+      signatures: components["schemas"]["SignatureDto"][];
+      terms: string[];
     };
     PricingRuleDto: {
       /** Format: uuid */
@@ -1797,6 +2380,564 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["LeadDetailDto"];
+        };
+      };
+    };
+  };
+  listProjects: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectListResponseDto"];
+        };
+      };
+    };
+  };
+  getProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailDto"];
+        };
+      };
+    };
+  };
+  generateProjectContract: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailDto"];
+        };
+      };
+    };
+  };
+  confirmProjectDepositReadiness: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ConfirmDepositReadinessDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailDto"];
+        };
+      };
+    };
+  };
+  transitionProject: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action:
+          | "start-planning"
+          | "activate"
+          | "complete-operationally"
+          | "complete-financially"
+          | "complete"
+          | "close"
+          | "place-hold"
+          | "release-hold"
+          | "reopen";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LifecycleActionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectDetailDto"];
+        };
+      };
+    };
+  };
+  signContractAsBusiness: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SignContractDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ContractDto"];
+        };
+      };
+    };
+  };
+  sendContract: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SendContractDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SendContractResponseDto"];
+        };
+      };
+    };
+  };
+  listJobs: {
+    parameters: {
+      query?: {
+        status?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["JobListResponseDto"];
+        };
+      };
+    };
+  };
+  getJob: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["JobDetailDto"];
+        };
+      };
+    };
+  };
+  evaluateJobReadiness: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EvaluateReadinessDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReadinessEvaluationDto"];
+        };
+      };
+    };
+  };
+  transitionJob: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action:
+          | "start-planning"
+          | "request-scheduling"
+          | "confirm-schedule"
+          | "mark-dispatch-ready"
+          | "start"
+          | "complete-operationally"
+          | "await-final-invoice"
+          | "mark-invoiced"
+          | "complete-financially"
+          | "close"
+          | "place-hold"
+          | "release-hold"
+          | "cancel"
+          | "reopen";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LifecycleActionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["JobDetailDto"];
+        };
+      };
+    };
+  };
+  createJobRouteStop: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateRouteStopDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RouteStopDto"];
+        };
+      };
+    };
+  };
+  createJobChecklist: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateChecklistDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChecklistDto"];
+        };
+      };
+    };
+  };
+  completeChecklistItem: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CompleteChecklistItemDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChecklistItemDto"];
+        };
+      };
+    };
+  };
+  listAssets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetListResponseDto"];
+        };
+      };
+    };
+  };
+  createAsset: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateAssetDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetDto"];
+        };
+      };
+    };
+  };
+  getScheduleCalendar: {
+    parameters: {
+      query: {
+        to: string;
+        from: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleCalendarResponseDto"];
+        };
+      };
+    };
+  };
+  getSchedulingQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["JobListResponseDto"];
+        };
+      };
+    };
+  };
+  createJobScheduleBlock: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateScheduleBlockDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleBlockDto"];
+        };
+      };
+    };
+  };
+  cancelScheduleBlock: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LifecycleActionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ScheduleBlockDto"];
+        };
+      };
+    };
+  };
+  getPublicContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicContractDto"];
+        };
+      };
+    };
+  };
+  signPublicContract: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SignContractDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicContractDto"];
         };
       };
     };

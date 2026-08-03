@@ -117,6 +117,12 @@ triggers protect active/retired pricing content, approved Estimate content and c
 terminal Quote content and children, and all Quote Acceptance evidence. `quote_public_links` stores
 only token hashes, purpose-bound creation hashes, expiration, and revocation metadata.
 
+Projects, Contracts, Jobs, and shared scheduling are implemented by migrations `0004` and `0005`.
+Migration `0004` expands the accepted-Quote Project, backfills one initial service-numbered Job for
+existing Projects, enables `btree_gist`, and creates the operational tables, tenant policies,
+immutability triggers, closed-Job guards, and the active Asset Reservation exclusion constraint.
+Migration `0005` records a request hash for Contract-link command idempotency.
+
 ### Projects and operations
 
 - projects
@@ -134,6 +140,8 @@ only token hashes, purpose-bound creation hashes, expiration, and revocation met
 - checklist_instances
 - checklist_items
 - job_events
+- readiness_evaluations
+- operational_holds
 
 ### Finance
 
@@ -183,10 +191,17 @@ only token hashes, purpose-bound creation hashes, expiration, and revocation met
 - Public document-link tokens are stored only as hashes and every link has a purpose, expiration,
   and optional revocation timestamp.
 - Quote-link tokens are Quote-Version scoped, expiring, revocable, and stored only as hashes.
+- Contract-link tokens are Contract scoped, expiring, revocable, stored only as hashes, and retain
+  the canonical send-request hash for conflict-safe replay.
+- Contract commercial content is immutable after business signature; all Contract Signatures and Job
+  Events are append-only.
+- Closed Jobs reject ordinary updates to the Job and shared operational child records until an
+  audited reopening command records `reopened_at`.
 
 Every implemented tenant table has forced Row-Level Security. Runtime policies compare `tenant_id`
 with `app.current_tenant_id`; duplicate lookups and all pricing, Estimate, Quote, acceptance, and
-Project queries are subject to the same tenant boundary.
+Project, Contract, Job, scheduling, asset, readiness, checklist, route, event, and hold queries are
+subject to the same tenant boundary.
 
 ## Derived values
 

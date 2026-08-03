@@ -15,6 +15,7 @@ import { IdentityModule } from "./identity/identity.module.js";
 import { IntakeModule } from "./intake/intake.module.js";
 import { DocumentsModule } from "./documents/documents.module.js";
 import { ObjectStorageModule } from "./object-storage/object-storage.module.js";
+import { OperationsModule } from "./operations/operations.module.js";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ObjectStorageModule } from "./object-storage/object-storage.module.js";
     ObjectStorageModule,
     DocumentsModule,
     IntakeModule,
+    OperationsModule,
     CommercialModule,
   ],
   providers: [

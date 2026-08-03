@@ -7,6 +7,7 @@ import {
   ClipboardList,
   FileCheck2,
   FileText,
+  FolderKanban,
   Inbox,
   LayoutDashboard,
   Menu,
@@ -30,6 +31,7 @@ const primaryNavigation = [
 ];
 
 const businessNavigation = [
+  { href: "/projects", icon: FolderKanban, label: "Projects" },
   { href: "/pricing", icon: CircleDollarSign, label: "Pricing" },
   { href: "/estimates", icon: Calculator, label: "Estimates" },
   { href: "/quotes", icon: FileCheck2, label: "Quotes" },

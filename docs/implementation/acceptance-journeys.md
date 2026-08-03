@@ -72,6 +72,32 @@
 
 ---
 
+## OPS-E2E-001 — Accepted Work to Conflict-Safe Schedule
+
+### Journey
+
+1. Accept a sent Quote twice concurrently and receive one Project plus one correctly prefixed Job.
+2. Verify Project and Job planning fail before Contract and deposit readiness.
+3. Generate the Contract, sign as the business, create a secure link, view it, and sign as customer.
+4. Confirm external deposit readiness and start Project and Job planning.
+5. Move the Job to Needs Scheduling and register an available asset.
+6. Create a required Schedule Block with the current user and asset.
+7. Verify an overlapping reservation for the same asset fails with a stable conflict.
+8. Confirm the schedule, pass dispatch readiness, and start the Job.
+9. Add a Route Stop and required Checklist, then complete its items.
+10. Complete the operational and financial lifecycle, close the Job, reject an ordinary child edit,
+    and reopen it with a reason.
+
+### Negative tests
+
+- a foreign tenant cannot read Project, Job, Contract, schedule, reservation, or readiness records
+- a customer Contract response exposes no internal identifiers, notes, or deposit evidence
+- a Contract link is invalid after expiration or revocation and its plaintext token is never stored
+- a different request replayed with one idempotency key is rejected
+- Contract content and signature evidence reject direct mutation
+
+---
+
 ## MD-E2E-001 — Multi-Material Delivery
 
 ### Configuration

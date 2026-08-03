@@ -3,7 +3,6 @@ import {
   allocateBusinessNumber,
   auditEvents,
   outboxEvents,
-  projects,
   quoteAcceptances,
   quoteDeliveries,
   quoteLineItems,
@@ -26,6 +25,7 @@ import {
   hashCanonicalPayload,
 } from "../idempotency/idempotent-command.service.js";
 import { IntakeService } from "../intake/intake.service.js";
+import { ProjectsService } from "../operations/projects.service.js";
 import type {
   AcceptQuoteDto,
   AcceptQuoteResponseDto,
@@ -62,6 +62,7 @@ export class QuotesService {
     @Inject(EstimatesService) private readonly estimates: EstimatesService,
     @Inject(IntakeService) private readonly intake: IntakeService,
     @Inject(QuoteTokenService) private readonly tokens: QuoteTokenService,
+    @Inject(ProjectsService) private readonly projects: ProjectsService,
   ) {}
 
   public async list(): Promise<QuoteListResponseDto> {
@@ -580,20 +581,15 @@ export class QuotesService {
             "This Quote was already accepted with different evidence",
           );
         }
-        const [project] = await transaction
-          .select()
-          .from(projects)
-          .where(
-            and(
-              eq(projects.tenantId, parsed.tenantId),
-              eq(projects.acceptedQuoteVersionId, context.version.id),
-            ),
-          );
-        if (!project) throw new Error("Accepted Quote Project was not found");
+        const project = await this.projects.findAcceptedProject(
+          transaction,
+          parsed.tenantId,
+          context.version.id,
+        );
         return {
           acceptanceId: existing.id,
           acceptedAt: existing.acceptedAt.toISOString(),
-          project: toProjectDto(project),
+          project,
         };
       }
       this.assertAcceptable(context.version, link);
@@ -619,26 +615,19 @@ export class QuotesService {
         tenantId: parsed.tenantId,
         userAgent: evidence.userAgent,
       });
-      const projectNumber = await allocateBusinessNumber(transaction, {
-        entityType: "project",
-        prefix: "PRJ",
+      const project = await this.projects.createAcceptedProject(transaction, {
+        acceptedQuoteContentHash: context.version.contentHash,
+        acceptedQuoteVersionId: context.version.id,
+        acceptedValueCents: context.version.totalCents,
+        customerAccountId: context.quote.customerAccountId,
+        outcomeStatement: context.version.scope,
+        ownerUserId: context.quote.ownerUserId,
+        primaryContactId: context.quote.primaryContactId,
+        requiredDepositCents: context.version.requiredDepositCents,
+        serviceLocationId: context.quote.serviceLocationId,
+        serviceType: snapshotString(context.version.customerSnapshot, "serviceType"),
         tenantId: parsed.tenantId,
-        year: acceptedAt.getUTCFullYear(),
       });
-      const [project] = await transaction
-        .insert(projects)
-        .values({
-          acceptedQuoteVersionId: context.version.id,
-          customerAccountId: context.quote.customerAccountId,
-          outcomeStatement: context.version.scope,
-          ownerUserId: context.quote.ownerUserId,
-          projectNumber,
-          serviceLocationId: context.quote.serviceLocationId,
-          serviceType: snapshotString(context.version.customerSnapshot, "serviceType"),
-          tenantId: parsed.tenantId,
-        })
-        .returning();
-      if (!project) throw new Error("Project was not created");
       await transaction
         .update(quoteVersions)
         .set({ status: "accepted", terminalAt: acceptedAt })
@@ -667,19 +656,10 @@ export class QuotesService {
         metadata: { acceptanceId, projectId: project.id, quoteId: context.quote.id },
         tenantId: parsed.tenantId,
       });
-      await this.recordChange(transaction, undefined, {
-        after: { projectNumber, status: project.status },
-        commandName: "CreateProjectFromQuoteAcceptance",
-        entityId: project.id,
-        entityType: "Project",
-        eventType: "project.created_from_quote",
-        metadata: { acceptanceId, quoteVersionId: context.version.id },
-        tenantId: parsed.tenantId,
-      });
       return {
         acceptanceId,
         acceptedAt: acceptedAt.toISOString(),
-        project: toProjectDto(project),
+        project,
       };
     });
   }
@@ -1270,16 +1250,6 @@ function toLineItemDto(line: typeof quoteLineItems.$inferSelect) {
 
 function toTermDto(term: typeof quoteTerms.$inferSelect) {
   return { body: term.body, id: term.id, title: term.title };
-}
-
-function toProjectDto(project: typeof projects.$inferSelect) {
-  return {
-    id: project.id,
-    outcomeStatement: project.outcomeStatement,
-    projectNumber: project.projectNumber,
-    serviceType: project.serviceType,
-    status: project.status,
-  };
 }
 
 function snapshotString(snapshot: Record<string, unknown>, key: string): string {

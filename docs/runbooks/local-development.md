@@ -113,6 +113,25 @@ The PostgreSQL integration suite exercises the canonical $184 cost, $420 Quote, 
 immutable accepted content, tenant isolation, supersession/decline terminal states, and repeated
 acceptance producing one Project.
 
+## Project and scheduling development
+
+Accepting a Quote now creates one Project and one initial `MAT` or `DTR` Job atomically. Open
+`/projects` to generate the immutable Contract snapshot, add the business signature, and create the
+customer capability link. The link is the only recoverable plaintext token; the database stores its
+hash and the send-request hash. After customer signature, confirm external deposit readiness before
+starting Project or Job planning.
+
+Use `/jobs` for lifecycle, route, checklist, readiness, and event history, and `/schedule` for the
+jobs-needing-scheduling queue, asset registry, and calendar. Material Jobs require a service block;
+rental Jobs require drop-off and pickup blocks. Every required block needs an assigned active user
+and available asset. PostgreSQL returns `ASSET_RESERVATION_CONFLICT` when concurrent or overlapping
+requests try to reserve the same asset. Do not work around this by checking availability only in the
+browser.
+
+Contract and Quote customer tokens, typed-name evidence, IP addresses, and user agents must not be
+logged or copied into support messages. Operational roles use `projects:read`, `operations:manage`,
+and `scheduling:manage`; the owner wildcard remains available for local development.
+
 ## Local state
 
 All generated state is ignored by Git and stored beneath `.local/`:

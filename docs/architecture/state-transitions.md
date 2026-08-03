@@ -71,8 +71,8 @@ supersedes the prior nonaccepted version and creates a new Draft; terminal versi
 ## Project
 
 ```text
-Pending Setup
-→ Pending Contract or Pending Deposit
+Pending Contract
+→ Pending Deposit
 → Ready for Planning
 → Planning
 → Active
@@ -82,7 +82,10 @@ Pending Setup
 → Closed
 ```
 
-`On Hold` may interrupt nonterminal states. Reopening is controlled and audited.
+Contract execution advances a Project to Pending Deposit, or directly to Ready for Planning when the
+deposit is waived. Confirming deposit readiness records external evidence and advances to Ready for
+Planning. `On Hold` may interrupt nonterminal states and preserves the prior state. Reopening a
+closed Project is reasoned, controlled, audited, and returns to Planning.
 
 ## Shared Job
 
@@ -105,6 +108,11 @@ Alternatives:
 ```text
 On Hold | Cancelled
 ```
+
+Schedule confirmation evaluates Project Contract and deposit readiness, required block types, driver
+assignments, and active Asset Reservations. Dispatch and completion have separate readiness
+evaluations. Holds restore the prior status when released. Closed Jobs reject ordinary updates;
+reasoned reopening returns to Planning and records `reopened_at`.
 
 ## Material Load
 

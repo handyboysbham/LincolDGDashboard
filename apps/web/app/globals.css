@@ -126,6 +126,403 @@ a {
   min-height: 100vh;
 }
 
+/* Sprint 1.5 shared operations */
+.operations-page {
+  max-width: 1420px;
+}
+
+.operations-table {
+  overflow: hidden;
+  padding: 0;
+}
+
+.operations-table-header,
+.operations-table-row {
+  align-items: center;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(210px, 1.6fr) 0.7fr 0.8fr 0.8fr 0.9fr 20px;
+  padding: 15px 20px;
+}
+
+.operations-table-header {
+  background: #f2efe6;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.operations-table-row {
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  min-height: 76px;
+  transition: background 150ms ease;
+}
+
+.operations-table-row:hover {
+  background: #faf7ef;
+}
+
+.operations-table-row > div,
+.operations-job-link > div,
+.schedule-job-card > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.operations-table-row small,
+.operations-job-link small,
+.schedule-job-card span,
+.muted-copy {
+  color: var(--muted);
+}
+
+.operations-table-row.job-columns,
+.operations-table-header.job-columns {
+  grid-template-columns: minmax(210px, 1.5fr) 0.7fr 0.8fr 0.9fr 0.9fr 20px;
+}
+
+.readiness-pill {
+  background: #eceae2;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  display: inline-flex;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  justify-content: center;
+  padding: 6px 9px;
+  width: fit-content;
+}
+
+.readiness-pill.is-ready,
+.readiness-pill.is-executed,
+.readiness-pill.is-satisfied,
+.readiness-pill.is-waived {
+  background: var(--sage);
+  color: var(--forest-deep);
+}
+
+.readiness-pill.is-not_ready,
+.readiness-pill.is-pending {
+  background: var(--clay-soft);
+  color: var(--danger);
+}
+
+.readiness-pill.is-ready_with_warnings,
+.readiness-pill.is-evaluation_required {
+  background: var(--gold-soft);
+  color: #66501e;
+}
+
+.operations-detail-grid,
+.schedule-layout {
+  align-items: start;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr);
+}
+
+.operations-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.operations-summary {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(4, 1fr);
+  overflow: hidden;
+  padding: 0;
+}
+
+.operations-summary > div,
+.contract-money-grid > div {
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px;
+}
+
+.operations-summary span,
+.contract-money-grid span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.operations-summary strong,
+.contract-money-grid strong {
+  font-family: Georgia, serif;
+  font-size: 20px;
+}
+
+.operations-section {
+  padding: 22px;
+}
+
+.operations-section h2 {
+  font-family: Georgia, serif;
+  margin: 7px 0 12px;
+}
+
+.operations-section-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.operations-section-heading h2 {
+  margin-bottom: 0;
+}
+
+.operations-job-link,
+.schedule-block-card,
+.plain-list-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto auto;
+  min-height: 58px;
+  padding: 10px 0;
+}
+
+.operations-job-link b,
+.schedule-block-card b {
+  font-size: 11px;
+}
+
+.compact-form,
+.schedule-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.compact-form label,
+.schedule-form label,
+.inline-filter,
+.inline-entry-form label {
+  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 750;
+  gap: 6px;
+}
+
+.compact-form input,
+.compact-form select,
+.schedule-form input,
+.schedule-form select,
+.inline-filter select,
+.inline-entry-form input,
+.public-signature-form input {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  min-height: 42px;
+  padding: 0 11px;
+}
+
+.signature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.signature-list > div {
+  align-items: center;
+  color: var(--forest);
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.inline-filter {
+  min-width: 170px;
+}
+
+.inline-entry-form {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr auto;
+  margin-top: 13px;
+}
+
+.plain-list-row {
+  grid-template-columns: auto 1fr auto;
+  font-size: 12px;
+}
+
+.plain-list-row small {
+  color: var(--muted);
+}
+
+.checklist-card {
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 15px 0;
+}
+
+.checklist-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  gap: 9px;
+  padding: 8px;
+  text-align: left;
+}
+
+.checklist-item:hover {
+  background: #f3f0e7;
+}
+
+.checklist-item.is-done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.timeline-list > div {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 10px 1fr;
+  margin: 13px 0;
+}
+
+.timeline-list > div > span {
+  background: var(--gold);
+  border-radius: 50%;
+  height: 8px;
+  margin-top: 4px;
+  width: 8px;
+}
+
+.timeline-list strong,
+.timeline-list small {
+  display: block;
+  font-size: 11px;
+}
+
+.timeline-list small {
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.schedule-empty {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+  padding: 18px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.calendar-card {
+  background: #f5f1e7;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px;
+}
+
+.calendar-card span,
+.calendar-card small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.schedule-job-card {
+  border-top: 1px solid var(--line);
+  padding: 17px 0;
+}
+
+.schedule-form {
+  align-items: end;
+  grid-template-columns: 0.7fr 1fr 1fr 1fr auto;
+}
+
+.asset-form {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.contract-money-grid {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.public-contract-card > svg {
+  color: var(--forest);
+}
+
+@media (max-width: 1050px) {
+  .operations-table-header {
+    display: none;
+  }
+
+  .operations-table-row,
+  .operations-table-row.job-columns {
+    grid-template-columns: 1fr auto;
+  }
+
+  .operations-table-row > :not(:first-child):not(:last-child) {
+    display: none;
+  }
+
+  .operations-detail-grid,
+  .schedule-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-form {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .operations-summary,
+  .calendar-grid,
+  .contract-money-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .operations-summary > div {
+    padding: 16px;
+  }
+
+  .schedule-form,
+  .inline-entry-form {
+    grid-template-columns: 1fr;
+  }
+}
+
 .staff-sidebar {
   background: var(--forest-deep);
   color: #f7f5ed;

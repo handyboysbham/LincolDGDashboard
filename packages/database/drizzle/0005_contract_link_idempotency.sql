@@ -1,0 +1,1 @@
+ALTER TABLE "contract_public_links" ADD COLUMN "request_hash" varchar(64) NOT NULL;

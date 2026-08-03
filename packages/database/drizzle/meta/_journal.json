@@ -29,6 +29,20 @@
       "when": 1785773382850,
       "tag": "0003_pricing_estimates_quotes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785781292739,
+      "tag": "0004_projects_contracts_jobs_scheduling",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785782919514,
+      "tag": "0005_contract_link_idempotency",
+      "breakpoints": true
     }
   ]
 }

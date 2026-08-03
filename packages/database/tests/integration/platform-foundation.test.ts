@@ -160,7 +160,15 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       expect.arrayContaining([
         "audit_events",
         "account_contacts",
+        "asset_assignments",
+        "asset_reservations",
+        "assets",
+        "checklist_instances",
+        "checklist_items",
         "contacts",
+        "contract_public_links",
+        "contract_signatures",
+        "contracts",
         "customer_accounts",
         "delivery_zones",
         "document_links",
@@ -174,8 +182,12 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "lead_tasks",
         "leads",
         "location_contacts",
+        "job_assignments",
+        "job_events",
+        "jobs",
         "number_sequences",
         "organizations",
+        "operational_holds",
         "outbox_events",
         "materials",
         "pricing_calculation_results",
@@ -191,8 +203,11 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "quote_terms",
         "quote_versions",
         "quotes",
+        "readiness_evaluations",
         "roles",
+        "route_stops",
         "scheduled_jobs",
+        "schedule_blocks",
         "service_locations",
         "supplier_cost_versions",
         "supplier_locations",
@@ -203,6 +218,41 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "worker_heartbeats",
       ]),
     );
+  });
+
+  it("forces RLS on every Sprint 1.5 tenant table", async () => {
+    const tenantTables = [
+      "asset_assignments",
+      "asset_reservations",
+      "assets",
+      "checklist_instances",
+      "checklist_items",
+      "contract_public_links",
+      "contract_signatures",
+      "contracts",
+      "job_assignments",
+      "job_events",
+      "jobs",
+      "operational_holds",
+      "readiness_evaluations",
+      "route_stops",
+      "schedule_blocks",
+    ];
+    const result = await migratorPool().query<{
+      relforcerowsecurity: boolean;
+      relname: string;
+      relrowsecurity: boolean;
+    }>(
+      `
+      select relname, relrowsecurity, relforcerowsecurity
+      from pg_class
+      where relname = any($1::text[])
+      order by relname
+    `,
+      [tenantTables],
+    );
+    expect(result.rows).toHaveLength(tenantTables.length);
+    expect(result.rows.every((row) => row.relrowsecurity && row.relforcerowsecurity)).toBe(true);
   });
 
   it("keeps the runtime role non-owning and unable to bypass RLS", async () => {

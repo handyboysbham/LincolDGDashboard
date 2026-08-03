@@ -21,6 +21,19 @@ Project owns:
 - closure and reopening
 - timeline
 
+Sprint 1.5 stores the accepted value and required deposit as integer cents copied from the accepted
+Quote Version. Contract readiness and deposit readiness are separate facts. Deposit readiness may
+reference external evidence, but it does not create an Invoice, Payment, Allocation, or accounting
+entry before the finance module is introduced.
+
+## Contract
+
+The Project has one Contract generated from a copied commercial snapshot. Its content hash binds
+both signatures to the exact customer, location, scope, accepted value, deposit requirement, and
+terms. The business signs before sending; the customer signs through an expiring, revocable,
+Contract-scoped capability whose plaintext token is never stored. Contract content is immutable
+after the business signs, and signature evidence is always immutable.
+
 ## Job
 
 A Job represents one independently scheduled operational unit.
@@ -57,6 +70,10 @@ The Job has exactly one service-specific Detail:
 
 The Detail owns service-specific planning and outcome.
 
+Quote acceptance creates the initial shared Job immediately (`MAT` for Material Delivery or `DTR`
+for Dump Trailer Rental). The service-specific Detail is added by the applicable later vertical
+slice; Sprint 1.5 does not invent placeholder service execution data.
+
 ## Schedule Blocks
 
 Schedule Blocks own calendar time.
@@ -70,6 +87,11 @@ Rental uses:
 - optional disposal or inspection block
 
 Trailer occupancy is an Asset Reservation and does not reserve driver time continuously.
+
+Every active Asset Reservation owns a half-open time range. PostgreSQL enforces that one tenant's
+asset cannot have overlapping active ranges, so concurrent schedule requests cannot double-book
+equipment. A Material Delivery schedule requires a service block; a rental schedule requires both
+drop-off and pickup blocks. Each required block needs a driver assignment and active reservation.
 
 ## Readiness states
 
@@ -96,3 +118,7 @@ After financial completion and closure:
 - historical records remain visible
 - corrections require controlled reopening or financial adjustment
 - prior closure history is preserved
+
+The database also rejects ordinary edits to closed Jobs and their schedule, reservation, assignment,
+route, checklist, and hold records. Reopening requires an explicit reason and returns the Job to
+Planning with a preserved reopen timestamp and Job Event.

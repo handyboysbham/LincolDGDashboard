@@ -168,6 +168,8 @@ pricing.
 
 ## Sprint 1.5.0 — Projects, Contracts, Jobs, and Scheduling
 
+Implementation status: complete in the 1.5.0 workspace change set.
+
 ### Goal
 
 Convert accepted work into independently scheduled operational Jobs.
@@ -189,6 +191,8 @@ Convert accepted work into independently scheduled operational Jobs.
 - contract or deposit requirements can block scheduling
 - overlapping active asset reservations are rejected transactionally
 - closed, financially complete Jobs reject ordinary edits
+- secure Contract links expose customer-safe content and immutable signature evidence only
+- Project, Job, calendar, schedule queue, and customer Contract production routes load successfully
 
 ## Sprint 1.6.0 — Material Delivery Operations
 

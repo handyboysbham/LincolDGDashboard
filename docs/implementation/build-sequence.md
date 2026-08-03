@@ -73,6 +73,8 @@ Exit:
 
 ## Stage 3 — Project, Contract, and Shared Job
 
+Status: implemented by Sprint 1.5.0.
+
 Build:
 
 - Project

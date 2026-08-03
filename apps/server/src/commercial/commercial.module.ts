@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { IdempotencyModule } from "../idempotency/idempotency.module.js";
 import { IntakeModule } from "../intake/intake.module.js";
+import { OperationsModule } from "../operations/operations.module.js";
 import {
   EstimatesController,
   PricingController,
@@ -15,7 +16,7 @@ import { QuotesService } from "./quotes.service.js";
 
 @Module({
   controllers: [PricingController, EstimatesController, QuotesController, PublicQuotesController],
-  imports: [IdempotencyModule, IntakeModule],
+  imports: [IdempotencyModule, IntakeModule, OperationsModule],
   providers: [PricingService, EstimatesService, QuoteTokenService, QuotesService],
 })
 export class CommercialModule {}

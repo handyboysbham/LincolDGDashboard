@@ -1550,12 +1550,30 @@ export const projects = pgTable(
       .references(() => organizations.id, { onDelete: "restrict" }),
     projectNumber: varchar("project_number", { length: 40 }).notNull(),
     customerAccountId: uuid("customer_account_id").notNull(),
+    primaryContactId: uuid("primary_contact_id").notNull(),
     serviceLocationId: uuid("service_location_id").notNull(),
     acceptedQuoteVersionId: uuid("accepted_quote_version_id").notNull(),
+    acceptedQuoteContentHash: varchar("accepted_quote_content_hash", { length: 64 }).notNull(),
+    acceptedValueCents: bigint("accepted_value_cents", { mode: "number" }).notNull(),
+    requiredDepositCents: bigint("required_deposit_cents", { mode: "number" }).notNull(),
     ownerUserId: uuid("owner_user_id").notNull(),
     serviceType: varchar("service_type", { length: 40 }).notNull(),
     outcomeStatement: text("outcome_statement").notNull(),
-    status: varchar("status", { length: 40 }).notNull().default("pending_setup"),
+    contractRequirement: varchar("contract_requirement", { length: 30 })
+      .notNull()
+      .default("required"),
+    contractStatus: varchar("contract_status", { length: 30 }).notNull().default("pending"),
+    depositRequirement: varchar("deposit_requirement", { length: 30 })
+      .notNull()
+      .default("required"),
+    depositStatus: varchar("deposit_status", { length: 30 }).notNull().default("pending"),
+    depositEvidenceReference: varchar("deposit_evidence_reference", { length: 240 }),
+    operationallyCompletedAt: timestamp("operationally_completed_at", { withTimezone: true }),
+    financiallyCompletedAt: timestamp("financially_completed_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    reopenedAt: timestamp("reopened_at", { withTimezone: true }),
+    status: varchar("status", { length: 40 }).notNull().default("pending_contract"),
     ...auditColumns,
   },
   (table) => [
@@ -1580,6 +1598,11 @@ export const projects = pgTable(
       name: "projects_tenant_customer_location_fk",
     }).onDelete("restrict"),
     foreignKey({
+      columns: [table.tenantId, table.primaryContactId],
+      foreignColumns: [contacts.tenantId, contacts.id],
+      name: "projects_tenant_contact_fk",
+    }).onDelete("restrict"),
+    foreignKey({
       columns: [table.tenantId, table.acceptedQuoteVersionId],
       foreignColumns: [quoteVersions.tenantId, quoteVersions.id],
       name: "projects_tenant_quote_version_fk",
@@ -1593,11 +1616,721 @@ export const projects = pgTable(
       "projects_service_check",
       sql`${table.serviceType} in ('material_delivery', 'dump_trailer_rental')`,
     ),
-    check("projects_status_check", sql`${table.status} in ('pending_setup')`),
+    check(
+      "projects_status_check",
+      sql`${table.status} in ('pending_setup', 'pending_contract', 'pending_deposit', 'ready_for_planning', 'planning', 'active', 'operationally_complete', 'financially_complete', 'completed', 'closed', 'on_hold')`,
+    ),
+    check(
+      "projects_contract_requirement_check",
+      sql`${table.contractRequirement} in ('required', 'waived')`,
+    ),
+    check(
+      "projects_contract_status_check",
+      sql`${table.contractStatus} in ('pending', 'generated', 'business_signed', 'sent', 'viewed', 'executed', 'waived', 'voided')`,
+    ),
+    check(
+      "projects_deposit_requirement_check",
+      sql`${table.depositRequirement} in ('required', 'waived')`,
+    ),
+    check(
+      "projects_deposit_status_check",
+      sql`${table.depositStatus} in ('pending', 'satisfied', 'waived')`,
+    ),
+    check("projects_value_check", sql`${table.acceptedValueCents} >= 0`),
+    check("projects_deposit_check", sql`${table.requiredDepositCents} >= 0`),
     index("projects_tenant_customer_status_idx").on(
       table.tenantId,
       table.customerAccountId,
       table.status,
     ),
+  ],
+);
+
+export const contracts = pgTable(
+  "contracts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id").notNull(),
+    contractNumber: varchar("contract_number", { length: 40 }).notNull(),
+    versionNumber: integer("version_number").notNull().default(1),
+    status: varchar("status", { length: 40 }).notNull().default("draft"),
+    contentSnapshot: jsonb("content_snapshot").$type<Record<string, unknown>>().notNull(),
+    contentHash: varchar("content_hash", { length: 64 }).notNull(),
+    issuedAt: timestamp("issued_at", { withTimezone: true }),
+    executedAt: timestamp("executed_at", { withTimezone: true }),
+    voidedAt: timestamp("voided_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("contracts_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("contracts_tenant_project_unique").on(table.tenantId, table.projectId),
+    unique("contracts_tenant_number_unique").on(table.tenantId, table.contractNumber),
+    foreignKey({
+      columns: [table.tenantId, table.projectId],
+      foreignColumns: [projects.tenantId, projects.id],
+      name: "contracts_tenant_project_fk",
+    }).onDelete("restrict"),
+    check("contracts_version_check", sql`${table.versionNumber} > 0`),
+    check(
+      "contracts_status_check",
+      sql`${table.status} in ('draft', 'business_signed', 'sent', 'viewed', 'executed', 'voided')`,
+    ),
+    index("contracts_tenant_status_idx").on(table.tenantId, table.status, table.createdAt),
+  ],
+);
+
+export const contractSignatures = pgTable(
+  "contract_signatures",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    contractId: uuid("contract_id").notNull(),
+    signerRole: varchar("signer_role", { length: 30 }).notNull(),
+    signerUserId: uuid("signer_user_id"),
+    signerContactId: uuid("signer_contact_id"),
+    typedName: varchar("typed_name", { length: 200 }).notNull(),
+    consentText: text("consent_text").notNull(),
+    contentHash: varchar("content_hash", { length: 64 }).notNull(),
+    requestHash: varchar("request_hash", { length: 64 }).notNull(),
+    signedAt: timestamp("signed_at", { withTimezone: true }).notNull().defaultNow(),
+    ipAddress: varchar("ip_address", { length: 64 }),
+    userAgent: text("user_agent"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("contract_signatures_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("contract_signatures_tenant_contract_role_unique").on(
+      table.tenantId,
+      table.contractId,
+      table.signerRole,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.contractId],
+      foreignColumns: [contracts.tenantId, contracts.id],
+      name: "contract_signatures_tenant_contract_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.signerUserId],
+      foreignColumns: [users.tenantId, users.id],
+      name: "contract_signatures_tenant_user_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.signerContactId],
+      foreignColumns: [contacts.tenantId, contacts.id],
+      name: "contract_signatures_tenant_contact_fk",
+    }).onDelete("restrict"),
+    check("contract_signatures_role_check", sql`${table.signerRole} in ('business', 'customer')`),
+    check(
+      "contract_signatures_subject_check",
+      sql`(${table.signerRole} = 'business' and ${table.signerUserId} is not null and ${table.signerContactId} is null) or (${table.signerRole} = 'customer' and ${table.signerContactId} is not null and ${table.signerUserId} is null)`,
+    ),
+    index("contract_signatures_tenant_signed_idx").on(table.tenantId, table.signedAt),
+  ],
+);
+
+export const contractPublicLinks = pgTable(
+  "contract_public_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    contractId: uuid("contract_id").notNull(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    creationKeyHash: varchar("creation_key_hash", { length: 64 }).notNull(),
+    requestHash: varchar("request_hash", { length: 64 }).notNull(),
+    recipient: varchar("recipient", { length: 320 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    lastViewedAt: timestamp("last_viewed_at", { withTimezone: true }),
+    viewCount: integer("view_count").notNull().default(0),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("contract_public_links_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("contract_public_links_token_hash_unique").on(table.tokenHash),
+    unique("contract_public_links_tenant_creation_key_unique").on(
+      table.tenantId,
+      table.creationKeyHash,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.contractId],
+      foreignColumns: [contracts.tenantId, contracts.id],
+      name: "contract_public_links_tenant_contract_fk",
+    }).onDelete("restrict"),
+    check("contract_public_links_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
+    check("contract_public_links_view_count_check", sql`${table.viewCount} >= 0`),
+    index("contract_public_links_tenant_contract_idx").on(
+      table.tenantId,
+      table.contractId,
+      table.expiresAt,
+    ),
+  ],
+);
+
+export const jobs = pgTable(
+  "jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id").notNull(),
+    jobNumber: varchar("job_number", { length: 40 }).notNull(),
+    serviceType: varchar("service_type", { length: 40 }).notNull(),
+    status: varchar("status", { length: 40 }).notNull().default("new"),
+    readiness: varchar("readiness", { length: 40 }).notNull().default("evaluation_required"),
+    scheduledStartAt: timestamp("scheduled_start_at", { withTimezone: true }),
+    scheduledEndAt: timestamp("scheduled_end_at", { withTimezone: true }),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    operationallyCompletedAt: timestamp("operationally_completed_at", { withTimezone: true }),
+    financiallyCompletedAt: timestamp("financially_completed_at", { withTimezone: true }),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    reopenedAt: timestamp("reopened_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("jobs_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("jobs_tenant_number_unique").on(table.tenantId, table.jobNumber),
+    foreignKey({
+      columns: [table.tenantId, table.projectId],
+      foreignColumns: [projects.tenantId, projects.id],
+      name: "jobs_tenant_project_fk",
+    }).onDelete("restrict"),
+    check(
+      "jobs_service_check",
+      sql`${table.serviceType} in ('material_delivery', 'dump_trailer_rental')`,
+    ),
+    check(
+      "jobs_status_check",
+      sql`${table.status} in ('new', 'planning', 'needs_scheduling', 'scheduled', 'dispatch_ready', 'active', 'operationally_complete', 'awaiting_final_invoice', 'invoiced', 'financially_complete', 'closed', 'on_hold', 'cancelled')`,
+    ),
+    check(
+      "jobs_readiness_check",
+      sql`${table.readiness} in ('ready', 'ready_with_warnings', 'not_ready', 'evaluation_required')`,
+    ),
+    check(
+      "jobs_schedule_range_check",
+      sql`${table.scheduledStartAt} is null or ${table.scheduledEndAt} is null or ${table.scheduledEndAt} > ${table.scheduledStartAt}`,
+    ),
+    index("jobs_tenant_project_status_idx").on(table.tenantId, table.projectId, table.status),
+    index("jobs_tenant_schedule_queue_idx").on(table.tenantId, table.status, table.createdAt),
+  ],
+);
+
+export const assets = pgTable(
+  "assets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    assetNumber: varchar("asset_number", { length: 40 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    assetType: varchar("asset_type", { length: 40 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("available"),
+    capacityWeight: numeric("capacity_weight", { precision: 14, scale: 3 }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("assets_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("assets_tenant_number_unique").on(table.tenantId, table.assetNumber),
+    check("assets_type_check", sql`${table.assetType} in ('truck', 'trailer', 'equipment')`),
+    check(
+      "assets_status_check",
+      sql`${table.status} in ('available', 'in_use', 'out_of_service', 'retired')`,
+    ),
+    check(
+      "assets_capacity_check",
+      sql`${table.capacityWeight} is null or ${table.capacityWeight} > 0`,
+    ),
+    index("assets_tenant_type_status_idx").on(table.tenantId, table.assetType, table.status),
+  ],
+);
+
+export const scheduleBlocks = pgTable(
+  "schedule_blocks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    blockType: varchar("block_type", { length: 40 }).notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("tentative"),
+    notes: text("notes"),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("schedule_blocks_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "schedule_blocks_tenant_job_fk",
+    }).onDelete("restrict"),
+    check(
+      "schedule_blocks_type_check",
+      sql`${table.blockType} in ('service', 'dropoff', 'pickup', 'disposal', 'inspection', 'other')`,
+    ),
+    check(
+      "schedule_blocks_status_check",
+      sql`${table.status} in ('tentative', 'confirmed', 'completed', 'cancelled')`,
+    ),
+    check("schedule_blocks_range_check", sql`${table.endsAt} > ${table.startsAt}`),
+    index("schedule_blocks_tenant_window_idx").on(
+      table.tenantId,
+      table.startsAt,
+      table.endsAt,
+      table.status,
+    ),
+    index("schedule_blocks_tenant_job_idx").on(table.tenantId, table.jobId, table.startsAt),
+  ],
+);
+
+export const assetReservations = pgTable(
+  "asset_reservations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    assetId: uuid("asset_id").notNull(),
+    jobId: uuid("job_id").notNull(),
+    scheduleBlockId: uuid("schedule_block_id"),
+    reservationType: varchar("reservation_type", { length: 30 }).notNull().default("schedule"),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("active"),
+    releasedAt: timestamp("released_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("asset_reservations_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.assetId],
+      foreignColumns: [assets.tenantId, assets.id],
+      name: "asset_reservations_tenant_asset_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "asset_reservations_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.scheduleBlockId],
+      foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id],
+      name: "asset_reservations_tenant_block_fk",
+    }).onDelete("restrict"),
+    check(
+      "asset_reservations_type_check",
+      sql`${table.reservationType} in ('schedule', 'occupancy')`,
+    ),
+    check(
+      "asset_reservations_status_check",
+      sql`${table.status} in ('active', 'released', 'cancelled')`,
+    ),
+    check("asset_reservations_range_check", sql`${table.endsAt} > ${table.startsAt}`),
+    index("asset_reservations_tenant_asset_window_idx").on(
+      table.tenantId,
+      table.assetId,
+      table.startsAt,
+      table.endsAt,
+    ),
+  ],
+);
+
+export const jobAssignments = pgTable(
+  "job_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    scheduleBlockId: uuid("schedule_block_id"),
+    userId: uuid("user_id").notNull(),
+    role: varchar("role", { length: 30 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("assigned"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("job_assignments_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("job_assignments_tenant_job_block_user_role_unique").on(
+      table.tenantId,
+      table.jobId,
+      table.scheduleBlockId,
+      table.userId,
+      table.role,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "job_assignments_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.scheduleBlockId],
+      foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id],
+      name: "job_assignments_tenant_block_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.userId],
+      foreignColumns: [users.tenantId, users.id],
+      name: "job_assignments_tenant_user_fk",
+    }).onDelete("restrict"),
+    check("job_assignments_role_check", sql`${table.role} in ('driver', 'dispatcher', 'crew')`),
+    check(
+      "job_assignments_status_check",
+      sql`${table.status} in ('assigned', 'declined', 'completed', 'cancelled')`,
+    ),
+    index("job_assignments_tenant_user_status_idx").on(table.tenantId, table.userId, table.status),
+  ],
+);
+
+export const assetAssignments = pgTable(
+  "asset_assignments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    scheduleBlockId: uuid("schedule_block_id"),
+    assetId: uuid("asset_id").notNull(),
+    role: varchar("role", { length: 30 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("assigned"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("asset_assignments_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("asset_assignments_tenant_job_block_asset_role_unique").on(
+      table.tenantId,
+      table.jobId,
+      table.scheduleBlockId,
+      table.assetId,
+      table.role,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "asset_assignments_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.scheduleBlockId],
+      foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id],
+      name: "asset_assignments_tenant_block_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.assetId],
+      foreignColumns: [assets.tenantId, assets.id],
+      name: "asset_assignments_tenant_asset_fk",
+    }).onDelete("restrict"),
+    check("asset_assignments_role_check", sql`${table.role} in ('truck', 'trailer', 'equipment')`),
+    check(
+      "asset_assignments_status_check",
+      sql`${table.status} in ('assigned', 'completed', 'cancelled')`,
+    ),
+    index("asset_assignments_tenant_asset_status_idx").on(
+      table.tenantId,
+      table.assetId,
+      table.status,
+    ),
+  ],
+);
+
+export const routeStops = pgTable(
+  "route_stops",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    scheduleBlockId: uuid("schedule_block_id"),
+    sequence: integer("sequence").notNull(),
+    stopType: varchar("stop_type", { length: 30 }).notNull(),
+    label: varchar("label", { length: 200 }).notNull(),
+    locationSnapshot: jsonb("location_snapshot").$type<Record<string, unknown>>().notNull(),
+    instructions: text("instructions"),
+    status: varchar("status", { length: 30 }).notNull().default("planned"),
+    arrivedAt: timestamp("arrived_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("route_stops_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("route_stops_tenant_job_sequence_unique").on(
+      table.tenantId,
+      table.jobId,
+      table.sequence,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "route_stops_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.scheduleBlockId],
+      foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id],
+      name: "route_stops_tenant_block_fk",
+    }).onDelete("restrict"),
+    check("route_stops_sequence_check", sql`${table.sequence} > 0`),
+    check(
+      "route_stops_type_check",
+      sql`${table.stopType} in ('supplier', 'customer', 'dropoff', 'pickup', 'disposal', 'inspection', 'other')`,
+    ),
+    check(
+      "route_stops_status_check",
+      sql`${table.status} in ('planned', 'arrived', 'completed', 'skipped')`,
+    ),
+    index("route_stops_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+  ],
+);
+
+export const checklistInstances = pgTable(
+  "checklist_instances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    scheduleBlockId: uuid("schedule_block_id"),
+    templateCode: varchar("template_code", { length: 100 }).notNull(),
+    name: varchar("name", { length: 200 }).notNull(),
+    required: boolean("required").notNull().default(true),
+    status: varchar("status", { length: 30 }).notNull().default("open"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("checklist_instances_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("checklist_instances_tenant_job_template_unique").on(
+      table.tenantId,
+      table.jobId,
+      table.templateCode,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "checklist_instances_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.scheduleBlockId],
+      foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id],
+      name: "checklist_instances_tenant_block_fk",
+    }).onDelete("restrict"),
+    check(
+      "checklist_instances_status_check",
+      sql`${table.status} in ('open', 'in_progress', 'completed', 'waived')`,
+    ),
+    index("checklist_instances_tenant_job_status_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.status,
+    ),
+  ],
+);
+
+export const checklistItems = pgTable(
+  "checklist_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    checklistInstanceId: uuid("checklist_instance_id").notNull(),
+    sequence: integer("sequence").notNull(),
+    label: varchar("label", { length: 240 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("pending"),
+    response: text("response"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    completedBy: uuid("completed_by"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("checklist_items_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("checklist_items_tenant_instance_sequence_unique").on(
+      table.tenantId,
+      table.checklistInstanceId,
+      table.sequence,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.checklistInstanceId],
+      foreignColumns: [checklistInstances.tenantId, checklistInstances.id],
+      name: "checklist_items_tenant_instance_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.completedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "checklist_items_tenant_completed_by_fk",
+    }).onDelete("restrict"),
+    check("checklist_items_sequence_check", sql`${table.sequence} > 0`),
+    check(
+      "checklist_items_status_check",
+      sql`${table.status} in ('pending', 'completed', 'failed', 'not_applicable')`,
+    ),
+    index("checklist_items_tenant_instance_status_idx").on(
+      table.tenantId,
+      table.checklistInstanceId,
+      table.status,
+    ),
+  ],
+);
+
+export const jobEvents = pgTable(
+  "job_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    eventType: varchar("event_type", { length: 100 }).notNull(),
+    summary: varchar("summary", { length: 300 }).notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+    actorUserId: uuid("actor_user_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique("job_events_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "job_events_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.actorUserId],
+      foreignColumns: [users.tenantId, users.id],
+      name: "job_events_tenant_actor_fk",
+    }).onDelete("restrict"),
+    index("job_events_tenant_job_occurred_idx").on(table.tenantId, table.jobId, table.occurredAt),
+  ],
+);
+
+export const readinessEvaluations = pgTable(
+  "readiness_evaluations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id"),
+    jobId: uuid("job_id"),
+    readinessType: varchar("readiness_type", { length: 30 }).notNull(),
+    result: varchar("result", { length: 40 }).notNull(),
+    blockers: jsonb("blockers").$type<string[]>().notNull().default([]),
+    warnings: jsonb("warnings").$type<string[]>().notNull().default([]),
+    evaluatedAt: timestamp("evaluated_at", { withTimezone: true }).notNull().defaultNow(),
+    evaluatedBy: uuid("evaluated_by"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("readiness_evaluations_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.projectId],
+      foreignColumns: [projects.tenantId, projects.id],
+      name: "readiness_evaluations_tenant_project_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "readiness_evaluations_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.evaluatedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "readiness_evaluations_tenant_evaluator_fk",
+    }).onDelete("restrict"),
+    check(
+      "readiness_evaluations_owner_check",
+      sql`(${table.projectId} is not null and ${table.jobId} is null) or (${table.projectId} is null and ${table.jobId} is not null)`,
+    ),
+    check(
+      "readiness_evaluations_type_check",
+      sql`${table.readinessType} in ('planning', 'schedule', 'dispatch', 'completion', 'invoice', 'closure')`,
+    ),
+    check(
+      "readiness_evaluations_result_check",
+      sql`${table.result} in ('ready', 'ready_with_warnings', 'not_ready', 'evaluation_required')`,
+    ),
+    index("readiness_evaluations_tenant_project_idx").on(
+      table.tenantId,
+      table.projectId,
+      table.readinessType,
+      table.evaluatedAt,
+    ),
+    index("readiness_evaluations_tenant_job_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.readinessType,
+      table.evaluatedAt,
+    ),
+  ],
+);
+
+export const operationalHolds = pgTable(
+  "operational_holds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id"),
+    jobId: uuid("job_id"),
+    reason: text("reason").notNull(),
+    previousStatus: varchar("previous_status", { length: 40 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("active"),
+    placedAt: timestamp("placed_at", { withTimezone: true }).notNull().defaultNow(),
+    placedBy: uuid("placed_by").notNull(),
+    releasedAt: timestamp("released_at", { withTimezone: true }),
+    releasedBy: uuid("released_by"),
+    releaseReason: text("release_reason"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("operational_holds_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.projectId],
+      foreignColumns: [projects.tenantId, projects.id],
+      name: "operational_holds_tenant_project_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "operational_holds_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.placedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "operational_holds_tenant_placed_by_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.releasedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "operational_holds_tenant_released_by_fk",
+    }).onDelete("restrict"),
+    check(
+      "operational_holds_owner_check",
+      sql`(${table.projectId} is not null and ${table.jobId} is null) or (${table.projectId} is null and ${table.jobId} is not null)`,
+    ),
+    check("operational_holds_status_check", sql`${table.status} in ('active', 'released')`),
+    index("operational_holds_tenant_project_status_idx").on(
+      table.tenantId,
+      table.projectId,
+      table.status,
+    ),
+    index("operational_holds_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
   ],
 );

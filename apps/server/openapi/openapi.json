@@ -750,6 +750,908 @@
         "tags": ["Leads"]
       }
     },
+    "/api/v1/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Projects and Contracts"]
+      }
+    },
+    "/api/v1/projects/{id}": {
+      "get": {
+        "operationId": "getProject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Projects and Contracts"]
+      }
+    },
+    "/api/v1/projects/{id}/actions/generate-contract": {
+      "post": {
+        "operationId": "generateProjectContract",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Projects and Contracts"]
+      }
+    },
+    "/api/v1/projects/{id}/actions/confirm-deposit-readiness": {
+      "post": {
+        "operationId": "confirmProjectDepositReadiness",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmDepositReadinessDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Projects and Contracts"]
+      }
+    },
+    "/api/v1/projects/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionProject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "start-planning",
+                "activate",
+                "complete-operationally",
+                "complete-financially",
+                "complete",
+                "close",
+                "place-hold",
+                "release-hold",
+                "reopen"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LifecycleActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Projects and Contracts"]
+      }
+    },
+    "/api/v1/contracts/{id}/actions/sign-business": {
+      "post": {
+        "operationId": "signContractAsBusiness",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Projects and Contracts"]
+      }
+    },
+    "/api/v1/contracts/{id}/actions/send": {
+      "post": {
+        "operationId": "sendContract",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendContractResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Projects and Contracts"]
+      }
+    },
+    "/api/v1/jobs": {
+      "get": {
+        "operationId": "listJobs",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/jobs/{id}": {
+      "get": {
+        "operationId": "getJob",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/jobs/{id}/actions/evaluate-readiness": {
+      "post": {
+        "operationId": "evaluateJobReadiness",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateReadinessDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessEvaluationDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/jobs/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionJob",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "start-planning",
+                "request-scheduling",
+                "confirm-schedule",
+                "mark-dispatch-ready",
+                "start",
+                "complete-operationally",
+                "await-final-invoice",
+                "mark-invoiced",
+                "complete-financially",
+                "close",
+                "place-hold",
+                "release-hold",
+                "cancel",
+                "reopen"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LifecycleActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/jobs/{id}/route-stops": {
+      "post": {
+        "operationId": "createJobRouteStop",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRouteStopDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteStopDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/jobs/{id}/checklists": {
+      "post": {
+        "operationId": "createJobChecklist",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChecklistDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChecklistDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/checklist-items/{id}/actions/complete": {
+      "post": {
+        "operationId": "completeChecklistItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteChecklistItemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChecklistItemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/assets": {
+      "get": {
+        "operationId": "listAssets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Scheduling and Assets"]
+      },
+      "post": {
+        "operationId": "createAsset",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Scheduling and Assets"]
+      }
+    },
+    "/api/v1/schedule/calendar": {
+      "get": {
+        "operationId": "getScheduleCalendar",
+        "parameters": [
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleCalendarResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Scheduling and Assets"]
+      }
+    },
+    "/api/v1/schedule/queue": {
+      "get": {
+        "operationId": "getSchedulingQueue",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Scheduling and Assets"]
+      }
+    },
+    "/api/v1/jobs/{id}/schedule-blocks": {
+      "post": {
+        "operationId": "createJobScheduleBlock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduleBlockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleBlockDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Scheduling and Assets"]
+      }
+    },
+    "/api/v1/schedule-blocks/{id}/actions/cancel": {
+      "post": {
+        "operationId": "cancelScheduleBlock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LifecycleActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleBlockDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Scheduling and Assets"]
+      }
+    },
+    "/api/v1/public/contracts/{token}": {
+      "get": {
+        "operationId": "getPublicContract",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicContractDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Public Contracts"]
+      }
+    },
+    "/api/v1/public/contracts/{token}/actions/sign": {
+      "post": {
+        "operationId": "signPublicContract",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignContractDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicContractDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Public Contracts"]
+      }
+    },
     "/api/v1/pricing/configurations": {
       "get": {
         "operationId": "listPricingConfigurations",
@@ -1466,7 +2368,7 @@
   "info": {
     "title": "Lincoln Dirt and Gravel API",
     "description": "Lincoln Dirt and Gravel operating system API",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "contact": {}
   },
   "tags": [],
@@ -2478,6 +3380,840 @@
             "maxLength": 2000
           }
         }
+      },
+      "ProjectSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "contractStatus": {
+            "type": "string"
+          },
+          "depositStatus": {
+            "type": "string"
+          },
+          "acceptedValueCents": {
+            "type": "number"
+          },
+          "requiredDepositCents": {
+            "type": "number"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "projectNumber",
+          "customerName",
+          "serviceType",
+          "status",
+          "contractStatus",
+          "depositStatus",
+          "acceptedValueCents",
+          "requiredDepositCents",
+          "updatedAt"
+        ]
+      },
+      "ProjectListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectSummaryDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "SignatureDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "signerRole": {
+            "type": "string"
+          },
+          "typedName": {
+            "type": "string"
+          },
+          "signedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "signerRole", "typedName", "signedAt"]
+      },
+      "ContractDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contractNumber": {
+            "type": "string"
+          },
+          "versionNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "content": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "signatures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignatureDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "contractNumber",
+          "versionNumber",
+          "status",
+          "contentHash",
+          "content",
+          "signatures"
+        ]
+      },
+      "JobSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobNumber": {
+            "type": "string"
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "readiness": {
+            "type": "string"
+          },
+          "scheduledStartAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "scheduledEndAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "jobNumber",
+          "projectNumber",
+          "customerName",
+          "serviceType",
+          "status",
+          "readiness"
+        ]
+      },
+      "ProjectDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "contractStatus": {
+            "type": "string"
+          },
+          "depositStatus": {
+            "type": "string"
+          },
+          "acceptedValueCents": {
+            "type": "number"
+          },
+          "requiredDepositCents": {
+            "type": "number"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contactName": {
+            "type": "string"
+          },
+          "serviceLocation": {
+            "type": "string"
+          },
+          "outcomeStatement": {
+            "type": "string"
+          },
+          "contract": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContractDto"
+              }
+            ]
+          },
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobSummaryDto"
+            }
+          },
+          "activeHolds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "projectNumber",
+          "customerName",
+          "serviceType",
+          "status",
+          "contractStatus",
+          "depositStatus",
+          "acceptedValueCents",
+          "requiredDepositCents",
+          "updatedAt",
+          "customerAccountId",
+          "contactName",
+          "serviceLocation",
+          "outcomeStatement",
+          "jobs",
+          "activeHolds"
+        ]
+      },
+      "ConfirmDepositReadinessDto": {
+        "type": "object",
+        "properties": {
+          "evidenceReference": {
+            "type": "string",
+            "maxLength": 240
+          }
+        },
+        "required": ["evidenceReference"]
+      },
+      "LifecycleActionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      },
+      "SignContractDto": {
+        "type": "object",
+        "properties": {
+          "typedName": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "consentText": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "contentHash": {
+            "type": "string",
+            "minLength": 64
+          }
+        },
+        "required": ["typedName", "consentText", "contentHash"]
+      },
+      "SendContractDto": {
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string"
+          },
+          "expiresInDays": {
+            "type": "number",
+            "default": 10,
+            "maximum": 30,
+            "minimum": 1
+          }
+        },
+        "required": ["recipient"]
+      },
+      "SendContractResponseDto": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "$ref": "#/components/schemas/ContractDto"
+          },
+          "customerPath": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": ["contract", "customerPath", "token"]
+      },
+      "JobListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobSummaryDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "ScheduleBlockDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobNumber": {
+            "type": "string"
+          },
+          "blockType": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "jobNumber",
+          "blockType",
+          "startsAt",
+          "endsAt",
+          "status",
+          "assetIds",
+          "userIds"
+        ]
+      },
+      "RouteStopDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "stopType": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "sequence", "stopType", "label", "status"]
+      },
+      "ChecklistItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "response": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "sequence", "label", "status"]
+      },
+      "ChecklistDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "templateCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItemDto"
+            }
+          }
+        },
+        "required": ["id", "templateCode", "name", "required", "status", "items"]
+      },
+      "JobEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "eventType", "summary", "occurredAt"]
+      },
+      "JobDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobNumber": {
+            "type": "string"
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "readiness": {
+            "type": "string"
+          },
+          "scheduledStartAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "scheduledEndAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "scheduleBlocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleBlockDto"
+            }
+          },
+          "routeStops": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RouteStopDto"
+            }
+          },
+          "checklists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistDto"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobEventDto"
+            }
+          },
+          "activeHolds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "jobNumber",
+          "projectNumber",
+          "customerName",
+          "serviceType",
+          "status",
+          "readiness",
+          "scheduleBlocks",
+          "routeStops",
+          "checklists",
+          "events",
+          "activeHolds"
+        ]
+      },
+      "EvaluateReadinessDto": {
+        "type": "object",
+        "properties": {
+          "readinessType": {
+            "type": "string",
+            "enum": ["planning", "schedule", "dispatch", "completion", "invoice", "closure"]
+          }
+        },
+        "required": ["readinessType"]
+      },
+      "ReadinessEvaluationDto": {
+        "type": "object",
+        "properties": {
+          "readinessType": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["readinessType", "result", "blockers", "warnings", "evaluatedAt"]
+      },
+      "CreateRouteStopDto": {
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "number",
+            "minimum": 1
+          },
+          "stopType": {
+            "type": "string",
+            "enum": ["supplier", "customer", "dropoff", "pickup", "disposal", "inspection", "other"]
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "locationSnapshot": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "instructions": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["sequence", "stopType", "label", "locationSnapshot"]
+      },
+      "ChecklistItemInputDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 240
+          }
+        },
+        "required": ["label"]
+      },
+      "CreateChecklistDto": {
+        "type": "object",
+        "properties": {
+          "templateCode": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItemInputDto"
+            }
+          }
+        },
+        "required": ["templateCode", "name", "items"]
+      },
+      "CompleteChecklistItemDto": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      },
+      "AssetDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetNumber": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "capacityWeight": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "assetNumber", "name", "assetType", "status"]
+      },
+      "AssetListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CreateAssetDto": {
+        "type": "object",
+        "properties": {
+          "assetNumber": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "assetType": {
+            "type": "string",
+            "enum": ["truck", "trailer", "equipment"]
+          },
+          "capacityWeight": {
+            "type": "string",
+            "pattern": "^\\d+(\\.\\d{1,3})?$"
+          }
+        },
+        "required": ["assetNumber", "name", "assetType"]
+      },
+      "ScheduleCalendarResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleBlockDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CreateScheduleBlockDto": {
+        "type": "object",
+        "properties": {
+          "blockType": {
+            "type": "string",
+            "enum": ["service", "dropoff", "pickup", "disposal", "inspection", "other"]
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["blockType", "startsAt", "endsAt", "assetIds", "userIds"]
+      },
+      "PublicContractDto": {
+        "type": "object",
+        "properties": {
+          "contractNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "serviceLocation": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "acceptedValueCents": {
+            "type": "number"
+          },
+          "requiredDepositCents": {
+            "type": "number"
+          },
+          "signatures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignatureDto"
+            }
+          },
+          "terms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "contractNumber",
+          "status",
+          "contentHash",
+          "customerName",
+          "serviceLocation",
+          "scope",
+          "acceptedValueCents",
+          "requiredDepositCents",
+          "signatures",
+          "terms"
+        ]
       },
       "PricingRuleDto": {
         "type": "object",
