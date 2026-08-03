@@ -36,6 +36,42 @@
 
 ---
 
+## INTAKE-E2E-001 — Customer Intake
+
+### Configuration
+
+- one authenticated tenant owner with Customer, Lead, and Document permissions
+- a second tenant with a similarly named customer for isolation checks
+- one available intake Document
+
+### Journey
+
+1. Search for duplicate Customer Accounts, Contacts, and Service Locations inside the active tenant.
+2. Create a new Customer Account, primary Contact, Service Location, and Material Delivery Lead in
+   one idempotent command.
+3. Replay the command with the same key and receive the original Lead without duplicate records.
+4. Create a separate Dump Trailer Rental Lead with a valid rental date range.
+5. List Customers and Leads, then load both detail views.
+6. Move the Material Delivery Lead from New to Contacting to Qualified to Estimating through
+   explicit action commands.
+7. Add an internal Note and follow-up Task, then complete the Task.
+8. Link the available intake Document and load the Audit Event-backed timeline.
+9. Close an active Lead with a terminal outcome and required reason.
+10. Load `/customers`, `/leads`, `/leads/new`, and a Lead detail shell from the production web
+    build.
+
+### Negative tests
+
+- a request containing both service detail types is rejected by the API and database constraint
+- incomplete or invalid service details are rejected
+- duplicate warnings never merge, overwrite, or delete records
+- a foreign tenant cannot read or relate Customer, Contact, Service Location, Lead, Note, or Task
+  records
+- missing Lead permissions deny writes and transitions
+- an invalid lifecycle source state is rejected without Audit or outbox side effects
+
+---
+
 ## MD-E2E-001 — Multi-Material Delivery
 
 ### Configuration

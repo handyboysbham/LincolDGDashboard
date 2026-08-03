@@ -1,16 +1,20 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
+  date,
   foreignKey,
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -244,6 +248,342 @@ export const workerHeartbeats = pgTable("worker_heartbeats", {
   heartbeatAt: timestamp("heartbeat_at", { withTimezone: true }).notNull(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
 });
+
+export const customerAccounts = pgTable(
+  "customer_accounts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    displayName: varchar("display_name", { length: 200 }).notNull(),
+    normalizedName: varchar("normalized_name", { length: 200 }).notNull(),
+    customerType: varchar("customer_type", { length: 30 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("active"),
+    ownerUserId: uuid("owner_user_id").notNull(),
+    preferredContactMethod: varchar("preferred_contact_method", { length: 30 }),
+    billingContactSummary: text("billing_contact_summary"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("customer_accounts_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.ownerUserId],
+      foreignColumns: [users.tenantId, users.id],
+      name: "customer_accounts_tenant_owner_fk",
+    }).onDelete("restrict"),
+    check("customer_accounts_type_check", sql`${table.customerType} in ('individual', 'business')`),
+    check("customer_accounts_status_check", sql`${table.status} in ('active', 'inactive')`),
+    check(
+      "customer_accounts_contact_method_check",
+      sql`${table.preferredContactMethod} is null or ${table.preferredContactMethod} in ('phone', 'email', 'text')`,
+    ),
+    check("customer_accounts_normalized_name_check", sql`length(${table.normalizedName}) > 0`),
+    index("customer_accounts_tenant_name_idx").on(table.tenantId, table.normalizedName),
+    index("customer_accounts_tenant_status_idx").on(table.tenantId, table.status),
+  ],
+);
+
+export const contacts = pgTable(
+  "contacts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    firstName: varchar("first_name", { length: 100 }).notNull(),
+    lastName: varchar("last_name", { length: 100 }).notNull(),
+    displayName: varchar("display_name", { length: 200 }).notNull(),
+    email: varchar("email", { length: 320 }),
+    normalizedEmail: varchar("normalized_email", { length: 320 }),
+    phone: varchar("phone", { length: 40 }),
+    normalizedPhone: varchar("normalized_phone", { length: 30 }),
+    preferredContactMethod: varchar("preferred_contact_method", { length: 30 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("active"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("contacts_tenant_id_id_unique").on(table.tenantId, table.id),
+    check("contacts_status_check", sql`${table.status} in ('active', 'inactive')`),
+    check(
+      "contacts_contact_method_check",
+      sql`${table.preferredContactMethod} in ('phone', 'email', 'text')`,
+    ),
+    check(
+      "contacts_reachable_check",
+      sql`${table.normalizedEmail} is not null or ${table.normalizedPhone} is not null`,
+    ),
+    index("contacts_tenant_email_idx").on(table.tenantId, table.normalizedEmail),
+    index("contacts_tenant_phone_idx").on(table.tenantId, table.normalizedPhone),
+  ],
+);
+
+export const accountContacts = pgTable(
+  "account_contacts",
+  {
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    contactId: uuid("contact_id").notNull(),
+    role: varchar("role", { length: 30 }).notNull().default("primary"),
+    isPrimary: boolean("is_primary").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdBy: uuid("created_by"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tenantId, table.customerAccountId, table.contactId] }),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId],
+      foreignColumns: [customerAccounts.tenantId, customerAccounts.id],
+      name: "account_contacts_tenant_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.contactId],
+      foreignColumns: [contacts.tenantId, contacts.id],
+      name: "account_contacts_tenant_contact_fk",
+    }).onDelete("restrict"),
+    check(
+      "account_contacts_role_check",
+      sql`${table.role} in ('primary', 'billing', 'site', 'other')`,
+    ),
+    uniqueIndex("account_contacts_one_primary_idx")
+      .on(table.tenantId, table.customerAccountId)
+      .where(sql`${table.isPrimary} = true`),
+    index("account_contacts_tenant_contact_idx").on(table.tenantId, table.contactId),
+  ],
+);
+
+export const serviceLocations = pgTable(
+  "service_locations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    label: varchar("label", { length: 120 }).notNull(),
+    addressLine1: varchar("address_line_1", { length: 200 }).notNull(),
+    addressLine2: varchar("address_line_2", { length: 200 }),
+    city: varchar("city", { length: 120 }).notNull(),
+    region: varchar("region", { length: 80 }).notNull(),
+    postalCode: varchar("postal_code", { length: 20 }).notNull(),
+    normalizedAddress: varchar("normalized_address", { length: 600 }).notNull(),
+    accessNotes: text("access_notes"),
+    status: varchar("status", { length: 30 }).notNull().default("active"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("service_locations_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("service_locations_tenant_customer_id_unique").on(
+      table.tenantId,
+      table.customerAccountId,
+      table.id,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId],
+      foreignColumns: [customerAccounts.tenantId, customerAccounts.id],
+      name: "service_locations_tenant_customer_fk",
+    }).onDelete("restrict"),
+    check("service_locations_status_check", sql`${table.status} in ('active', 'inactive')`),
+    check("service_locations_address_check", sql`length(${table.normalizedAddress}) > 0`),
+    index("service_locations_tenant_customer_idx").on(
+      table.tenantId,
+      table.customerAccountId,
+      table.status,
+    ),
+    index("service_locations_tenant_address_idx").on(table.tenantId, table.normalizedAddress),
+  ],
+);
+
+export const locationContacts = pgTable(
+  "location_contacts",
+  {
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    serviceLocationId: uuid("service_location_id").notNull(),
+    contactId: uuid("contact_id").notNull(),
+    role: varchar("role", { length: 30 }).notNull().default("site"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdBy: uuid("created_by"),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tenantId, table.serviceLocationId, table.contactId] }),
+    foreignKey({
+      columns: [table.tenantId, table.serviceLocationId],
+      foreignColumns: [serviceLocations.tenantId, serviceLocations.id],
+      name: "location_contacts_tenant_location_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.contactId],
+      foreignColumns: [contacts.tenantId, contacts.id],
+      name: "location_contacts_tenant_contact_fk",
+    }).onDelete("restrict"),
+    check("location_contacts_role_check", sql`${table.role} in ('site', 'access', 'other')`),
+    index("location_contacts_tenant_contact_idx").on(table.tenantId, table.contactId),
+  ],
+);
+
+export const leads = pgTable(
+  "leads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    leadNumber: varchar("lead_number", { length: 40 }).notNull(),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    primaryContactId: uuid("primary_contact_id").notNull(),
+    serviceLocationId: uuid("service_location_id").notNull(),
+    ownerUserId: uuid("owner_user_id").notNull(),
+    serviceType: varchar("service_type", { length: 40 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("new"),
+    source: varchar("source", { length: 30 }).notNull(),
+    summary: varchar("summary", { length: 300 }).notNull(),
+    materialDescription: varchar("material_description", { length: 240 }),
+    estimatedQuantity: numeric("estimated_quantity", { precision: 12, scale: 3 }),
+    quantityUnit: varchar("quantity_unit", { length: 30 }),
+    rentalStartDate: date("rental_start_date", { mode: "string" }),
+    rentalEndDate: date("rental_end_date", { mode: "string" }),
+    debrisType: varchar("debris_type", { length: 160 }),
+    serviceInstructions: text("service_instructions"),
+    terminalReason: text("terminal_reason"),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("leads_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("leads_tenant_number_unique").on(table.tenantId, table.leadNumber),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId],
+      foreignColumns: [customerAccounts.tenantId, customerAccounts.id],
+      name: "leads_tenant_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId, table.primaryContactId],
+      foreignColumns: [
+        accountContacts.tenantId,
+        accountContacts.customerAccountId,
+        accountContacts.contactId,
+      ],
+      name: "leads_tenant_customer_contact_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId, table.serviceLocationId],
+      foreignColumns: [
+        serviceLocations.tenantId,
+        serviceLocations.customerAccountId,
+        serviceLocations.id,
+      ],
+      name: "leads_tenant_customer_location_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.ownerUserId],
+      foreignColumns: [users.tenantId, users.id],
+      name: "leads_tenant_owner_fk",
+    }).onDelete("restrict"),
+    check(
+      "leads_service_type_check",
+      sql`${table.serviceType} in ('material_delivery', 'dump_trailer_rental')`,
+    ),
+    check(
+      "leads_status_check",
+      sql`${table.status} in ('new', 'contacting', 'qualified', 'estimating', 'quoted', 'accepted', 'lost', 'cancelled', 'duplicate', 'disqualified')`,
+    ),
+    check(
+      "leads_source_check",
+      sql`${table.source} in ('phone', 'website', 'email', 'referral', 'repeat', 'other')`,
+    ),
+    check(
+      "leads_service_details_check",
+      sql`(
+        ${table.serviceType} = 'material_delivery'
+        and ${table.materialDescription} is not null
+        and ${table.estimatedQuantity} is not null
+        and ${table.estimatedQuantity} > 0
+        and ${table.quantityUnit} in ('tons', 'cubic_yards', 'loads')
+        and ${table.rentalStartDate} is null
+        and ${table.rentalEndDate} is null
+        and ${table.debrisType} is null
+      ) or (
+        ${table.serviceType} = 'dump_trailer_rental'
+        and ${table.materialDescription} is null
+        and ${table.estimatedQuantity} is null
+        and ${table.quantityUnit} is null
+        and ${table.rentalStartDate} is not null
+        and ${table.rentalEndDate} is not null
+        and ${table.rentalEndDate} >= ${table.rentalStartDate}
+        and ${table.debrisType} is not null
+      )`,
+    ),
+    index("leads_tenant_status_created_idx").on(table.tenantId, table.status, table.createdAt),
+    index("leads_tenant_customer_idx").on(table.tenantId, table.customerAccountId, table.createdAt),
+    index("leads_tenant_owner_status_idx").on(table.tenantId, table.ownerUserId, table.status),
+  ],
+);
+
+export const leadNotes = pgTable(
+  "lead_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    leadId: uuid("lead_id").notNull(),
+    body: text("body").notNull(),
+    visibility: varchar("visibility", { length: 30 }).notNull().default("internal"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("lead_notes_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.leadId],
+      foreignColumns: [leads.tenantId, leads.id],
+      name: "lead_notes_tenant_lead_fk",
+    }).onDelete("restrict"),
+    check("lead_notes_visibility_check", sql`${table.visibility} in ('internal', 'customer')`),
+    index("lead_notes_tenant_lead_created_idx").on(table.tenantId, table.leadId, table.createdAt),
+  ],
+);
+
+export const leadTasks = pgTable(
+  "lead_tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    leadId: uuid("lead_id").notNull(),
+    title: varchar("title", { length: 240 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("open"),
+    assignedUserId: uuid("assigned_user_id"),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("lead_tasks_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.leadId],
+      foreignColumns: [leads.tenantId, leads.id],
+      name: "lead_tasks_tenant_lead_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.assignedUserId],
+      foreignColumns: [users.tenantId, users.id],
+      name: "lead_tasks_tenant_assignee_fk",
+    }).onDelete("restrict"),
+    check("lead_tasks_status_check", sql`${table.status} in ('open', 'completed', 'cancelled')`),
+    index("lead_tasks_tenant_lead_status_idx").on(table.tenantId, table.leadId, table.status),
+    index("lead_tasks_tenant_assignee_due_idx").on(
+      table.tenantId,
+      table.assignedUserId,
+      table.status,
+      table.dueAt,
+    ),
+  ],
+);
 
 export const documents = pgTable(
   "documents",

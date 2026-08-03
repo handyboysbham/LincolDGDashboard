@@ -7,22 +7,27 @@ import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
+  accountContacts,
   allocateBusinessNumber,
   auditEvents,
   claimOutboxEvents,
   claimScheduledJobs,
+  contacts,
   createDatabase,
   createDatabasePool,
+  customerAccounts,
   documentPublicLinks,
   documents,
   executeIdempotent,
   IdempotencyConflictError,
   localSeedIds,
+  leads,
   organizations,
   outboxEvents,
   roles,
   runMigrations,
   scheduledJobs,
+  serviceLocations,
   seedLocalDevelopment,
   userRoles,
   users,
@@ -154,15 +159,23 @@ describe("Sprint 1.0.0 platform data foundation", () => {
     expect(result.rows.map((row) => row.table_name)).toEqual(
       expect.arrayContaining([
         "audit_events",
+        "account_contacts",
+        "contacts",
+        "customer_accounts",
         "document_links",
         "document_public_links",
         "documents",
         "idempotency_keys",
+        "lead_notes",
+        "lead_tasks",
+        "leads",
+        "location_contacts",
         "number_sequences",
         "organizations",
         "outbox_events",
         "roles",
         "scheduled_jobs",
+        "service_locations",
         "user_roles",
         "users",
         "worker_heartbeats",
@@ -294,6 +307,149 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         (_, index) => `LEAD-2026-${(index + 1).toString().padStart(5, "0")}`,
       ),
     );
+  });
+
+  it("isolates intake records and rejects cross-tenant or mixed-service relationships", async () => {
+    const customerB = randomUUID();
+    const contactB = randomUUID();
+    const locationB = randomUUID();
+    const leadB = randomUUID();
+
+    await withTenantTransaction(migratorDatabase(), tenantB, async (transaction) => {
+      await transaction.insert(customerAccounts).values({
+        customerType: "individual",
+        displayName: "Tenant B Customer",
+        id: customerB,
+        normalizedName: "tenant b customer",
+        ownerUserId: userB,
+        tenantId: tenantB,
+      });
+      await transaction.insert(contacts).values({
+        displayName: "Tenant B Contact",
+        email: "tenant-b-contact@example.test",
+        firstName: "Tenant",
+        id: contactB,
+        lastName: "Contact",
+        normalizedEmail: "tenant-b-contact@example.test",
+        preferredContactMethod: "email",
+        tenantId: tenantB,
+      });
+      await transaction.insert(accountContacts).values({
+        contactId: contactB,
+        customerAccountId: customerB,
+        isPrimary: true,
+        tenantId: tenantB,
+      });
+      await transaction.insert(serviceLocations).values({
+        addressLine1: "10 Other Street",
+        city: "Lincoln",
+        customerAccountId: customerB,
+        id: locationB,
+        label: "Job site",
+        normalizedAddress: "10 other street lincoln ne 68501",
+        postalCode: "68501",
+        region: "NE",
+        tenantId: tenantB,
+      });
+      await transaction.insert(leads).values({
+        customerAccountId: customerB,
+        estimatedQuantity: "4.000",
+        id: leadB,
+        leadNumber: "LEAD-2026-00999",
+        materialDescription: "Crushed limestone",
+        ownerUserId: userB,
+        primaryContactId: contactB,
+        quantityUnit: "tons",
+        serviceLocationId: locationB,
+        serviceType: "material_delivery",
+        source: "phone",
+        summary: "Tenant B material delivery",
+        tenantId: tenantB,
+      });
+    });
+
+    const visibleToTenantA = await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.select().from(leads).where(eq(leads.id, leadB)),
+    );
+    expect(visibleToTenantA).toEqual([]);
+
+    await expect(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(serviceLocations).values({
+          addressLine1: "10 Other Street",
+          city: "Lincoln",
+          customerAccountId: customerB,
+          label: "Blocked relationship",
+          normalizedAddress: "10 other street lincoln ne 68501",
+          postalCode: "68501",
+          region: "NE",
+          tenantId: tenantA,
+        }),
+      ),
+    ).rejects.toThrow();
+
+    const customerA = randomUUID();
+    const contactA = randomUUID();
+    const locationA = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, async (transaction) => {
+      await transaction.insert(customerAccounts).values({
+        customerType: "individual",
+        displayName: "Tenant A Customer",
+        id: customerA,
+        normalizedName: "tenant a customer",
+        ownerUserId: userA,
+        tenantId: tenantA,
+      });
+      await transaction.insert(contacts).values({
+        displayName: "Tenant A Contact",
+        firstName: "Tenant",
+        id: contactA,
+        lastName: "Contact",
+        normalizedPhone: "4025550101",
+        phone: "402-555-0101",
+        preferredContactMethod: "phone",
+        tenantId: tenantA,
+      });
+      await transaction.insert(accountContacts).values({
+        contactId: contactA,
+        customerAccountId: customerA,
+        isPrimary: true,
+        tenantId: tenantA,
+      });
+      await transaction.insert(serviceLocations).values({
+        addressLine1: "20 Test Avenue",
+        city: "Lincoln",
+        customerAccountId: customerA,
+        id: locationA,
+        label: "Job site",
+        normalizedAddress: "20 test avenue lincoln ne 68502",
+        postalCode: "68502",
+        region: "NE",
+        tenantId: tenantA,
+      });
+    });
+
+    await expect(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(leads).values({
+          customerAccountId: customerA,
+          debrisType: "Concrete",
+          estimatedQuantity: "3.000",
+          leadNumber: "LEAD-2026-01000",
+          materialDescription: "Gravel",
+          ownerUserId: userA,
+          primaryContactId: contactA,
+          quantityUnit: "tons",
+          rentalEndDate: "2026-08-09",
+          rentalStartDate: "2026-08-08",
+          serviceLocationId: locationA,
+          serviceType: "material_delivery",
+          source: "website",
+          summary: "Invalid mixed service",
+          tenantId: tenantA,
+        }),
+      ),
+    ).rejects.toThrow();
   });
 
   it("replays completed idempotent commands and rejects a changed request", async () => {

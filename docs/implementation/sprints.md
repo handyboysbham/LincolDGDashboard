@@ -116,6 +116,8 @@ Provide the first usable staff, driver, and customer shells with secure document
 
 ## Sprint 1.3.0 — Customer Intake
 
+Status: Completed on 2026-08-03.
+
 ### Goal
 
 Capture a complete, tenant-isolated service opportunity for either supported service.

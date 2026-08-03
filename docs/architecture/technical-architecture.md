@@ -145,6 +145,16 @@ State-changing requests should support:
 - idempotency key
 - request correlation ID
 
+Customer Intake follows the same command boundary. `POST /api/v1/intake/leads` creates the Lead and
+any new Customer Account, Contact, and Service Location in one tenant transaction. Explicit Lead
+action endpoints own lifecycle changes. Notes, Tasks, document links, lifecycle changes, and new
+intake entities write immutable Audit Events and transactional outbox events with the business
+change.
+
+Duplicate lookup is advisory. The API compares normalized names, email addresses, phone numbers, and
+complete service addresses inside the authenticated tenant, returns stable candidate IDs, and never
+merges or silently replaces a record.
+
 ## Tenant isolation
 
 Every tenant-owned table includes `tenant_id`.
@@ -192,6 +202,8 @@ Use optimistic concurrency with `row_version` for normal editable records.
 
 Mandatory for:
 
+- intake Lead creation
+- intake Notes, Tasks, document links, and lifecycle commands
 - Quote acceptance
 - Project conversion
 - Contract generation

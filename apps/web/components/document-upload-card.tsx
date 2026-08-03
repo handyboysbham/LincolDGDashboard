@@ -23,7 +23,11 @@ type UploadState =
   | { documentId: string; filename: string; name: "available" }
   | { message: string; name: "error" };
 
-export function DocumentUploadCard() {
+interface DocumentUploadCardProps {
+  onAvailable?: (document: { id: string; originalFilename: string }) => Promise<void> | void;
+}
+
+export function DocumentUploadCard({ onAvailable }: DocumentUploadCardProps = {}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>({ name: "idle" });
   const [customerLink, setCustomerLink] = useState<string>();
@@ -64,6 +68,7 @@ export function DocumentUploadCard() {
         params: { path: { id: created.data.document.id } },
       });
       if (!completed.data) throw new Error(apiErrorMessage(completed.error));
+      await onAvailable?.(completed.data);
       setState({
         documentId: completed.data.id,
         filename: completed.data.originalFilename,

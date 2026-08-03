@@ -27,6 +27,22 @@ Terminal alternatives:
 Lost | Cancelled | Duplicate | Disqualified
 ```
 
+Sprint 1.3.0 owns these explicit intake commands:
+
+| Command          | Allowed source | Result       |
+| ---------------- | -------------- | ------------ |
+| Start contacting | New            | Contacting   |
+| Qualify          | Contacting     | Qualified    |
+| Start estimating | Qualified      | Estimating   |
+| Mark lost        | New–Estimating | Lost         |
+| Cancel           | New–Estimating | Cancelled    |
+| Mark duplicate   | New–Estimating | Duplicate    |
+| Disqualify       | New–Estimating | Disqualified |
+
+Every terminal command requires a reason. The API locks the Lead, validates the source state and
+permission, and writes the state change, Audit Event, outbox event, and idempotency result in one
+transaction. Quoted and Accepted remain owned by later pricing and quote sprints.
+
 ## Estimate
 
 ```text

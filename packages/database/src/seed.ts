@@ -52,7 +52,17 @@ export async function seedLocalDevelopment(database: Database): Promise<void> {
           tenantId,
           code: "dispatcher",
           name: "Dispatcher",
-          permissions: ["customers:read", "operations:manage", "scheduling:manage"],
+          permissions: [
+            "customers:read",
+            "customers:write",
+            "documents:read",
+            "documents:write",
+            "leads:read",
+            "leads:transition",
+            "leads:write",
+            "operations:manage",
+            "scheduling:manage",
+          ],
         },
         {
           id: localSeedIds.driverRole,

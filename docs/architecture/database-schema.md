@@ -75,9 +75,16 @@ RFD-2026-00001
 - disposal_rate_versions
 - assets
 
+The implemented intake slice uses normalized, tenant-scoped comparison fields on Customer Accounts,
+Contacts, and Service Locations for duplicate warnings. `account_contacts` and `location_contacts`
+model reusable relationships; a partial unique index permits only one primary Contact per Customer
+Account. Service Locations belong to a Customer Account through a tenant-aware foreign key.
+
 ### Sales
 
 - leads
+- lead_notes
+- lead_tasks
 - pricing_policies
 - pricing_versions
 - pricing_rules
@@ -94,6 +101,12 @@ RFD-2026-00001
 - quote_acceptances
 - contracts
 - contract_signatures
+
+`leads` stores one intake service discriminator and one matching set of service-detail columns. A
+database check requires either complete Material Delivery fields or complete Dump Trailer Rental
+fields—never both. Quantities use `NUMERIC(12,3)`, rental dates are date-only, and rental end cannot
+precede rental start. Lead Notes and Tasks are intake-owned collaboration records; uploaded file
+metadata remains in `documents` and links to a Lead through `document_links`.
 
 ### Projects and operations
 
@@ -154,8 +167,15 @@ RFD-2026-00001
 - Unique active Job Charge dedupe key.
 - No overlapping active Asset Reservation for the same asset.
 - Tenant-aware foreign keys prevent cross-tenant relationships.
+- A Lead has exactly one supported service type and its complete matching detail fields.
+- Material Delivery estimated quantity is positive and never stored as floating point.
+- Dump Trailer Rental end date is not before its start date.
+- One primary Contact is allowed per Customer Account.
 - Public document-link tokens are stored only as hashes and every link has a purpose, expiration,
   and optional revocation timestamp.
+
+Every implemented intake table has forced Row-Level Security. Runtime policies compare `tenant_id`
+with `app.current_tenant_id`; duplicate lookups are subject to the same tenant boundary.
 
 ## Derived values
 

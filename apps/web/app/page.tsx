@@ -9,6 +9,7 @@ import {
   Plus,
   Truck,
 } from "lucide-react";
+import Link from "next/link";
 
 import { StaffShell } from "../components/staff-shell";
 import { DocumentUploadCard } from "../components/document-upload-card";
@@ -56,10 +57,10 @@ export default function DashboardPage() {
               <CalendarClock aria-hidden="true" size={17} />
               View schedule
             </button>
-            <button className="button button-primary" type="button">
+            <Link className="button button-primary" href="/leads/new">
               <Plus aria-hidden="true" size={17} />
               New lead
-            </button>
+            </Link>
           </div>
         </section>
 

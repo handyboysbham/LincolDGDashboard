@@ -61,6 +61,28 @@ Development authentication is allowed only with `APP_ENV=local`. The tenant, use
 come from `.env`; clients cannot select tenant context with an `x-tenant-id` header. Set
 `READY_REQUIRE_WORKER=true` when readiness should also require a fresh worker heartbeat.
 
+## Customer Intake development
+
+After migration and seed, open `/leads/new` to create either a Material Delivery or Dump Trailer
+Rental opportunity. The seeded owner has all permissions. A dispatcher role intended to operate
+intake needs `customers:read`, `customers:write`, `leads:read`, `leads:write`, `leads:transition`,
+`documents:read`, and `documents:write`.
+
+Use a new `Idempotency-Key` header for each logical write and reuse that key only when retrying the
+same body. The browser does this automatically. Duplicate warnings are advisory: continuing creates
+a separate record and never merges existing customer data. Lead state changes must use the action
+endpoints shown in Swagger; do not patch `status` directly.
+
+Run the intake verification gates with local infrastructure available:
+
+```bash
+pnpm db:migrate
+pnpm test:integration
+pnpm api:check
+pnpm test:e2e
+pnpm check
+```
+
 ## Document development
 
 Local document uploads accept PDF, JPEG, PNG, and plain-text files up to 20 MiB by default. The

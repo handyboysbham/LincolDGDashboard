@@ -21,6 +21,7 @@ const primaryNavigation = [
   { href: "/", icon: LayoutDashboard, label: "Overview" },
   { href: "/inbox", icon: Inbox, label: "Inbox", badge: "4" },
   { href: "/schedule", icon: CalendarDays, label: "Schedule" },
+  { href: "/leads", icon: ClipboardList, label: "Leads" },
   { href: "/jobs", icon: Truck, label: "Jobs" },
   { href: "/customers", icon: Users, label: "Customers" },
 ];
@@ -50,11 +51,7 @@ export function StaffShell({
         <nav aria-label="Staff navigation" className="staff-navigation">
           <span className="nav-eyebrow">Workspace</span>
           {primaryNavigation.map(({ badge, href, icon: Icon, label }) => (
-            <Link
-              className={href === active ? "nav-link is-active" : "nav-link"}
-              href={href}
-              key={href}
-            >
+            <Link className={navigationClass(active, href)} href={href} key={href}>
               <Icon aria-hidden="true" size={18} strokeWidth={1.8} />
               <span>{label}</span>
               {badge && <span className="nav-badge">{badge}</span>}
@@ -62,11 +59,7 @@ export function StaffShell({
           ))}
           <span className="nav-eyebrow nav-eyebrow-spaced">Business</span>
           {businessNavigation.map(({ href, icon: Icon, label }) => (
-            <Link
-              className={href === active ? "nav-link is-active" : "nav-link"}
-              href={href}
-              key={href}
-            >
+            <Link className={navigationClass(active, href)} href={href} key={href}>
               <Icon aria-hidden="true" size={18} strokeWidth={1.8} />
               <span>{label}</span>
             </Link>
@@ -81,10 +74,7 @@ export function StaffShell({
               <span>Open the operations guide</span>
             </div>
           </div>
-          <Link
-            className={active === "/settings" ? "nav-link is-active" : "nav-link"}
-            href="/settings"
-          >
+          <Link className={navigationClass(active, "/settings")} href="/settings">
             <Settings aria-hidden="true" size={18} strokeWidth={1.8} />
             <span>Settings</span>
           </Link>
@@ -126,15 +116,24 @@ export function StaffShell({
           <CalendarDays aria-hidden="true" size={20} />
           <span>Schedule</span>
         </Link>
-        <Link className={active === "/jobs" ? "is-active" : undefined} href="/jobs">
+        <Link className={active.startsWith("/leads") ? "is-active" : undefined} href="/leads">
           <ClipboardList aria-hidden="true" size={20} />
-          <span>Jobs</span>
+          <span>Leads</span>
         </Link>
-        <Link className={active === "/customers" ? "is-active" : undefined} href="/customers">
+        <Link
+          className={active.startsWith("/customers") ? "is-active" : undefined}
+          href="/customers"
+        >
           <Users aria-hidden="true" size={20} />
           <span>Customers</span>
         </Link>
       </nav>
     </div>
   );
+}
+
+function navigationClass(active: string, href: string): string {
+  return active === href || (href !== "/" && active.startsWith(`${href}/`))
+    ? "nav-link is-active"
+    : "nav-link";
 }

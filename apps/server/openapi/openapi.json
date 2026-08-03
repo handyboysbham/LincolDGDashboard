@@ -278,12 +278,483 @@
         "summary": "",
         "tags": ["Public documents"]
       }
+    },
+    "/api/v1/intake/actions/check-duplicates": {
+      "post": {
+        "operationId": "checkIntakeDuplicates",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DuplicateCheckDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateCheckResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Intake"]
+      }
+    },
+    "/api/v1/intake/leads": {
+      "post": {
+        "operationId": "createIntakeLead",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntakeLeadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateIntakeLeadResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Intake"]
+      }
+    },
+    "/api/v1/customers": {
+      "get": {
+        "operationId": "listCustomers",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Customers"]
+      }
+    },
+    "/api/v1/customers/{id}": {
+      "get": {
+        "operationId": "getCustomer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Customers"]
+      }
+    },
+    "/api/v1/leads": {
+      "get": {
+        "operationId": "listLeads",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Leads"]
+      }
+    },
+    "/api/v1/leads/{id}": {
+      "get": {
+        "operationId": "getLead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Leads"]
+      }
+    },
+    "/api/v1/leads/{id}/notes": {
+      "post": {
+        "operationId": "addLeadNote",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLeadNoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadNoteDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Leads"]
+      }
+    },
+    "/api/v1/leads/{id}/tasks": {
+      "post": {
+        "operationId": "addLeadTask",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLeadTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadTaskDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Leads"]
+      }
+    },
+    "/api/v1/leads/{id}/tasks/{taskId}/actions/complete": {
+      "post": {
+        "operationId": "completeLeadTask",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadTaskDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Leads"]
+      }
+    },
+    "/api/v1/leads/{id}/documents": {
+      "post": {
+        "operationId": "linkLeadDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkLeadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadDocumentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Leads"]
+      }
+    },
+    "/api/v1/leads/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionLead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "start-contacting",
+                "qualify",
+                "start-estimating",
+                "mark-lost",
+                "cancel",
+                "mark-duplicate",
+                "disqualify"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionLeadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Leads"]
+      }
     }
   },
   "info": {
     "title": "Lincoln Dirt and Gravel API",
     "description": "Lincoln Dirt and Gravel operating system API",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "contact": {}
   },
   "tags": [],
@@ -539,6 +1010,762 @@
           }
         },
         "required": ["expiresAt", "url", "document"]
+      },
+      "NewServiceLocationDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "addressLine1": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "addressLine2": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "region": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "postalCode": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "accessNotes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["label", "addressLine1", "city", "region", "postalCode"]
+      },
+      "DuplicateCheckDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 320
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "serviceLocation": {
+            "$ref": "#/components/schemas/NewServiceLocationDto"
+          }
+        }
+      },
+      "DuplicateWarningDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": ["customer_name", "contact_email", "contact_phone", "service_address"]
+          },
+          "entityType": {
+            "type": "string",
+            "enum": ["CustomerAccount", "Contact", "ServiceLocation"]
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "display": {
+            "type": "string"
+          }
+        },
+        "required": ["code", "entityType", "entityId", "display"]
+      },
+      "DuplicateCheckResponseDto": {
+        "type": "object",
+        "properties": {
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DuplicateWarningDto"
+            }
+          }
+        },
+        "required": ["warnings"]
+      },
+      "NewCustomerAccountDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "customerType": {
+            "type": "string",
+            "enum": ["individual", "business"]
+          },
+          "preferredContactMethod": {
+            "type": "string",
+            "enum": ["phone", "email", "text"]
+          },
+          "billingContactSummary": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": ["displayName", "customerType"]
+      },
+      "NewContactDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 320
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "preferredContactMethod": {
+            "type": "string",
+            "enum": ["phone", "email", "text"]
+          }
+        },
+        "required": ["firstName", "lastName", "preferredContactMethod"]
+      },
+      "MaterialDeliveryLeadInputDto": {
+        "type": "object",
+        "properties": {
+          "materialDescription": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "estimatedQuantity": {
+            "type": "string",
+            "description": "Positive decimal with no more than three fractional digits"
+          },
+          "quantityUnit": {
+            "type": "string",
+            "enum": ["tons", "cubic_yards", "loads"]
+          },
+          "deliveryInstructions": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["materialDescription", "estimatedQuantity", "quantityUnit"]
+      },
+      "DumpTrailerRentalLeadInputDto": {
+        "type": "object",
+        "properties": {
+          "rentalStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "rentalEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "debrisType": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "deliveryInstructions": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["rentalStartDate", "rentalEndDate", "debrisType"]
+      },
+      "CreateIntakeLeadDto": {
+        "type": "object",
+        "properties": {
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/NewCustomerAccountDto"
+          },
+          "primaryContactId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "primaryContact": {
+            "$ref": "#/components/schemas/NewContactDto"
+          },
+          "serviceLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "serviceLocation": {
+            "$ref": "#/components/schemas/NewServiceLocationDto"
+          },
+          "serviceType": {
+            "type": "string",
+            "enum": ["material_delivery", "dump_trailer_rental"]
+          },
+          "source": {
+            "type": "string",
+            "enum": ["phone", "website", "email", "referral", "repeat", "other"]
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "materialDelivery": {
+            "$ref": "#/components/schemas/MaterialDeliveryLeadInputDto"
+          },
+          "dumpTrailerRental": {
+            "$ref": "#/components/schemas/DumpTrailerRentalLeadInputDto"
+          }
+        },
+        "required": ["serviceType", "source", "summary"]
+      },
+      "CustomerAccountDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "customerType": {
+            "type": "string",
+            "enum": ["individual", "business"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive"]
+          },
+          "preferredContactMethod": {
+            "type": "string",
+            "enum": ["phone", "email", "text"],
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "displayName", "customerType", "status", "createdAt"]
+      },
+      "ContactDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "preferredContactMethod": {
+            "type": "string",
+            "enum": ["phone", "email", "text"]
+          }
+        },
+        "required": ["id", "displayName", "preferredContactMethod"]
+      },
+      "ServiceLocationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "addressLine1": {
+            "type": "string"
+          },
+          "addressLine2": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "accessNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "label", "addressLine1", "city", "region", "postalCode"]
+      },
+      "LeadDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leadNumber": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string",
+            "enum": ["material_delivery", "dump_trailer_rental"]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "contacting",
+              "qualified",
+              "estimating",
+              "quoted",
+              "accepted",
+              "lost",
+              "cancelled",
+              "duplicate",
+              "disqualified"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": ["phone", "website", "email", "referral", "repeat", "other"]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/CustomerAccountDto"
+          },
+          "primaryContact": {
+            "$ref": "#/components/schemas/ContactDto"
+          },
+          "serviceLocation": {
+            "$ref": "#/components/schemas/ServiceLocationDto"
+          },
+          "materialDelivery": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MaterialDeliveryLeadInputDto"
+              }
+            ]
+          },
+          "dumpTrailerRental": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DumpTrailerRentalLeadInputDto"
+              }
+            ]
+          },
+          "terminalReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "leadNumber",
+          "serviceType",
+          "status",
+          "source",
+          "summary",
+          "customer",
+          "primaryContact",
+          "serviceLocation",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateIntakeLeadResponseDto": {
+        "type": "object",
+        "properties": {
+          "lead": {
+            "$ref": "#/components/schemas/LeadDto"
+          },
+          "duplicateWarnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DuplicateWarningDto"
+            }
+          }
+        },
+        "required": ["lead", "duplicateWarnings"]
+      },
+      "CustomerListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerAccountDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": ["items", "total"]
+      },
+      "CustomerDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "customerType": {
+            "type": "string",
+            "enum": ["individual", "business"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive"]
+          },
+          "preferredContactMethod": {
+            "type": "string",
+            "enum": ["phone", "email", "text"],
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "contacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContactDto"
+            }
+          },
+          "serviceLocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceLocationDto"
+            }
+          },
+          "leads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "customerType",
+          "status",
+          "createdAt",
+          "contacts",
+          "serviceLocations",
+          "leads"
+        ]
+      },
+      "LeadListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": ["items", "total"]
+      },
+      "LeadNoteDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": ["internal", "customer"]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "body", "visibility", "createdAt"]
+      },
+      "LeadTaskDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "completed", "cancelled"]
+          },
+          "dueAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "title", "status"]
+      },
+      "LeadDocumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originalFilename": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "originalFilename", "mediaType", "purpose"]
+      },
+      "LeadTimelineItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": ["id", "eventType", "occurredAt", "metadata"]
+      },
+      "LeadDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leadNumber": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string",
+            "enum": ["material_delivery", "dump_trailer_rental"]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "contacting",
+              "qualified",
+              "estimating",
+              "quoted",
+              "accepted",
+              "lost",
+              "cancelled",
+              "duplicate",
+              "disqualified"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": ["phone", "website", "email", "referral", "repeat", "other"]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/CustomerAccountDto"
+          },
+          "primaryContact": {
+            "$ref": "#/components/schemas/ContactDto"
+          },
+          "serviceLocation": {
+            "$ref": "#/components/schemas/ServiceLocationDto"
+          },
+          "materialDelivery": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MaterialDeliveryLeadInputDto"
+              }
+            ]
+          },
+          "dumpTrailerRental": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DumpTrailerRentalLeadInputDto"
+              }
+            ]
+          },
+          "terminalReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadNoteDto"
+            }
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadTaskDto"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadDocumentDto"
+            }
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeadTimelineItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "leadNumber",
+          "serviceType",
+          "status",
+          "source",
+          "summary",
+          "customer",
+          "primaryContact",
+          "serviceLocation",
+          "createdAt",
+          "updatedAt",
+          "notes",
+          "tasks",
+          "documents",
+          "timeline"
+        ]
+      },
+      "CreateLeadNoteDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxLength": 5000
+          },
+          "visibility": {
+            "type": "string",
+            "enum": ["internal", "customer"],
+            "default": "internal"
+          }
+        },
+        "required": ["body"]
+      },
+      "CreateLeadTaskDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assignedUserId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["title"]
+      },
+      "LinkLeadDocumentDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purpose": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": ["documentId", "purpose"]
+      },
+      "TransitionLeadDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
       }
     }
   }

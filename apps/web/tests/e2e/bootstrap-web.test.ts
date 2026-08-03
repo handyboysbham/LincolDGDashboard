@@ -36,6 +36,10 @@ describe("BOOT-E2E-001 web startup", () => {
 
   it.each([
     ["/", "Good morning, Kaleb."],
+    ["/customers", "Accounts, contacts, service locations"],
+    ["/leads", "Every request from first call"],
+    ["/leads/new", "Capture a complete Lead"],
+    ["/leads/00000000-0000-4000-8000-000000000999", "Loading Lead"],
     ["/driver", "Your road is clear."],
     ["/customer/documents/not-a-token", "Checking your link"],
   ])("serves %s", async (path, expected) => {

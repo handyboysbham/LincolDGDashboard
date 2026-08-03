@@ -2,6 +2,7 @@ import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import {
   IdempotencyConflictError,
   auditEvents,
+  documentLinks,
   documentPublicLinks,
   documents,
   outboxEvents,
@@ -9,7 +10,7 @@ import {
   type Database,
   type TenantTransaction,
 } from "@ldg/database";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
 import { ServerConfigService } from "../config/server-config.service.js";
@@ -169,6 +170,70 @@ export class DocumentsService {
     const record = await this.findDocument(actor.tenantId, documentId);
     this.assertAvailable(record);
     return this.signDownload(record);
+  }
+
+  public async linkAvailableToEntity(
+    transaction: TenantTransaction,
+    input: {
+      actorUserId: string;
+      documentId: string;
+      entityId: string;
+      entityType: string;
+      purpose: string;
+      tenantId: string;
+    },
+  ): Promise<{ created: boolean; document: DocumentDto; purpose: string }> {
+    const record = await this.findDocumentInTransaction(
+      transaction,
+      input.tenantId,
+      input.documentId,
+    );
+    this.assertAvailable(record);
+    const inserted = await transaction
+      .insert(documentLinks)
+      .values({
+        createdBy: input.actorUserId,
+        documentId: input.documentId,
+        entityId: input.entityId,
+        entityType: input.entityType,
+        purpose: input.purpose,
+        tenantId: input.tenantId,
+      })
+      .onConflictDoNothing()
+      .returning({ id: documentLinks.id });
+    return {
+      created: inserted.length > 0,
+      document: toDocumentDto(record),
+      purpose: input.purpose,
+    };
+  }
+
+  public async listEntityDocuments(
+    transaction: TenantTransaction,
+    input: { entityId: string; entityType: string; tenantId: string },
+  ): Promise<{ document: DocumentDto; purpose: string }[]> {
+    const records = await transaction
+      .select({ document: documents, purpose: documentLinks.purpose })
+      .from(documentLinks)
+      .innerJoin(
+        documents,
+        and(
+          eq(documents.tenantId, documentLinks.tenantId),
+          eq(documents.id, documentLinks.documentId),
+        ),
+      )
+      .where(
+        and(
+          eq(documentLinks.tenantId, input.tenantId),
+          eq(documentLinks.entityType, input.entityType),
+          eq(documentLinks.entityId, input.entityId),
+        ),
+      )
+      .orderBy(desc(documentLinks.createdAt));
+    return records.map(({ document, purpose }) => ({
+      document: toDocumentDto(document),
+      purpose,
+    }));
   }
 
   public async createPublicLink(

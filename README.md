@@ -43,7 +43,7 @@ Then read the relevant domain file before implementing a module.
 
 ## Recommended implementation approach
 
-Use a TypeScript modular monolith:
+The repository implements a TypeScript modular monolith:
 
 - Next.js web application
 - NestJS API and worker
@@ -100,8 +100,8 @@ pnpm check
 ```
 
 Use `pnpm install` without `--frozen-lockfile` only when intentionally updating dependencies. The
-database, NestJS API and worker, OpenAPI artifact, and typed API client are implemented; the Next.js
-web application remains the next bootstrap increment.
+database, NestJS API and worker, OpenAPI artifact, typed API client, responsive Next.js web
+application, private document workflow, and Customer Intake vertical slice are implemented.
 
 ## Local infrastructure
 
@@ -140,3 +140,11 @@ document surfaces. Start it with `pnpm dev:web` after the API and local infrastr
 Documents upload directly from the browser to the private MinIO bucket through short-lived,
 object-specific URLs. The API validates type, size, and SHA-256 before making a file available.
 Customer document links are scoped, expiring, revocable, and stored only as hashes.
+
+## Customer Intake
+
+Staff can create a complete Material Delivery or Dump Trailer Rental Lead from `/leads/new`. The
+command creates or reuses the Customer Account, Contact, and Service Location atomically; checks
+tenant-scoped duplicate candidates; and rejects requests that mix both service types. Lead detail
+supports controlled lifecycle commands, internal notes, follow-up tasks, validated documents, and an
+audit-backed timeline. Browse Customers at `/customers` and the intake pipeline at `/leads`.

@@ -7,6 +7,7 @@ import { DocumentsService } from "./documents.service.js";
 
 @Module({
   controllers: [DocumentsController, PublicDocumentsController],
+  exports: [DocumentsService],
   imports: [IdempotencyModule],
   providers: [DocumentsService, DocumentTokenService],
 })

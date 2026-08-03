@@ -148,6 +148,182 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/intake/actions/check-duplicates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["checkIntakeDuplicates"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/intake/leads": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createIntakeLead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listCustomers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customers/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getCustomer"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listLeads"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getLead"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads/{id}/notes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["addLeadNote"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads/{id}/tasks": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["addLeadTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads/{id}/tasks/{taskId}/actions/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["completeLeadTask"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads/{id}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["linkLeadDocument"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/leads/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionLead"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -253,6 +429,262 @@ export interface components {
       /** Format: uri */
       url: string;
       document: components["schemas"]["DocumentDto"];
+    };
+    NewServiceLocationDto: {
+      label: string;
+      addressLine1: string;
+      addressLine2?: string;
+      city: string;
+      region: string;
+      postalCode: string;
+      accessNotes?: string;
+    };
+    DuplicateCheckDto: {
+      customerName?: string;
+      email?: string;
+      phone?: string;
+      serviceLocation?: components["schemas"]["NewServiceLocationDto"];
+    };
+    DuplicateWarningDto: {
+      /** @enum {string} */
+      code: "customer_name" | "contact_email" | "contact_phone" | "service_address";
+      /** @enum {string} */
+      entityType: "CustomerAccount" | "Contact" | "ServiceLocation";
+      /** Format: uuid */
+      entityId: string;
+      display: string;
+    };
+    DuplicateCheckResponseDto: {
+      warnings: components["schemas"]["DuplicateWarningDto"][];
+    };
+    NewCustomerAccountDto: {
+      displayName: string;
+      /** @enum {string} */
+      customerType: "individual" | "business";
+      /** @enum {string} */
+      preferredContactMethod?: "phone" | "email" | "text";
+      billingContactSummary?: string;
+    };
+    NewContactDto: {
+      firstName: string;
+      lastName: string;
+      email?: string;
+      phone?: string;
+      /** @enum {string} */
+      preferredContactMethod: "phone" | "email" | "text";
+    };
+    MaterialDeliveryLeadInputDto: {
+      materialDescription: string;
+      /** @description Positive decimal with no more than three fractional digits */
+      estimatedQuantity: string;
+      /** @enum {string} */
+      quantityUnit: "tons" | "cubic_yards" | "loads";
+      deliveryInstructions?: string;
+    };
+    DumpTrailerRentalLeadInputDto: {
+      /** Format: date */
+      rentalStartDate: string;
+      /** Format: date */
+      rentalEndDate: string;
+      debrisType: string;
+      deliveryInstructions?: string;
+    };
+    CreateIntakeLeadDto: {
+      /** Format: uuid */
+      customerAccountId?: string;
+      customer?: components["schemas"]["NewCustomerAccountDto"];
+      /** Format: uuid */
+      primaryContactId?: string;
+      primaryContact?: components["schemas"]["NewContactDto"];
+      /** Format: uuid */
+      serviceLocationId?: string;
+      serviceLocation?: components["schemas"]["NewServiceLocationDto"];
+      /** @enum {string} */
+      serviceType: "material_delivery" | "dump_trailer_rental";
+      /** @enum {string} */
+      source: "phone" | "website" | "email" | "referral" | "repeat" | "other";
+      summary: string;
+      materialDelivery?: components["schemas"]["MaterialDeliveryLeadInputDto"];
+      dumpTrailerRental?: components["schemas"]["DumpTrailerRentalLeadInputDto"];
+    };
+    CustomerAccountDto: {
+      /** Format: uuid */
+      id: string;
+      displayName: string;
+      /** @enum {string} */
+      customerType: "individual" | "business";
+      /** @enum {string} */
+      status: "active" | "inactive";
+      /** @enum {string|null} */
+      preferredContactMethod?: "phone" | "email" | "text" | null;
+      createdAt: string;
+    };
+    ContactDto: {
+      /** Format: uuid */
+      id: string;
+      displayName: string;
+      email?: string | null;
+      phone?: string | null;
+      /** @enum {string} */
+      preferredContactMethod: "phone" | "email" | "text";
+    };
+    ServiceLocationDto: {
+      /** Format: uuid */
+      id: string;
+      label: string;
+      addressLine1: string;
+      addressLine2?: string | null;
+      city: string;
+      region: string;
+      postalCode: string;
+      accessNotes?: string | null;
+    };
+    LeadDto: {
+      /** Format: uuid */
+      id: string;
+      leadNumber: string;
+      /** @enum {string} */
+      serviceType: "material_delivery" | "dump_trailer_rental";
+      /** @enum {string} */
+      status:
+        | "new"
+        | "contacting"
+        | "qualified"
+        | "estimating"
+        | "quoted"
+        | "accepted"
+        | "lost"
+        | "cancelled"
+        | "duplicate"
+        | "disqualified";
+      /** @enum {string} */
+      source: "phone" | "website" | "email" | "referral" | "repeat" | "other";
+      summary: string;
+      customer: components["schemas"]["CustomerAccountDto"];
+      primaryContact: components["schemas"]["ContactDto"];
+      serviceLocation: components["schemas"]["ServiceLocationDto"];
+      materialDelivery?: components["schemas"]["MaterialDeliveryLeadInputDto"] | null;
+      dumpTrailerRental?: components["schemas"]["DumpTrailerRentalLeadInputDto"] | null;
+      terminalReason?: string | null;
+      createdAt: string;
+      updatedAt: string;
+    };
+    CreateIntakeLeadResponseDto: {
+      lead: components["schemas"]["LeadDto"];
+      duplicateWarnings: components["schemas"]["DuplicateWarningDto"][];
+    };
+    CustomerListResponseDto: {
+      items: components["schemas"]["CustomerAccountDto"][];
+      total: number;
+    };
+    CustomerDetailDto: {
+      /** Format: uuid */
+      id: string;
+      displayName: string;
+      /** @enum {string} */
+      customerType: "individual" | "business";
+      /** @enum {string} */
+      status: "active" | "inactive";
+      /** @enum {string|null} */
+      preferredContactMethod?: "phone" | "email" | "text" | null;
+      createdAt: string;
+      contacts: components["schemas"]["ContactDto"][];
+      serviceLocations: components["schemas"]["ServiceLocationDto"][];
+      leads: components["schemas"]["LeadDto"][];
+    };
+    LeadListResponseDto: {
+      items: components["schemas"]["LeadDto"][];
+      total: number;
+    };
+    LeadNoteDto: {
+      /** Format: uuid */
+      id: string;
+      body: string;
+      /** @enum {string} */
+      visibility: "internal" | "customer";
+      createdAt: string;
+    };
+    LeadTaskDto: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      /** @enum {string} */
+      status: "open" | "completed" | "cancelled";
+      dueAt?: string | null;
+      completedAt?: string | null;
+    };
+    LeadDocumentDto: {
+      /** Format: uuid */
+      id: string;
+      originalFilename: string;
+      mediaType: string;
+      purpose: string;
+    };
+    LeadTimelineItemDto: {
+      /** Format: uuid */
+      id: string;
+      eventType: string;
+      occurredAt: string;
+      metadata: {
+        [key: string]: unknown;
+      };
+    };
+    LeadDetailDto: {
+      /** Format: uuid */
+      id: string;
+      leadNumber: string;
+      /** @enum {string} */
+      serviceType: "material_delivery" | "dump_trailer_rental";
+      /** @enum {string} */
+      status:
+        | "new"
+        | "contacting"
+        | "qualified"
+        | "estimating"
+        | "quoted"
+        | "accepted"
+        | "lost"
+        | "cancelled"
+        | "duplicate"
+        | "disqualified";
+      /** @enum {string} */
+      source: "phone" | "website" | "email" | "referral" | "repeat" | "other";
+      summary: string;
+      customer: components["schemas"]["CustomerAccountDto"];
+      primaryContact: components["schemas"]["ContactDto"];
+      serviceLocation: components["schemas"]["ServiceLocationDto"];
+      materialDelivery?: components["schemas"]["MaterialDeliveryLeadInputDto"] | null;
+      dumpTrailerRental?: components["schemas"]["DumpTrailerRentalLeadInputDto"] | null;
+      terminalReason?: string | null;
+      createdAt: string;
+      updatedAt: string;
+      notes: components["schemas"]["LeadNoteDto"][];
+      tasks: components["schemas"]["LeadTaskDto"][];
+      documents: components["schemas"]["LeadDocumentDto"][];
+      timeline: components["schemas"]["LeadTimelineItemDto"][];
+    };
+    CreateLeadNoteDto: {
+      body: string;
+      /**
+       * @default internal
+       * @enum {string}
+       */
+      visibility: "internal" | "customer";
+    };
+    CreateLeadTaskDto: {
+      title: string;
+      /** Format: date-time */
+      dueAt?: string;
+      /** Format: uuid */
+      assignedUserId?: string;
+    };
+    LinkLeadDocumentDto: {
+      /** Format: uuid */
+      documentId: string;
+      purpose: string;
+    };
+    TransitionLeadDto: {
+      reason?: string;
     };
   };
   responses: never;
@@ -459,6 +891,281 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["PublicDocumentDownloadDto"];
+        };
+      };
+    };
+  };
+  checkIntakeDuplicates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DuplicateCheckDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DuplicateCheckResponseDto"];
+        };
+      };
+    };
+  };
+  createIntakeLead: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateIntakeLeadDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateIntakeLeadResponseDto"];
+        };
+      };
+    };
+  };
+  listCustomers: {
+    parameters: {
+      query?: {
+        limit?: number;
+        q?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerListResponseDto"];
+        };
+      };
+    };
+  };
+  getCustomer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerDetailDto"];
+        };
+      };
+    };
+  };
+  listLeads: {
+    parameters: {
+      query?: {
+        limit?: number;
+        status?: string;
+        q?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeadListResponseDto"];
+        };
+      };
+    };
+  };
+  getLead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeadDetailDto"];
+        };
+      };
+    };
+  };
+  addLeadNote: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateLeadNoteDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeadNoteDto"];
+        };
+      };
+    };
+  };
+  addLeadTask: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateLeadTaskDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeadTaskDto"];
+        };
+      };
+    };
+  };
+  completeLeadTask: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        taskId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeadTaskDto"];
+        };
+      };
+    };
+  };
+  linkLeadDocument: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LinkLeadDocumentDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeadDocumentDto"];
+        };
+      };
+    };
+  };
+  transitionLead: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action:
+          | "start-contacting"
+          | "qualify"
+          | "start-estimating"
+          | "mark-lost"
+          | "cancel"
+          | "mark-duplicate"
+          | "disqualify";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TransitionLeadDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LeadDetailDto"];
         };
       };
     };
