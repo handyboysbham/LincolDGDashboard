@@ -4,6 +4,11 @@
 
 Recommended database: PostgreSQL.
 
+For V1, one Organization is one tenant. `organizations.id` is the tenant identity. The Organization
+row is the tenant root, and every tenant-owned child table carries `tenant_id` referencing that
+identifier. The Organization row is protected by tenant context using its own `id`; it does not
+duplicate the value in a second `tenant_id` column.
+
 ## Data types
 
 | Value                 | Type               |

@@ -23,7 +23,7 @@ Customer Request
 
 ### Identity and access
 
-- Organization and tenant record
+- Organization as the V1 tenant record
 - User accounts
 - Owner, dispatcher, driver, and financial roles
 - Role-based permissions

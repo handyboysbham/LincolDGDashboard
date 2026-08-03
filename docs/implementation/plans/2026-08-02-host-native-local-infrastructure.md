@@ -51,6 +51,6 @@ None. Database schema and Drizzle migrations remain part of Task 3.
 - [x] PostgreSQL role initialization implemented
 - [x] Private MinIO bucket initialized
 - [x] MinIO and Mailpit live services verified
-- [ ] PostgreSQL live service verified outside the Codex shared-memory sandbox
+- [x] PostgreSQL live service verified outside the Codex shared-memory sandbox
 - [x] Root checks pass
 - [x] Commit 2 created

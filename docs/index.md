@@ -37,6 +37,7 @@ Do not rely on chat history after a decision has been consolidated into these fi
 ## Implementation
 
 - [Build Sequence](implementation/build-sequence.md)
+- [V1 Sprint Roadmap](implementation/sprints.md)
 - [Acceptance Journeys](implementation/acceptance-journeys.md)
 - [Codex Handoff](implementation/codex-handoff.md)
 

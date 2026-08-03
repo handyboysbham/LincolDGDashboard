@@ -149,6 +149,9 @@ State-changing requests should support:
 
 Every tenant-owned table includes `tenant_id`.
 
+For V1, an Organization is the tenant boundary: `organizations.id` is the value propagated as
+`tenant_id`. A separate Tenant record is not used.
+
 Isolation layers:
 
 1. Authenticated request context

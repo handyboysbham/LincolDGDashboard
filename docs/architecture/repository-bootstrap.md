@@ -118,7 +118,7 @@ service set.
 
 ## First migration
 
-The first migration should create only platform foundation tables:
+Migration `0000_platform_foundation` creates only platform foundation tables:
 
 - organizations
 - users
