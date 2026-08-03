@@ -43,10 +43,10 @@ Run all available checks and report exactly what was created.
 
 ### Task 2 — Local infrastructure
 
-- Docker Compose
-- PostgreSQL roles
-- MinIO
-- Mailpit
+- checksum-verified project-local tool installer
+- host-native PostgreSQL roles and lifecycle
+- host-native MinIO, private bucket, and scoped application user
+- host-native Mailpit
 - environment validation
 
 ### Task 3 — Database foundation
@@ -84,7 +84,7 @@ Run all available checks and report exactly what was created.
 - OpenAPI generation
 - tenant-isolation tests
 - BOOT-E2E-001
-- container builds
+- deployment packaging
 
 ## Rules for Codex tasks
 

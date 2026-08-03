@@ -38,7 +38,6 @@ lincoln-dirt-gravel/
 ├── tsconfig.base.json
 ├── eslint.config.mjs
 ├── prettier.config.mjs
-├── docker-compose.yml
 ├── .env.example
 ├── apps/
 │   ├── web/
@@ -87,14 +86,35 @@ pnpm api:check
 
 ## Local infrastructure
 
-Docker Compose should provide:
+Local development uses host-native services on Intel macOS. A repository installer downloads
+checksum-verified release artifacts for:
 
 - PostgreSQL 18
-- MinIO
-- MinIO bucket initializer
+- MinIO and MinIO Client
 - Mailpit
 
-Web, API, and worker run on the host during development.
+Repository scripts install, initialize, start, verify, and stop the services. Tool binaries, service
+data, logs, MinIO client configuration, and PID files remain under the ignored project-local
+`.local/` directory. Services bind to `127.0.0.1` and must not be exposed to the local network by
+default.
+
+Local development does not require Docker, Homebrew formula installation, or global background
+services. Web, API, and worker also run on the host during development.
+
+Required local infrastructure commands:
+
+```bash
+pnpm infra:install
+pnpm infra:verify-env
+pnpm infra:up
+pnpm infra:status
+pnpm infra:verify
+pnpm infra:logs
+pnpm infra:down
+```
+
+`pnpm db:up` and `pnpm db:down` are aliases for starting and stopping the complete supporting
+service set.
 
 ## First migration
 

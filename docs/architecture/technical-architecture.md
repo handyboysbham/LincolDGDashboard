@@ -44,6 +44,10 @@ debugging without providing useful V1 value.
 - Vitest, PostgreSQL integration tests, and Playwright
 - S3-compatible object storage
 
+For V1 Intel macOS local development, PostgreSQL, MinIO, and Mailpit run as host-native processes
+from checksum-verified, project-local tool installations. Repository scripts own their state and
+lifecycle. Docker and global package installation are not local-development dependencies.
+
 ## Runtime topology
 
 ```text
@@ -250,3 +254,4 @@ Do not add:
 - GraphQL
 - separate search cluster
 - native mobile app
+- Docker or Docker Compose as a required local-development dependency

@@ -101,3 +101,29 @@ pnpm check
 
 Use `pnpm install` without `--frozen-lockfile` only when intentionally updating dependencies. The
 `apps` and `packages` directories remain implementation placeholders until their staged tasks.
+
+## Local infrastructure
+
+Local development uses host-native services on Intel macOS. Docker and Homebrew packages are not
+required. The installer downloads checksum-verified PostgreSQL 18, MinIO, MinIO Client, and Mailpit
+binaries from their official publishers; repository scripts run them with all tools and state under
+ignored `.local/`.
+
+```bash
+pnpm infra:install
+cp .env.example .env
+pnpm db:up
+pnpm infra:verify
+```
+
+Service endpoints:
+
+- PostgreSQL: `127.0.0.1:5432`
+- MinIO API: `http://127.0.0.1:9000`
+- MinIO console: `http://127.0.0.1:9001`
+- Mailpit SMTP: `127.0.0.1:1025`
+- Mailpit interface: `http://127.0.0.1:8025`
+
+Use `pnpm infra:status`, `pnpm infra:logs`, and `pnpm db:down` to manage the services. See
+[`docs/runbooks/local-development.md`](docs/runbooks/local-development.md) for troubleshooting and
+data-location details.
