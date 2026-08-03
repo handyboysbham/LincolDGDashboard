@@ -303,3 +303,41 @@ export const documentLinks = pgTable(
     index("document_links_tenant_entity_idx").on(table.tenantId, table.entityType, table.entityId),
   ],
 );
+
+export const documentPublicLinks = pgTable(
+  "document_public_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    documentId: uuid("document_id").notNull(),
+    scope: varchar("scope", { length: 50 }).notNull().default("download"),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    creationKeyHash: varchar("creation_key_hash", { length: 64 }).notNull(),
+    requestHash: varchar("request_hash", { length: 64 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.tenantId, table.documentId],
+      foreignColumns: [documents.tenantId, documents.id],
+      name: "document_public_links_tenant_document_fk",
+    }).onDelete("restrict"),
+    unique("document_public_links_token_hash_unique").on(table.tokenHash),
+    unique("document_public_links_tenant_creation_key_unique").on(
+      table.tenantId,
+      table.creationKeyHash,
+    ),
+    check("document_public_links_scope_check", sql`${table.scope} in ('download')`),
+    check("document_public_links_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
+    index("document_public_links_tenant_document_idx").on(
+      table.tenantId,
+      table.documentId,
+      table.scope,
+    ),
+    index("document_public_links_expiry_idx").on(table.expiresAt),
+  ],
+);

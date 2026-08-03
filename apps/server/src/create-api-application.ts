@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from "@nestjs/swag
 import helmet from "@fastify/helmet";
 
 import { AppModule } from "./app.module.js";
+import { ServerConfigService } from "./config/server-config.service.js";
 import { registerRequestContext } from "./context/register-request-context.js";
 import { RequestContextService } from "./context/request-context.service.js";
 
@@ -16,7 +17,7 @@ export interface ApiApplication {
 export async function createApiApplication(): Promise<ApiApplication> {
   const application = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: false }),
+    new FastifyAdapter({ logger: false, routerOptions: { maxParamLength: 256 } }),
   );
   application.enableShutdownHooks();
   application.setGlobalPrefix("api/v1", {
@@ -28,6 +29,13 @@ export async function createApiApplication(): Promise<ApiApplication> {
   application.useGlobalPipes(
     new ValidationPipe({ forbidNonWhitelisted: true, transform: true, whitelist: true }),
   );
+  const configuration = application.get(ServerConfigService);
+  application.enableCors({
+    allowedHeaders: ["content-type", "idempotency-key", "x-request-id"],
+    exposedHeaders: ["x-request-id"],
+    methods: ["GET", "POST", "OPTIONS"],
+    origin: configuration.value.web.origin,
+  });
   registerRequestContext(
     application.getHttpAdapter().getInstance(),
     application.get(RequestContextService),
@@ -37,7 +45,7 @@ export async function createApiApplication(): Promise<ApiApplication> {
   const swaggerConfiguration = new DocumentBuilder()
     .setTitle("Lincoln Dirt and Gravel API")
     .setDescription("Lincoln Dirt and Gravel operating system API")
-    .setVersion("1.1.0")
+    .setVersion("1.2.0")
     .build();
   const document = SwaggerModule.createDocument(application, swaggerConfiguration);
   SwaggerModule.setup("api/docs", application, document, {

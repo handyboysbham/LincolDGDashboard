@@ -70,12 +70,220 @@
         "summary": "",
         "tags": ["Identity"]
       }
+    },
+    "/api/v1/documents/uploads": {
+      "post": {
+        "operationId": "createDocumentUpload",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDocumentUploadResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Documents"]
+      }
+    },
+    "/api/v1/documents/{id}/actions/complete": {
+      "post": {
+        "operationId": "completeDocumentUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Documents"]
+      }
+    },
+    "/api/v1/documents/{id}/actions/download": {
+      "post": {
+        "operationId": "createDocumentDownload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentDownloadDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Documents"]
+      }
+    },
+    "/api/v1/documents/{id}/public-links": {
+      "post": {
+        "operationId": "createDocumentPublicLink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentPublicLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentPublicLinkDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Documents"]
+      }
+    },
+    "/api/v1/documents/{id}/public-links/{linkId}/actions/revoke": {
+      "post": {
+        "operationId": "revokeDocumentPublicLink",
+        "parameters": [
+          {
+            "name": "linkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "",
+        "tags": ["Documents"]
+      }
+    },
+    "/api/v1/public/document-links/{token}": {
+      "get": {
+        "operationId": "resolvePublicDocumentLink",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicDocumentDownloadDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Public documents"]
+      }
     }
   },
   "info": {
     "title": "Lincoln Dirt and Gravel API",
     "description": "Lincoln Dirt and Gravel operating system API",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "contact": {}
   },
   "tags": [],
@@ -181,6 +389,156 @@
           }
         },
         "required": ["permissions", "tenantId", "userId"]
+      },
+      "CreateDocumentUploadDto": {
+        "type": "object",
+        "properties": {
+          "originalFilename": {
+            "type": "string",
+            "example": "supplier-ticket.pdf",
+            "maxLength": 255
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": ["application/pdf", "image/jpeg", "image/png", "text/plain"]
+          },
+          "sizeBytes": {
+            "type": "number",
+            "maximum": 104857600,
+            "minimum": 1
+          },
+          "sha256": {
+            "type": "string",
+            "example": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "minLength": 64
+          }
+        },
+        "required": ["originalFilename", "mediaType", "sizeBytes", "sha256"]
+      },
+      "DocumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "originalFilename": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "available", "rejected"]
+          }
+        },
+        "required": ["id", "mediaType", "originalFilename", "sizeBytes", "status"]
+      },
+      "DocumentUploadTargetDto": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["expiresAt", "headers", "url"]
+      },
+      "CreateDocumentUploadResponseDto": {
+        "type": "object",
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/DocumentDto"
+          },
+          "upload": {
+            "$ref": "#/components/schemas/DocumentUploadTargetDto"
+          }
+        },
+        "required": ["document", "upload"]
+      },
+      "DocumentDownloadDto": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["expiresAt", "url"]
+      },
+      "CreateDocumentPublicLinkDto": {
+        "type": "object",
+        "properties": {
+          "expiresInSeconds": {
+            "type": "number",
+            "default": 86400,
+            "maximum": 604800,
+            "minimum": 60
+          },
+          "scope": {
+            "type": "string",
+            "default": "download",
+            "enum": ["download"]
+          }
+        },
+        "required": ["scope"]
+      },
+      "DocumentPublicLinkDto": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "linkId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["download"]
+          },
+          "token": {
+            "type": "string",
+            "description": "Plaintext capability returned only to the creator"
+          }
+        },
+        "required": ["expiresAt", "linkId", "scope", "token"]
+      },
+      "PublicDocumentDownloadDto": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "document": {
+            "$ref": "#/components/schemas/DocumentDto"
+          }
+        },
+        "required": ["expiresAt", "url", "document"]
       }
     }
   }

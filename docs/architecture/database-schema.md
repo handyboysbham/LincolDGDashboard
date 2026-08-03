@@ -134,6 +134,7 @@ RFD-2026-00001
 
 - documents
 - document_links
+- document_public_links
 - notes
 - tasks
 - communications
@@ -153,6 +154,8 @@ RFD-2026-00001
 - Unique active Job Charge dedupe key.
 - No overlapping active Asset Reservation for the same asset.
 - Tenant-aware foreign keys prevent cross-tenant relationships.
+- Public document-link tokens are stored only as hashes and every link has a purpose, expiration,
+  and optional revocation timestamp.
 
 ## Derived values
 

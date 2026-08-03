@@ -1,5 +1,41 @@
 # End-to-End Acceptance Journeys
 
+## BOOT-E2E-001 — Repository Bootstrap
+
+### Configuration
+
+- one seeded Organization with owner and driver users
+- restricted PostgreSQL runtime role with forced Row-Level Security
+- private MinIO bucket with bucket-scoped application credentials
+- API, worker, and web processes configured independently
+- development tenant and users supplied only by server configuration
+
+### Journey
+
+1. Apply all forward migrations to an empty PostgreSQL database and create the local seed records.
+2. Start the API, worker, and web independently.
+3. Verify API liveness and database, migration, object-storage, and optional worker readiness.
+4. Allocate business numbers concurrently without duplicates.
+5. Replay one idempotent command and receive its original result.
+6. Commit and roll back business data, Audit Events, and outbox events atomically.
+7. Claim one outbox event exactly once across two workers.
+8. Claim scheduled work exactly once across two workers.
+9. Create a pending Document, upload bytes directly to private storage, validate it, and download it
+   through a short-lived authorized URL.
+10. Create and resolve an expiring customer document link whose plaintext token is not stored.
+11. Load the staff, driver, and customer web routes from a production build.
+
+### Negative tests
+
+- an arbitrary `x-tenant-id` browser header is rejected
+- a tenant cannot download another tenant's Document
+- invalid uploaded bytes remain unavailable
+- expired, revoked, malformed, and tampered customer links fail safely
+- signed URLs, capability tokens, and storage credentials are absent from application logs
+- the web package cannot import PostgreSQL or the database package
+
+---
+
 ## MD-E2E-001 — Multi-Material Delivery
 
 ### Configuration

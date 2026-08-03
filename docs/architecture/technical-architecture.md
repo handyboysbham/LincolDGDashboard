@@ -234,6 +234,16 @@ Create pending Document
 
 Customer access uses short-lived authorized download URLs.
 
+Pending uploads record the expected media type, byte size, and SHA-256. Completion reads the stored
+object and verifies all three values plus a supported content signature before changing the Document
+to Available. Invalid objects become Rejected and cannot receive download URLs.
+
+Authenticated document commands run in the actor's tenant transaction. Public document links use a
+versioned capability containing opaque identifiers and high-entropy HMAC-derived token material.
+Only the token hash and a hashed creation-idempotency key are stored. Link resolution establishes
+the encoded tenant context, verifies the hash in constant time, and then checks purpose, expiration,
+revocation, and Document availability before issuing a new short-lived download URL.
+
 ## Authentication
 
 Staff use a managed OIDC or JWT-compatible provider.

@@ -43,6 +43,7 @@ if ldg_read_pid "${MINIO_PID_FILE}" >/dev/null 2>&1; then
 else
   rm -f "${MINIO_PID_FILE}"
   ldg_note "Starting MinIO"
+  MINIO_API_CORS_ALLOW_ORIGIN="${WEB_ORIGIN}" \
   MINIO_ROOT_USER="${MINIO_ROOT_USER}" \
     MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD}" \
     MINIO_REGION="${MINIO_REGION:-us-east-1}" \

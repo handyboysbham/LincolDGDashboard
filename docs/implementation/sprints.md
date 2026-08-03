@@ -89,6 +89,8 @@ Expose a secure application boundary and reliable background-processing shell ov
 
 ## Sprint 1.2.0 — Web and Document Foundation
 
+Status: Completed on 2026-08-03.
+
 ### Goal
 
 Provide the first usable staff, driver, and customer shells with secure document storage.

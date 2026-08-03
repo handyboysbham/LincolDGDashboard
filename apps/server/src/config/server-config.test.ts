@@ -9,8 +9,12 @@ const baseEnvironment: NodeJS.ProcessEnv = {
   DATABASE_URL: "postgresql://app:password@127.0.0.1:5432/database",
   DEVELOPMENT_TENANT_ID: "00000000-0000-4000-8000-000000000001",
   DEVELOPMENT_USER_ID: "00000000-0000-4000-8000-000000000201",
+  DOCUMENT_PUBLIC_LINK_SIGNING_KEY: "unit-test-signing-key-with-32-characters",
+  MINIO_APP_PASSWORD: "object-storage-secret",
+  MINIO_APP_USER: "object-storage-user",
   MINIO_BUCKET: "documents",
   MINIO_ENDPOINT: "http://127.0.0.1:9000",
+  WEB_ORIGIN: "http://127.0.0.1:3000",
 };
 
 describe("loadServerConfig", () => {
@@ -20,6 +24,7 @@ describe("loadServerConfig", () => {
     expect(configuration.auth.mode).toBe("development");
     expect(configuration.worker.tenantIds).toEqual(["00000000-0000-4000-8000-000000000001"]);
     expect(configuration.api.port).toBe(3001);
+    expect(configuration.objectStorage.maxUploadBytes).toBe(20_971_520);
   });
 
   it("rejects development authentication outside local development", () => {

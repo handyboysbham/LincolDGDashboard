@@ -16,8 +16,20 @@ export interface ServerConfig {
   };
   databaseUrl: string;
   objectStorage: {
+    accessKeyId: string;
     bucket: string;
+    endpoint: string;
+    forcePathStyle: boolean;
     healthUrl: string;
+    maxUploadBytes: number;
+    presignExpiresSeconds: number;
+    publicLinkDefaultExpiresSeconds: number;
+    publicLinkSigningKey: string;
+    region: string;
+    secretAccessKey: string;
+  };
+  web: {
+    origin: string;
   };
   worker: {
     heartbeatIntervalMs: number;
@@ -72,8 +84,42 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
     },
     databaseUrl: required("DATABASE_URL", environment.DATABASE_URL),
     objectStorage: {
+      accessKeyId: required("MINIO_APP_USER", environment.MINIO_APP_USER),
       bucket: required("MINIO_BUCKET", environment.MINIO_BUCKET),
+      endpoint: minioEndpoint,
+      forcePathStyle: booleanValue(
+        "MINIO_FORCE_PATH_STYLE",
+        environment.MINIO_FORCE_PATH_STYLE ?? "true",
+      ),
       healthUrl: `${minioEndpoint}/minio/health/ready`,
+      maxUploadBytes: integer(
+        "DOCUMENT_MAX_UPLOAD_BYTES",
+        environment.DOCUMENT_MAX_UPLOAD_BYTES ?? "20971520",
+        1_024,
+        104_857_600,
+      ),
+      presignExpiresSeconds: integer(
+        "DOCUMENT_PRESIGN_EXPIRES_SECONDS",
+        environment.DOCUMENT_PRESIGN_EXPIRES_SECONDS ?? "300",
+        30,
+        3_600,
+      ),
+      publicLinkDefaultExpiresSeconds: integer(
+        "DOCUMENT_PUBLIC_LINK_EXPIRES_SECONDS",
+        environment.DOCUMENT_PUBLIC_LINK_EXPIRES_SECONDS ?? "86400",
+        60,
+        604_800,
+      ),
+      publicLinkSigningKey: minimumLength(
+        "DOCUMENT_PUBLIC_LINK_SIGNING_KEY",
+        environment.DOCUMENT_PUBLIC_LINK_SIGNING_KEY,
+        32,
+      ),
+      region: environment.MINIO_REGION ?? "us-east-1",
+      secretAccessKey: required("MINIO_APP_PASSWORD", environment.MINIO_APP_PASSWORD),
+    },
+    web: {
+      origin: required("WEB_ORIGIN", environment.WEB_ORIGIN),
     },
     worker: {
       heartbeatIntervalMs: integer(
@@ -122,6 +168,14 @@ function requiredUuid(name: string, value: string | undefined): string {
   const parsed = required(name, value);
   if (!uuidPattern.test(parsed)) {
     throw new Error(`${name} must be a valid UUID`);
+  }
+  return parsed;
+}
+
+function minimumLength(name: string, value: string | undefined, length: number): string {
+  const parsed = required(name, value);
+  if (parsed.length < length) {
+    throw new Error(`${name} must contain at least ${length.toString()} characters`);
   }
   return parsed;
 }

@@ -11,6 +11,8 @@ import { ApiExceptionFilter } from "./errors/api-exception.filter.js";
 import { HealthModule } from "./health/health.module.js";
 import { IdempotencyModule } from "./idempotency/idempotency.module.js";
 import { IdentityModule } from "./identity/identity.module.js";
+import { DocumentsModule } from "./documents/documents.module.js";
+import { ObjectStorageModule } from "./object-storage/object-storage.module.js";
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { IdentityModule } from "./identity/identity.module.js";
     HealthModule,
     IdentityModule,
     IdempotencyModule,
+    ObjectStorageModule,
+    DocumentsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },

@@ -96,6 +96,23 @@ describe("API foundation", () => {
     const response = await fastify.inject({ method: "GET", url: "/api/docs/openapi.json" });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({ info: { version: "1.1.0" }, openapi: "3.0.0" });
+    expect(response.json()).toMatchObject({ info: { version: "1.2.0" }, openapi: "3.0.0" });
+  });
+
+  it("allows the configured web origin without exposing tenant headers", async () => {
+    const webOrigin = process.env.WEB_ORIGIN;
+    if (!webOrigin) throw new Error("WEB_ORIGIN is required for API integration tests");
+    const response = await fastify.inject({
+      headers: {
+        "access-control-request-method": "POST",
+        origin: webOrigin,
+      },
+      method: "OPTIONS",
+      url: "/api/v1/documents/uploads",
+    });
+
+    expect(response.statusCode).toBe(204);
+    expect(response.headers["access-control-allow-origin"]).toBe(webOrigin);
+    expect(response.headers["access-control-allow-headers"]).not.toContain("x-tenant-id");
   });
 });

@@ -131,3 +131,12 @@ data-location details.
 
 After migrating and seeding PostgreSQL, start the API and worker independently with `pnpm dev:api`
 and `pnpm dev:worker`.
+
+## Web and documents
+
+The responsive Next.js application provides staff operations, mobile driver, and secure customer
+document surfaces. Start it with `pnpm dev:web` after the API and local infrastructure are ready.
+
+Documents upload directly from the browser to the private MinIO bucket through short-lived,
+object-specific URLs. The API validates type, size, and SHA-256 before making a file available.
+Customer document links are scoped, expiring, revocable, and stored only as hashes.

@@ -13,6 +13,7 @@ import {
   claimScheduledJobs,
   createDatabase,
   createDatabasePool,
+  documentPublicLinks,
   documents,
   executeIdempotent,
   IdempotencyConflictError,
@@ -154,6 +155,7 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       expect.arrayContaining([
         "audit_events",
         "document_links",
+        "document_public_links",
         "documents",
         "idempotency_keys",
         "number_sequences",
@@ -213,6 +215,62 @@ describe("Sprint 1.0.0 platform data foundation", () => {
 
     const withoutContext = await runtime().select().from(users);
     expect(withoutContext).toEqual([]);
+
+    const documentA = randomUUID();
+    const documentB = randomUUID();
+    const linkA = randomUUID();
+    await withTenantTransaction(migratorDatabase(), tenantA, async (transaction) => {
+      await transaction.insert(documents).values({
+        id: documentA,
+        mediaType: "text/plain",
+        objectKey: `${tenantA}/${documentA}`,
+        originalFilename: "tenant-a.txt",
+        tenantId: tenantA,
+      });
+      await transaction.insert(documentPublicLinks).values({
+        creationKeyHash: "a".repeat(64),
+        documentId: documentA,
+        expiresAt: new Date(Date.now() + 60_000),
+        id: linkA,
+        requestHash: "b".repeat(64),
+        tenantId: tenantA,
+        tokenHash: "c".repeat(64),
+      });
+    });
+    await withTenantTransaction(migratorDatabase(), tenantB, async (transaction) => {
+      await transaction.insert(documents).values({
+        id: documentB,
+        mediaType: "text/plain",
+        objectKey: `${tenantB}/${documentB}`,
+        originalFilename: "tenant-b.txt",
+        tenantId: tenantB,
+      });
+      await transaction.insert(documentPublicLinks).values({
+        creationKeyHash: "d".repeat(64),
+        documentId: documentB,
+        expiresAt: new Date(Date.now() + 60_000),
+        requestHash: "e".repeat(64),
+        tenantId: tenantB,
+        tokenHash: "f".repeat(64),
+      });
+    });
+
+    const visiblePublicLinks = await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.select().from(documentPublicLinks),
+    );
+    expect(visiblePublicLinks.map((link) => link.id)).toEqual([linkA]);
+    await expect(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(documentPublicLinks).values({
+          creationKeyHash: "1".repeat(64),
+          documentId: documentB,
+          expiresAt: new Date(Date.now() + 60_000),
+          requestHash: "2".repeat(64),
+          tenantId: tenantB,
+          tokenHash: "3".repeat(64),
+        }),
+      ),
+    ).rejects.toThrow();
   });
 
   it("allocates unique sequential business numbers concurrently", async () => {

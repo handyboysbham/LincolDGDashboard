@@ -1,0 +1,29 @@
+{
+  "name": "@ldg/web",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "clean": "rimraf .next coverage",
+    "dev": "next dev --hostname 127.0.0.1 --port 3000",
+    "lint": "eslint app components lib next.config.ts vitest.config.ts vitest.e2e.config.ts",
+    "start": "next start --hostname 127.0.0.1 --port 3000",
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "next build && vitest run --config vitest.e2e.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ldg/api-client": "workspace:*",
+    "lucide-react": "^1.28.0",
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "vitest": "^4.1.10"
+  }
+}

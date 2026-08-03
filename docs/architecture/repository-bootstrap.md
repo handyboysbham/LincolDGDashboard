@@ -205,7 +205,7 @@ payload or browser request before opening a tenant transaction.
 
 ## Initial web shell
 
-Staff shell includes:
+The implemented staff shell includes:
 
 - desktop sidebar
 - mobile navigation
@@ -215,10 +215,18 @@ Staff shell includes:
 - dashboard placeholders for quick actions, messages, alerts, tasks, schedule, and jobs needing
   scheduling
 
-Driver shell includes a mobile-first empty assignment state.
+The driver shell includes a mobile-first empty assignment state, readiness summary, large dispatch
+actions, and bottom navigation.
 
-Customer-public shell initially supports safe invalid, expired, revoked, already-used, and
-unavailable link states.
+The customer-public document shell supports safe invalid, expired, revoked, and unavailable link
+states plus an Available download state. It never exposes storage credentials or internal records.
+
+## Document API foundation
+
+The API provides pending upload creation, validation completion, authenticated download,
+customer-link creation and revocation, and public link resolution. Presigned URLs are scoped to one
+object and operation and expire after the configured short interval. The browser origin is explicit
+for API and MinIO CORS; `x-tenant-id` is never allowed.
 
 ## Bootstrap acceptance
 

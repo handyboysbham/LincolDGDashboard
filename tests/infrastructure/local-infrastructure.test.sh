@@ -13,6 +13,7 @@ required_variables=(
   MINIO_ENDPOINT
   MINIO_APP_USER
   MINIO_BUCKET
+  WEB_ORIGIN
   MAILPIT_UI_PORT
 )
 for variable_name in "${required_variables[@]}"; do

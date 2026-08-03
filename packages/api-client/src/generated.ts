@@ -52,6 +52,102 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/documents/uploads": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createDocumentUpload"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{id}/actions/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["completeDocumentUpload"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{id}/actions/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createDocumentDownload"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{id}/public-links": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createDocumentPublicLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/documents/{id}/public-links/{linkId}/actions/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["revokeDocumentPublicLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/document-links/{token}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["resolvePublicDocumentLink"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -94,6 +190,69 @@ export interface components {
       tenantId: string;
       /** Format: uuid */
       userId: string;
+    };
+    CreateDocumentUploadDto: {
+      /** @example supplier-ticket.pdf */
+      originalFilename: string;
+      /** @enum {string} */
+      mediaType: "application/pdf" | "image/jpeg" | "image/png" | "text/plain";
+      sizeBytes: number;
+      /** @example aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */
+      sha256: string;
+    };
+    DocumentDto: {
+      /** Format: uuid */
+      id: string;
+      mediaType: string;
+      originalFilename: string;
+      sizeBytes: number;
+      /** @enum {string} */
+      status: "pending" | "available" | "rejected";
+    };
+    DocumentUploadTargetDto: {
+      /** Format: date-time */
+      expiresAt: string;
+      headers: {
+        [key: string]: string;
+      };
+      /** Format: uri */
+      url: string;
+    };
+    CreateDocumentUploadResponseDto: {
+      document: components["schemas"]["DocumentDto"];
+      upload: components["schemas"]["DocumentUploadTargetDto"];
+    };
+    DocumentDownloadDto: {
+      /** Format: date-time */
+      expiresAt: string;
+      /** Format: uri */
+      url: string;
+    };
+    CreateDocumentPublicLinkDto: {
+      /** @default 86400 */
+      expiresInSeconds: number;
+      /**
+       * @default download
+       * @enum {string}
+       */
+      scope: "download";
+    };
+    DocumentPublicLinkDto: {
+      /** Format: date-time */
+      expiresAt: string;
+      /** Format: uuid */
+      linkId: string;
+      /** @enum {string} */
+      scope: "download";
+      /** @description Plaintext capability returned only to the creator */
+      token: string;
+    };
+    PublicDocumentDownloadDto: {
+      /** Format: date-time */
+      expiresAt: string;
+      /** Format: uri */
+      url: string;
+      document: components["schemas"]["DocumentDto"];
     };
   };
   responses: never;
@@ -165,6 +324,141 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SessionDto"];
+        };
+      };
+    };
+  };
+  createDocumentUpload: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDocumentUploadDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreateDocumentUploadResponseDto"];
+        };
+      };
+    };
+  };
+  completeDocumentUpload: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DocumentDto"];
+        };
+      };
+    };
+  };
+  createDocumentDownload: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DocumentDownloadDto"];
+        };
+      };
+    };
+  };
+  createDocumentPublicLink: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDocumentPublicLinkDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DocumentPublicLinkDto"];
+        };
+      };
+    };
+  };
+  revokeDocumentPublicLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        linkId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  resolvePublicDocumentLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicDocumentDownloadDto"];
         };
       };
     };

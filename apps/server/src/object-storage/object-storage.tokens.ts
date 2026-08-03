@@ -1,0 +1,1 @@
+export const OBJECT_STORAGE_CLIENT = Symbol("OBJECT_STORAGE_CLIENT");
