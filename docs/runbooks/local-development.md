@@ -37,6 +37,26 @@ pnpm db:down
 `db:up` starts all supporting services because PostgreSQL, private object storage, and email capture
 form one local infrastructure unit. It is safe to run repeatedly.
 
+## API and worker processes
+
+After the infrastructure is healthy, prepare the database and start the application processes in
+separate terminals:
+
+```bash
+pnpm db:migrate
+pnpm db:seed
+pnpm dev:api
+pnpm dev:worker
+```
+
+The API listens at `http://127.0.0.1:3001`. Swagger UI is available at `/api/docs`, the committed
+contract at `/api/docs/openapi.json`, liveness at `/health/live`, and readiness at `/health/ready`.
+The worker is a standalone NestJS application context and opens no HTTP listener.
+
+Development authentication is allowed only with `APP_ENV=local`. The tenant, user, and permissions
+come from `.env`; clients cannot select tenant context with an `x-tenant-id` header. Set
+`READY_REQUIRE_WORKER=true` when readiness should also require a fresh worker heartbeat.
+
 ## Local state
 
 All generated state is ignored by Git and stored beneath `.local/`:

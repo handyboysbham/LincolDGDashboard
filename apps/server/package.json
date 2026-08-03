@@ -1,0 +1,39 @@
+{
+  "name": "@ldg/server",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "api:openapi": "tsx src/openapi.ts && prettier --write openapi/openapi.json",
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf dist coverage openapi/openapi.json",
+    "dev:api": "tsx watch src/main.ts",
+    "dev:worker": "tsx watch src/worker.ts",
+    "lint": "eslint src tests vitest.config.ts vitest.integration.config.ts",
+    "start:api": "node dist/main.js",
+    "start:worker": "node dist/worker.js",
+    "test": "vitest run --config vitest.config.ts --passWithNoTests",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fastify/helmet": "^13.1.0",
+    "@fastify/static": "^10.1.2",
+    "@ldg/database": "workspace:*",
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28",
+    "@nestjs/platform-fastify": "^11.1.28",
+    "@nestjs/swagger": "^11.4.6",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "fastify": "5.10.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.1.28",
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.1",
+    "vitest": "^4.1.10"
+  }
+}

@@ -60,6 +60,8 @@ business module.
 
 ## Sprint 1.1.0 — API and Worker Foundation
 
+Status: Completed on 2026-08-02.
+
 ### Goal
 
 Expose a secure application boundary and reliable background-processing shell over Sprint 1.0.0.

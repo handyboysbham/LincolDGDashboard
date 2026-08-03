@@ -197,7 +197,11 @@ Readiness failure returns HTTP 503 and never exposes secrets.
 `AUTH_MODE=development` is allowed only when `APP_ENV=local`.
 
 The local tenant and user are server-configured. The browser may not select an arbitrary tenant by
-header.
+header. `GET /api/v1/session` exposes the authenticated development actor to typed clients without
+returning credentials.
+
+Worker tenant scope is also server-configured. A worker never accepts tenant context from an event
+payload or browser request before opening a tenant transaction.
 
 ## Initial web shell
 

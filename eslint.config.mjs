@@ -22,4 +22,12 @@ export default tseslint.config(
     ...tseslint.configs.disableTypeChecked,
     languageOptions: { globals: globals.node },
   },
+  {
+    files: ["**/*.module.ts"],
+    rules: { "@typescript-eslint/no-extraneous-class": "off" },
+  },
+  {
+    files: ["**/generated.ts"],
+    rules: { "@typescript-eslint/consistent-indexed-object-style": "off" },
+  },
 );

@@ -100,7 +100,8 @@ pnpm check
 ```
 
 Use `pnpm install` without `--frozen-lockfile` only when intentionally updating dependencies. The
-`apps` and `packages` directories remain implementation placeholders until their staged tasks.
+database, NestJS API and worker, OpenAPI artifact, and typed API client are implemented; the Next.js
+web application remains the next bootstrap increment.
 
 ## Local infrastructure
 
@@ -127,3 +128,6 @@ Service endpoints:
 Use `pnpm infra:status`, `pnpm infra:logs`, and `pnpm db:down` to manage the services. See
 [`docs/runbooks/local-development.md`](docs/runbooks/local-development.md) for troubleshooting and
 data-location details.
+
+After migrating and seeding PostgreSQL, start the API and worker independently with `pnpm dev:api`
+and `pnpm dev:worker`.

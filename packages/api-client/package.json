@@ -1,0 +1,28 @@
+{
+  "name": "@ldg/api-client",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf dist",
+    "generate": "openapi-typescript ../../apps/server/openapi/openapi.json -o src/generated.ts && prettier --write src/generated.ts",
+    "lint": "eslint src",
+    "test": "vitest run src --passWithNoTests",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "openapi-typescript": "^7.13.0",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  }
+}

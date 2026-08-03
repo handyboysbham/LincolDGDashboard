@@ -1,6 +1,7 @@
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import type { TenantTransaction } from "./client.js";
+import { outboxEvents } from "./schema.js";
 
 export interface ClaimedOutboxEvent {
   aggregateId: string;
@@ -120,4 +121,62 @@ export async function claimScheduledJobs(
   `);
 
   return result.rows as unknown as ClaimedScheduledJob[];
+}
+
+export async function completeOutboxEvent(
+  transaction: TenantTransaction,
+  input: { eventId: string; workerId: string },
+): Promise<boolean> {
+  const completed = await transaction
+    .update(outboxEvents)
+    .set({
+      lastError: null,
+      lockedBy: null,
+      lockedUntil: null,
+      processedAt: new Date(),
+      status: "processed",
+    })
+    .where(
+      and(
+        eq(outboxEvents.id, input.eventId),
+        eq(outboxEvents.status, "processing"),
+        eq(outboxEvents.lockedBy, input.workerId),
+      ),
+    )
+    .returning({ id: outboxEvents.id });
+
+  return completed.length === 1;
+}
+
+export async function failOutboxEvent(
+  transaction: TenantTransaction,
+  input: {
+    attempts: number;
+    error: string;
+    eventId: string;
+    maxAttempts: number;
+    retryAt: Date;
+    workerId: string;
+  },
+): Promise<"dead_letter" | "pending" | "not_owned"> {
+  const status = input.attempts >= input.maxAttempts ? "dead_letter" : "pending";
+  const failed = await transaction
+    .update(outboxEvents)
+    .set({
+      availableAt: input.retryAt,
+      lastError: input.error.slice(0, 4_000),
+      lockedBy: null,
+      lockedUntil: null,
+      status,
+    })
+    .where(
+      and(
+        eq(outboxEvents.id, input.eventId),
+        eq(outboxEvents.status, "processing"),
+        eq(outboxEvents.lockedBy, input.workerId),
+      ),
+    )
+    .returning({ id: outboxEvents.id });
+
+  return failed.length === 1 ? status : "not_owned";
 }

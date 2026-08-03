@@ -166,6 +166,10 @@ A tenant transaction sets:
 SET LOCAL app.current_tenant_id = '<tenant UUID>';
 ```
 
+API tenant context comes from authenticated server state, never an unrestricted browser header.
+Worker tenant scope is supplied by trusted server configuration before queue claims or handler
+transactions begin.
+
 ## Transactions and concurrency
 
 One application command normally equals one database transaction.

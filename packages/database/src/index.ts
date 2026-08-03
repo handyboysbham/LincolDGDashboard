@@ -6,3 +6,4 @@ export * from "./queues.js";
 export * from "./schema.js";
 export * from "./seed.js";
 export * from "./tenant.js";
+export type { Pool } from "pg";
