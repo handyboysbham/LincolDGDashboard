@@ -10,6 +10,9 @@ import {
   jobAssignments,
   jobEvents,
   jobs,
+  materialDeliveryDetails,
+  materialLoadValidations,
+  materialLoads,
   operationalHolds,
   outboxEvents,
   projects,
@@ -385,6 +388,7 @@ export class JobsService {
           .values({
             assetNumber: input.assetNumber.trim().toUpperCase(),
             assetType: input.assetType,
+            capacityVolumeCubicYards: input.capacityVolumeCubicYards,
             capacityWeight: input.capacityWeight,
             createdBy: actor.userId,
             name: input.name.trim(),
@@ -920,6 +924,18 @@ export class JobsService {
     }
     if (readinessType === "dispatch" && blocks.some((block) => block.status !== "confirmed"))
       blockers.push("Schedule Blocks are not confirmed");
+    if (
+      job.serviceType === "material_delivery" &&
+      ["schedule", "dispatch"].includes(readinessType)
+    ) {
+      await this.addMaterialDeliverySafetyBlockers(
+        transaction,
+        actor.tenantId,
+        job.id,
+        readinessType === "dispatch" ? "dispatch" : "planning",
+        blockers,
+      );
+    }
     if (readinessType === "completion") {
       const requiredChecklists = await transaction
         .select()
@@ -934,6 +950,20 @@ export class JobsService {
       if (requiredChecklists.some((checklist) => checklist.status !== "completed"))
         blockers.push("A required checklist is incomplete");
       if (requiredChecklists.length === 0) warnings.push("No required checklist is configured");
+      if (job.serviceType === "material_delivery") {
+        const [delivery] = await transaction
+          .select()
+          .from(materialDeliveryDetails)
+          .where(
+            and(
+              eq(materialDeliveryDetails.tenantId, actor.tenantId),
+              eq(materialDeliveryDetails.jobId, job.id),
+            ),
+          );
+        if (delivery?.status !== "operationally_complete") {
+          blockers.push("Material Delivery loads and quantities are not fully reconciled");
+        }
+      }
     }
     const result =
       blockers.length > 0 ? "not_ready" : warnings.length > 0 ? "ready_with_warnings" : "ready";
@@ -1076,6 +1106,68 @@ export class JobsService {
       routeStops: stops.map(routeStopDto),
       scheduleBlocks: blockDtos,
     };
+  }
+
+  private async addMaterialDeliverySafetyBlockers(
+    transaction: TenantTransaction,
+    tenantId: string,
+    jobId: string,
+    validationType: "planning" | "dispatch",
+    blockers: string[],
+  ): Promise<void> {
+    const [detail] = await transaction
+      .select()
+      .from(materialDeliveryDetails)
+      .where(
+        and(
+          eq(materialDeliveryDetails.tenantId, tenantId),
+          eq(materialDeliveryDetails.jobId, jobId),
+        ),
+      );
+    if (!detail) {
+      blockers.push("Material Delivery plan is missing");
+      return;
+    }
+    const loads = await transaction
+      .select()
+      .from(materialLoads)
+      .where(
+        and(
+          eq(materialLoads.tenantId, tenantId),
+          eq(materialLoads.materialDeliveryDetailId, detail.id),
+        ),
+      )
+      .orderBy(asc(materialLoads.sequence));
+    const activeLoads = loads.filter((load) => load.status !== "cancelled");
+    if (activeLoads.length !== detail.plannedLoadCount || activeLoads.length === 0) {
+      blockers.push("Material Delivery active Loads do not match the planned load count");
+    }
+    for (const load of activeLoads) {
+      const [validation] = await transaction
+        .select()
+        .from(materialLoadValidations)
+        .where(
+          and(
+            eq(materialLoadValidations.tenantId, tenantId),
+            eq(materialLoadValidations.materialLoadId, load.id),
+            eq(materialLoadValidations.validationType, validationType),
+          ),
+        )
+        .orderBy(desc(materialLoadValidations.evaluatedAt))
+        .limit(1);
+      if (!validation || validation.result === "not_ready") {
+        blockers.push(
+          `Material Load ${load.sequence.toString()} lacks ready ${validationType} safety evidence`,
+        );
+      }
+      if (
+        load.capacityResult !== "pass" ||
+        !["pass", "not_required"].includes(load.compatibilityResult) ||
+        !["pass", "not_required"].includes(load.separationResult)
+      ) {
+        blockers.push(`Material Load ${load.sequence.toString()} has unresolved safety results`);
+      }
+    }
   }
 
   private async lockJob(transaction: TenantTransaction, tenantId: string, jobId: string) {
@@ -1291,6 +1383,7 @@ function assetDto(asset: typeof assets.$inferSelect): AssetDto {
   return {
     assetNumber: asset.assetNumber,
     assetType: asset.assetType,
+    capacityVolumeCubicYards: asset.capacityVolumeCubicYards,
     capacityWeight: asset.capacityWeight,
     id: asset.id,
     name: asset.name,

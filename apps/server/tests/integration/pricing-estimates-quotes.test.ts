@@ -3,7 +3,18 @@ import {
   contracts,
   createDatabase,
   createDatabasePool,
+  documentLinks,
+  documents,
+  expenseAllocations,
+  expenses,
+  jobCharges,
   jobs,
+  materialDeliveryDetails,
+  materialLoadItems,
+  materialLoads,
+  materialLoadValidations,
+  materialQuantityVariances,
+  materials,
   organizations,
   projects,
   quoteAcceptances,
@@ -402,6 +413,170 @@ describe(
           )
         ).json(),
       ).toMatchObject({ status: "planning" });
+
+      const planningReferences = await withTenantTransaction(
+        runtime(),
+        tenantId,
+        async (transaction) => ({
+          acceptedLine: (
+            await transaction
+              .select()
+              .from(quoteLineItems)
+              .where(eq(quoteLineItems.quoteVersionId, quote.id))
+              .limit(1)
+          )[0],
+          limestone: (
+            await transaction
+              .select()
+              .from(materials)
+              .where(eq(materials.name, "Canonical limestone"))
+              .limit(1)
+          )[0],
+        }),
+      );
+      const acceptedLine = required(planningReferences.acceptedLine, "Accepted Quote Line Item");
+      const limestone = required(planningReferences.limestone, "Canonical limestone");
+      const sandId = randomUUID();
+      await withTenantTransaction(migrator(), tenantId, (transaction) =>
+        transaction.insert(materials).values({
+          defaultUnit: "cubic_yards",
+          id: sandId,
+          name: "Canonical masonry sand",
+          normalizedName: `canonical masonry sand ${sandId}`,
+          tenantId,
+        }),
+      );
+      const supplierStop = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/route-stops`,
+        "material-supplier-stop",
+        {
+          label: "Canonical supplier yard",
+          locationSnapshot: { city: "Lincoln", region: "NE" },
+          sequence: 1,
+          stopType: "supplier",
+        },
+      );
+      expect(supplierStop.statusCode).toBe(201);
+      const supplierStopId = supplierStop.json<{ id: string }>().id;
+      const placementStop = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/route-stops`,
+        "material-placement-stop",
+        {
+          label: "Customer driveway placement",
+          locationSnapshot: { city: "Lincoln", region: "NE" },
+          sequence: 2,
+          stopType: "customer",
+        },
+      );
+      expect(placementStop.statusCode).toBe(201);
+      const placementStopId = placementStop.json<{ id: string }>().id;
+      const planPayload = {
+        deliveryType: "placed",
+        placementEvidenceRequired: true,
+        plannedLoadCount: 1,
+      };
+      const plan = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/material-delivery`,
+        "material-plan-create",
+        planPayload,
+      );
+      expect(plan.statusCode).toBe(201);
+      const planReplay = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/material-delivery`,
+        "material-plan-create",
+        planPayload,
+      );
+      expect(planReplay.json()).toEqual(plan.json());
+      const load = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/material-loads`,
+        "material-load-create",
+        { sequence: 1 },
+      );
+      expect(load.statusCode).toBe(201);
+      const loadId = load.json<{ id: string }>().id;
+      const gravelItemPayload = {
+        acceptedQuoteLineItemId: acceptedLine.id,
+        compartment: "Separated front compartment",
+        loadingSequence: 1,
+        materialId: limestone.id,
+        placementRouteStopId: placementStopId,
+        plannedQuantity: "4.000",
+        quantityUnit: "cubic_yards",
+        separationInstructions: "Keep limestone separated from sand",
+        sequence: 1,
+        supplierRouteStopId: supplierStopId,
+        unitVolumeCubicYards: "1.000",
+        unitWeightPounds: "1500.000",
+        unloadingSequence: 1,
+      };
+      const gravelItem = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/items`,
+        "material-gravel-item-create",
+        gravelItemPayload,
+      );
+      expect(gravelItem.statusCode).toBe(201);
+      const unsafeSandPayload = {
+        compartment: "Separated rear compartment",
+        loadingSequence: 2,
+        materialId: sandId,
+        placementRouteStopId: placementStopId,
+        plannedQuantity: "3.333",
+        quantityUnit: "cubic_yards",
+        separationInstructions: "Keep masonry sand separated from limestone",
+        sequence: 2,
+        supplierRouteStopId: supplierStopId,
+        unitVolumeCubicYards: "1.000",
+        unitWeightPounds: "1500.000",
+        unloadingSequence: 2,
+      };
+      const sandItem = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/items`,
+        "material-sand-item-create",
+        unsafeSandPayload,
+      );
+      expect(sandItem.statusCode).toBe(201);
+      const sandItemId = sandItem.json<{ id: string }>().id;
+      const createdAsset = await command("POST", "/api/v1/assets", "asset-create-truck", {
+        assetNumber: "TRK-100",
+        assetType: "truck",
+        capacityVolumeCubicYards: "7.000",
+        capacityWeight: "10000.000",
+        name: "Canonical Truck",
+      });
+      expect(createdAsset.statusCode).toBe(201);
+      const assetId = createdAsset.json<{ id: string }>().id;
+      const loadAsset = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/assets`,
+        "material-load-asset",
+        { assetId, role: "truck" },
+      );
+      expect(loadAsset.statusCode).toBe(201);
+      const unsafeSafety = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/actions/evaluate-safety`,
+        "material-planning-safety-unsafe",
+        {
+          compatibilityConfirmed: true,
+          separationConfirmed: true,
+          validationType: "planning",
+        },
+      );
+      expect(unsafeSafety.statusCode).toBe(200);
+      expect(unsafeSafety.json()).toMatchObject({ capacityResult: "fail", result: "not_ready" });
+      expect(unsafeSafety.json<{ blockers: string[] }>().blockers).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("exceeds capacity 10000.000 pounds"),
+          expect.stringContaining("exceeds capacity 7.000 cubic yards"),
+        ]),
+      );
       expect(
         (
           await command(
@@ -434,14 +609,6 @@ describe(
       expect(released.statusCode).toBe(200);
       expect(released.json()).toMatchObject({ status: "needs_scheduling" });
 
-      const createdAsset = await command("POST", "/api/v1/assets", "asset-create-truck", {
-        assetNumber: "TRK-100",
-        assetType: "truck",
-        capacityWeight: "12.500",
-        name: "Canonical Truck",
-      });
-      expect(createdAsset.statusCode).toBe(201);
-      const assetId = createdAsset.json<{ id: string }>().id;
       const startsAt = new Date(Date.now() + 86_400_000).toISOString();
       const endsAt = new Date(Date.now() + 90_000_000).toISOString();
       const schedulePayload = {
@@ -466,6 +633,66 @@ describe(
       );
       expect(overlap.statusCode).toBe(409);
       expect(overlap.json()).toMatchObject({ error: { code: "ASSET_RESERVATION_CONFLICT" } });
+      const blockedSchedule = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/actions/confirm-schedule`,
+        "job-confirm-schedule-unsafe",
+        {},
+      );
+      expect(blockedSchedule.statusCode).toBe(409);
+      expect(blockedSchedule.json()).toMatchObject({
+        error: { code: "JOB_NOT_READY_TO_SCHEDULE" },
+      });
+      const earlyDispatchSafety = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/actions/evaluate-safety`,
+        "material-dispatch-safety-too-early",
+        {
+          compatibilityConfirmed: true,
+          separationConfirmed: true,
+          validationType: "dispatch",
+        },
+      );
+      expect(earlyDispatchSafety.statusCode).toBe(409);
+      expect(earlyDispatchSafety.json()).toMatchObject({
+        error: { code: "MATERIAL_LOAD_DISPATCH_STATE_INVALID" },
+      });
+      const safeSandPayload = { ...unsafeSandPayload, plannedQuantity: "2.000" };
+      const revisedSand = await command(
+        "POST",
+        `/api/v1/material-load-items/${sandItemId}/actions/revise`,
+        "material-sand-item-revise",
+        safeSandPayload,
+      );
+      expect(revisedSand.statusCode).toBe(200);
+      const planningSafety = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/actions/evaluate-safety`,
+        "material-planning-safety-ready",
+        {
+          compatibilityConfirmed: true,
+          separationConfirmed: true,
+          validationType: "planning",
+        },
+      );
+      expect(planningSafety.statusCode).toBe(200);
+      expect(planningSafety.json()).toMatchObject({
+        capacityResult: "pass",
+        compatibilityResult: "pass",
+        result: "ready_with_warnings",
+        separationResult: "pass",
+      });
+      const planningSafetyReplay = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/actions/evaluate-safety`,
+        "material-planning-safety-ready",
+        {
+          compatibilityConfirmed: true,
+          separationConfirmed: true,
+          validationType: "planning",
+        },
+      );
+      expect(planningSafetyReplay.json()).toEqual(planningSafety.json());
       expect(
         (
           await command(
@@ -476,6 +703,21 @@ describe(
           )
         ).json(),
       ).toMatchObject({ readiness: "ready", status: "scheduled" });
+      const dispatchSafety = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/actions/evaluate-safety`,
+        "material-dispatch-safety-ready",
+        {
+          compatibilityConfirmed: true,
+          separationConfirmed: true,
+          validationType: "dispatch",
+        },
+      );
+      expect(dispatchSafety.statusCode).toBe(200);
+      expect(dispatchSafety.json()).toMatchObject({
+        capacityResult: "pass",
+        result: "ready_with_warnings",
+      });
       expect(
         (
           await command(
@@ -486,15 +728,353 @@ describe(
           )
         ).json(),
       ).toMatchObject({ status: "dispatch_ready" });
-      await command("POST", `/api/v1/jobs/${jobId}/actions/start`, "job-start", {});
+      const startedJob = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/actions/start`,
+        "job-start",
+        {},
+      );
+      expect(startedJob.statusCode).toBe(200);
+
+      const evidenceDocument = async (filename: string) => {
+        const documentId = randomUUID();
+        await withTenantTransaction(migrator(), tenantId, (transaction) =>
+          transaction.insert(documents).values({
+            availableAt: new Date(),
+            createdBy: userId,
+            id: documentId,
+            mediaType: "application/pdf",
+            objectKey: `integration/material-delivery/${documentId}`,
+            originalFilename: filename,
+            sha256: "a".repeat(64),
+            sizeBytes: 512,
+            status: "available",
+            tenantId,
+            updatedBy: userId,
+          }),
+        );
+        return documentId;
+      };
+      const gravelTicketId = await evidenceDocument("gravel-ticket.pdf");
+      const sandTicketId = await evidenceDocument("sand-ticket.pdf");
+      const gravelReceiptId = await evidenceDocument("gravel-receipt.pdf");
+      const sandReceiptId = await evidenceDocument("sand-receipt.pdf");
+      const gravelPlacementId = await evidenceDocument("gravel-placement.pdf");
+      const sandPlacementId = await evidenceDocument("sand-placement.pdf");
+
+      const transitionLoad = async (action: string, key: string) =>
+        command("POST", `/api/v1/material-loads/${loadId}/actions/${action}`, key, {});
+      expect(
+        (await transitionLoad("ready-for-loading", "load-ready-loading")).json(),
+      ).toMatchObject({
+        status: "ready_for_loading",
+      });
+      expect(
+        (await transitionLoad("arrive-supplier", "load-arrive-supplier")).json(),
+      ).toMatchObject({
+        status: "at_supplier",
+      });
+      expect((await transitionLoad("start-loading", "load-start-loading")).json()).toMatchObject({
+        status: "loading",
+      });
+
+      const gravelQuantities = await command(
+        "POST",
+        `/api/v1/material-load-items/${gravelItem.json<{ id: string }>().id}/actions/record-quantities`,
+        "gravel-quantities-loaded",
+        {
+          actualMaterialId: limestone.id,
+          actualUnitCostCents: 3_200,
+          loadedQuantity: "4.000",
+          purchasedQuantity: "4.000",
+        },
+      );
+      expect(gravelQuantities.statusCode).toBe(200);
+      const sandQuantities = await command(
+        "POST",
+        `/api/v1/material-load-items/${sandItemId}/actions/record-quantities`,
+        "sand-quantities-loaded",
+        {
+          actualMaterialId: sandId,
+          actualUnitCostCents: 2_800,
+          loadedQuantity: "2.000",
+          purchasedQuantity: "2.000",
+        },
+      );
+      expect(sandQuantities.statusCode).toBe(200);
+
+      const attachEvidence = async (
+        itemId: string,
+        documentId: string,
+        purpose: string,
+        key: string,
+      ) =>
+        command("POST", `/api/v1/material-load-items/${itemId}/documents`, key, {
+          documentId,
+          purpose,
+        });
+      expect(
+        (
+          await attachEvidence(
+            gravelItem.json<{ id: string }>().id,
+            gravelTicketId,
+            "supplier_ticket",
+            "gravel-ticket",
+          )
+        ).statusCode,
+      ).toBe(201);
+      expect(
+        (await attachEvidence(sandItemId, sandTicketId, "supplier_ticket", "sand-ticket"))
+          .statusCode,
+      ).toBe(201);
+
+      const actualSafety = await command(
+        "POST",
+        `/api/v1/material-loads/${loadId}/actions/evaluate-safety`,
+        "material-actual-safety-ready",
+        {
+          compatibilityConfirmed: true,
+          separationConfirmed: true,
+          validationType: "actual",
+        },
+      );
+      expect(actualSafety.statusCode).toBe(200);
+      expect(actualSafety.json()).toMatchObject({
+        capacityResult: "pass",
+        result: "ready_with_warnings",
+      });
+      expect((await transitionLoad("mark-loaded", "load-mark-loaded")).json()).toMatchObject({
+        status: "loaded",
+      });
+      expect((await transitionLoad("start-transit", "load-start-transit")).json()).toMatchObject({
+        status: "en_route",
+      });
+      expect(
+        (await transitionLoad("arrive-customer", "load-arrive-customer")).json(),
+      ).toMatchObject({
+        status: "at_customer",
+      });
+      expect(
+        (await transitionLoad("start-unloading", "load-start-unloading")).json(),
+      ).toMatchObject({
+        status: "unloading",
+      });
+
+      await attachEvidence(
+        gravelItem.json<{ id: string }>().id,
+        gravelPlacementId,
+        "placement_evidence",
+        "gravel-placement",
+      );
+      await attachEvidence(sandItemId, sandPlacementId, "placement_evidence", "sand-placement");
+      expect(
+        (
+          await command(
+            "POST",
+            `/api/v1/material-load-items/${gravelItem.json<{ id: string }>().id}/actions/record-quantities`,
+            "gravel-quantities-delivered",
+            {
+              deliveredQuantity: "4.000",
+              deliveryResult: "delivered",
+              remainingDisposition: "none",
+              remainingQuantity: "0.000",
+            },
+          )
+        ).json(),
+      ).toMatchObject({ deliveredQuantity: "4.000", deliveryResult: "delivered" });
+      expect(
+        (
+          await command(
+            "POST",
+            `/api/v1/material-load-items/${sandItemId}/actions/record-quantities`,
+            "sand-quantities-delivered",
+            {
+              deliveredQuantity: "2.000",
+              deliveryResult: "delivered",
+              remainingDisposition: "none",
+              remainingQuantity: "0.000",
+            },
+          )
+        ).json(),
+      ).toMatchObject({ deliveredQuantity: "2.000", deliveryResult: "delivered" });
+
+      const variance = await command(
+        "POST",
+        `/api/v1/material-load-items/${sandItemId}/variances`,
+        "sand-purchase-variance",
+        {
+          actualQuantity: "2.100",
+          expectedQuantity: "2.000",
+          responsibility: "customer",
+          varianceType: "purchase",
+        },
+      );
+      expect(variance.statusCode).toBe(201);
+      expect(variance.json()).toMatchObject({ status: "open", varianceQuantity: "0.100" });
+      const duplicateVariance = await command(
+        "POST",
+        `/api/v1/material-load-items/${sandItemId}/variances`,
+        "sand-purchase-variance-duplicate",
+        {
+          actualQuantity: "2.100",
+          expectedQuantity: "2.000",
+          responsibility: "customer",
+          varianceType: "purchase",
+        },
+      );
+      expect(duplicateVariance.statusCode).toBe(409);
+      const varianceId = variance.json<{ id: string }>().id;
+      const chargePayload = {
+        calculationSnapshot: { acceptedRateSource: "canonical-masonry-sand-line" },
+        chargeKind: "charge",
+        chargeType: "additional_material",
+        customerAuthorizationStatus: "authorized",
+        customerDescription: "Additional masonry sand purchased",
+        dedupeKey: `purchase-variance:${varianceId}`,
+        evidenceStatus: "complete",
+        internalApprovalStatus: "approved",
+        occurredAt: new Date().toISOString(),
+        quantity: "0.100",
+        rateCents: 2_800,
+        responsibility: "customer",
+        sourceId: varianceId,
+        sourceType: "quantity_variance",
+        taxBehavior: "non_taxable",
+        unit: "cubic_yards",
+      };
+      const charge = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/job-charges`,
+        "sand-variance-charge",
+        chargePayload,
+      );
+      expect(charge.statusCode).toBe(201);
+      expect(charge.json()).toMatchObject({ calculatedAmountCents: 280, status: "draft" });
+      const duplicateCharge = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/job-charges`,
+        "sand-variance-charge-duplicate",
+        chargePayload,
+      );
+      expect(duplicateCharge.statusCode).toBe(409);
+      const approvedCharge = await command(
+        "POST",
+        `/api/v1/job-charges/${charge.json<{ id: string }>().id}/actions/approve`,
+        "sand-variance-charge-approve",
+        {},
+      );
+      expect(approvedCharge.json()).toMatchObject({
+        approvedAmountCents: 280,
+        status: "ready_to_invoice",
+      });
+      const resolvedVariance = await command(
+        "POST",
+        `/api/v1/material-quantity-variances/${varianceId}/actions/resolve`,
+        "sand-purchase-variance-resolve",
+        { reason: "Additional purchase approved as a Job Charge", resolutionType: "charge" },
+      );
+      expect(resolvedVariance.json()).toMatchObject({ status: "resolved" });
+
+      expect(
+        (await transitionLoad("complete-delivery", "load-complete-delivery")).json(),
+      ).toMatchObject({
+        status: "delivered",
+      });
+      expect(
+        (await transitionLoad("start-reconciliation", "load-start-reconcile")).json(),
+      ).toMatchObject({
+        status: "reconciling",
+      });
+      expect((await transitionLoad("reconcile", "load-reconcile")).json()).toMatchObject({
+        status: "reconciled",
+      });
+
+      const createExpense = async (
+        itemId: string,
+        receiptDocumentId: string,
+        amountCents: number,
+        label: string,
+      ) => {
+        const created = await command(
+          "POST",
+          `/api/v1/jobs/${jobId}/expenses`,
+          `${label}-expense`,
+          {
+            amountCents,
+            description: `${label} material purchase`,
+            expenseType: "material_purchase",
+            incurredAt: new Date().toISOString(),
+            receiptDocumentId,
+          },
+        );
+        expect(created.statusCode).toBe(201);
+        const expenseId = created.json<{ id: string }>().id;
+        expect(
+          (
+            await command(
+              "POST",
+              `/api/v1/expenses/${expenseId}/allocations`,
+              `${label}-allocation`,
+              { amountCents, materialLoadItemId: itemId },
+            )
+          ).statusCode,
+        ).toBe(201);
+        expect(
+          (
+            await command(
+              "POST",
+              `/api/v1/expenses/${expenseId}/actions/approve`,
+              `${label}-expense-approve`,
+              {},
+            )
+          ).json(),
+        ).toMatchObject({ status: "approved" });
+        expect(
+          (
+            await command(
+              "POST",
+              `/api/v1/expenses/${expenseId}/actions/reconcile`,
+              `${label}-expense-reconcile`,
+              {},
+            )
+          ).json(),
+        ).toMatchObject({ status: "reconciled" });
+        return expenseId;
+      };
+      await createExpense(gravelItem.json<{ id: string }>().id, gravelReceiptId, 12_800, "gravel");
+      await createExpense(sandItemId, sandReceiptId, 5_600, "sand");
+      const blockedInvoiceReadiness = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/actions/evaluate-invoice-readiness`,
+        "material-invoice-readiness-missing-receipts",
+      );
+      expect(blockedInvoiceReadiness.json<{ blockers: string[] }>()).toMatchObject({
+        result: "not_ready",
+      });
+      expect(blockedInvoiceReadiness.json<{ blockers: string[] }>().blockers).toEqual(
+        expect.arrayContaining([expect.stringContaining("missing a supplier receipt")]),
+      );
+      await attachEvidence(
+        gravelItem.json<{ id: string }>().id,
+        gravelReceiptId,
+        "supplier_receipt",
+        "gravel-item-receipt",
+      );
+      await attachEvidence(sandItemId, sandReceiptId, "supplier_receipt", "sand-item-receipt");
+      const invoiceReadiness = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/actions/evaluate-invoice-readiness`,
+        "material-invoice-readiness-ready",
+      );
+      expect(invoiceReadiness.json()).toMatchObject({ blockers: [], result: "ready" });
       const routeStop = await command(
         "POST",
         `/api/v1/jobs/${jobId}/route-stops`,
         "job-route-stop",
         {
-          label: "Customer driveway",
+          label: "Customer exit check",
           locationSnapshot: { city: "Lincoln", region: "NE" },
-          sequence: 1,
+          sequence: 3,
           stopType: "customer",
         },
       );
@@ -541,7 +1121,7 @@ describe(
         "POST",
         `/api/v1/jobs/${jobId}/route-stops`,
         "job-route-after-close",
-        { label: "Late stop", locationSnapshot: {}, sequence: 2, stopType: "other" },
+        { label: "Late stop", locationSnapshot: {}, sequence: 4, stopType: "other" },
       );
       expect(lockedStop.statusCode).toBe(409);
       const reopened = await command("POST", `/api/v1/jobs/${jobId}/actions/reopen`, "job-reopen", {
@@ -570,15 +1150,66 @@ describe(
           .select({ value: count() })
           .from(jobs)
           .where(eq(jobs.projectId, acceptedBody.project.id)),
+        materialDeliveryDetails: await transaction
+          .select({ value: count() })
+          .from(materialDeliveryDetails)
+          .where(eq(materialDeliveryDetails.jobId, jobId)),
+        materialLoadValidations: await transaction
+          .select({ value: count() })
+          .from(materialLoadValidations)
+          .where(eq(materialLoadValidations.materialLoadId, loadId)),
+        materialLoads: await transaction
+          .select({ value: count() })
+          .from(materialLoads)
+          .where(eq(materialLoads.jobId, jobId)),
+        materialLoadItems: await transaction
+          .select({ value: count() })
+          .from(materialLoadItems)
+          .where(eq(materialLoadItems.jobId, jobId)),
+        materialQuantityVariances: await transaction
+          .select({ value: count() })
+          .from(materialQuantityVariances)
+          .where(eq(materialQuantityVariances.jobId, jobId)),
+        expenses: await transaction
+          .select({ value: count() })
+          .from(expenses)
+          .where(eq(expenses.jobId, jobId)),
+        expenseAllocations: await transaction
+          .select({ value: count() })
+          .from(expenseAllocations)
+          .where(eq(expenseAllocations.jobId, jobId)),
+        jobCharges: await transaction
+          .select({ value: count() })
+          .from(jobCharges)
+          .where(eq(jobCharges.jobId, jobId)),
+        documentLinks: await transaction
+          .select({ value: count() })
+          .from(documentLinks)
+          .where(eq(documentLinks.entityType, "MaterialLoadItem")),
       }));
       expect(persisted.acceptances[0]?.value).toBe(1);
       expect(persisted.projects[0]?.value).toBe(1);
       expect(persisted.jobs[0]?.value).toBe(1);
+      expect(persisted.materialDeliveryDetails[0]?.value).toBe(1);
+      expect(persisted.materialLoadValidations[0]?.value).toBe(4);
+      expect(persisted.materialLoads[0]?.value).toBe(1);
+      expect(persisted.materialLoadItems[0]?.value).toBe(2);
+      expect(persisted.materialQuantityVariances[0]?.value).toBe(1);
+      expect(persisted.expenses[0]?.value).toBe(2);
+      expect(persisted.expenseAllocations[0]?.value).toBe(2);
+      expect(persisted.jobCharges[0]?.value).toBe(1);
+      expect(persisted.documentLinks[0]?.value).toBe(6);
       expect(persisted.line).toBeDefined();
       const foreignJobs = await withTenantTransaction(runtime(), foreignTenantId, (transaction) =>
         transaction.select().from(jobs),
       );
       expect(foreignJobs).toEqual([]);
+      const foreignMaterialDelivery = await withTenantTransaction(
+        runtime(),
+        foreignTenantId,
+        (transaction) => transaction.select().from(materialDeliveryDetails),
+      );
+      expect(foreignMaterialDelivery).toEqual([]);
       await expect(
         withTenantTransaction(runtime(), tenantId, (transaction) =>
           transaction

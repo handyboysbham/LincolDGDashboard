@@ -739,6 +739,11 @@ export const supplierLocations = pgTable(
   },
   (table) => [
     unique("supplier_locations_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("supplier_locations_tenant_supplier_id_unique").on(
+      table.tenantId,
+      table.supplierId,
+      table.id,
+    ),
     foreignKey({
       columns: [table.tenantId, table.supplierId],
       foreignColumns: [suppliers.tenantId, suppliers.id],
@@ -1836,6 +1841,10 @@ export const assets = pgTable(
     assetType: varchar("asset_type", { length: 40 }).notNull(),
     status: varchar("status", { length: 30 }).notNull().default("available"),
     capacityWeight: numeric("capacity_weight", { precision: 14, scale: 3 }),
+    capacityVolumeCubicYards: numeric("capacity_volume_cubic_yards", {
+      precision: 14,
+      scale: 3,
+    }),
     ...auditColumns,
   },
   (table) => [
@@ -1849,6 +1858,10 @@ export const assets = pgTable(
     check(
       "assets_capacity_check",
       sql`${table.capacityWeight} is null or ${table.capacityWeight} > 0`,
+    ),
+    check(
+      "assets_volume_capacity_check",
+      sql`${table.capacityVolumeCubicYards} is null or ${table.capacityVolumeCubicYards} > 0`,
     ),
     index("assets_tenant_type_status_idx").on(table.tenantId, table.assetType, table.status),
   ],
@@ -2069,6 +2082,7 @@ export const routeStops = pgTable(
   },
   (table) => [
     unique("route_stops_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("route_stops_tenant_job_id_unique").on(table.tenantId, table.jobId, table.id),
     unique("route_stops_tenant_job_sequence_unique").on(
       table.tenantId,
       table.jobId,
@@ -2332,5 +2346,993 @@ export const operationalHolds = pgTable(
       table.status,
     ),
     index("operational_holds_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+  ],
+);
+
+export const materialDeliveryDetails = pgTable(
+  "material_delivery_details",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    status: varchar("status", { length: 40 }).notNull().default("planning"),
+    deliveryType: varchar("delivery_type", { length: 30 }).notNull().default("bulk"),
+    plannedLoadCount: integer("planned_load_count").notNull().default(1),
+    plannedVolumeCubicYards: numeric("planned_volume_cubic_yards", {
+      precision: 14,
+      scale: 3,
+    }),
+    plannedWeightPounds: numeric("planned_weight_pounds", { precision: 14, scale: 3 }),
+    actualDeliveredVolumeCubicYards: numeric("actual_delivered_volume_cubic_yards", {
+      precision: 14,
+      scale: 3,
+    }),
+    actualDeliveredWeightPounds: numeric("actual_delivered_weight_pounds", {
+      precision: 14,
+      scale: 3,
+    }),
+    capacityStatus: varchar("capacity_status", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    compatibilityStatus: varchar("compatibility_status", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    receiptStatus: varchar("receipt_status", { length: 30 }).notNull().default("missing"),
+    placementEvidenceRequired: boolean("placement_evidence_required").notNull().default(true),
+    placementEvidenceStatus: varchar("placement_evidence_status", { length: 30 })
+      .notNull()
+      .default("missing"),
+    invoiceReadiness: varchar("invoice_readiness", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    partialDelivery: boolean("partial_delivery").notNull().default(false),
+    completionSummary: text("completion_summary"),
+    operationallyCompletedAt: timestamp("operationally_completed_at", { withTimezone: true }),
+    invoiceReadyAt: timestamp("invoice_ready_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("material_delivery_details_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("material_delivery_details_tenant_job_unique").on(table.tenantId, table.jobId),
+    unique("material_delivery_details_tenant_id_job_unique").on(
+      table.tenantId,
+      table.id,
+      table.jobId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "material_delivery_details_tenant_job_fk",
+    }).onDelete("restrict"),
+    check(
+      "material_delivery_details_status_check",
+      sql`${table.status} in ('planning', 'ready', 'active', 'partially_delivered', 'delivered', 'reconciling', 'operationally_complete', 'cancelled')`,
+    ),
+    check(
+      "material_delivery_details_type_check",
+      sql`${table.deliveryType} in ('bulk', 'placed', 'spread')`,
+    ),
+    check("material_delivery_details_load_count_check", sql`${table.plannedLoadCount} > 0`),
+    check(
+      "material_delivery_details_planned_volume_check",
+      sql`${table.plannedVolumeCubicYards} is null or ${table.plannedVolumeCubicYards} > 0`,
+    ),
+    check(
+      "material_delivery_details_planned_weight_check",
+      sql`${table.plannedWeightPounds} is null or ${table.plannedWeightPounds} > 0`,
+    ),
+    check(
+      "material_delivery_details_actual_volume_check",
+      sql`${table.actualDeliveredVolumeCubicYards} is null or ${table.actualDeliveredVolumeCubicYards} >= 0`,
+    ),
+    check(
+      "material_delivery_details_actual_weight_check",
+      sql`${table.actualDeliveredWeightPounds} is null or ${table.actualDeliveredWeightPounds} >= 0`,
+    ),
+    check(
+      "material_delivery_details_capacity_check",
+      sql`${table.capacityStatus} in ('evaluation_required', 'pass', 'fail')`,
+    ),
+    check(
+      "material_delivery_details_compatibility_check",
+      sql`${table.compatibilityStatus} in ('evaluation_required', 'pass', 'fail', 'not_required')`,
+    ),
+    check(
+      "material_delivery_details_receipt_check",
+      sql`${table.receiptStatus} in ('missing', 'partial', 'complete', 'waived')`,
+    ),
+    check(
+      "material_delivery_details_evidence_check",
+      sql`${table.placementEvidenceStatus} in ('not_required', 'missing', 'partial', 'complete', 'waived')`,
+    ),
+    check(
+      "material_delivery_details_invoice_readiness_check",
+      sql`${table.invoiceReadiness} in ('evaluation_required', 'ready', 'not_ready')`,
+    ),
+    index("material_delivery_details_tenant_readiness_idx").on(
+      table.tenantId,
+      table.invoiceReadiness,
+      table.status,
+    ),
+  ],
+);
+
+export const materialLoads = pgTable(
+  "material_loads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    materialDeliveryDetailId: uuid("material_delivery_detail_id").notNull(),
+    sequence: integer("sequence").notNull(),
+    status: varchar("status", { length: 40 }).notNull().default("planned"),
+    plannedVolumeCubicYards: numeric("planned_volume_cubic_yards", {
+      precision: 14,
+      scale: 3,
+    }),
+    plannedWeightPounds: numeric("planned_weight_pounds", { precision: 14, scale: 3 }),
+    actualVolumeCubicYards: numeric("actual_volume_cubic_yards", { precision: 14, scale: 3 }),
+    actualWeightPounds: numeric("actual_weight_pounds", { precision: 14, scale: 3 }),
+    capacityResult: varchar("capacity_result", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    compatibilityResult: varchar("compatibility_result", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    separationResult: varchar("separation_result", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    loadingStartedAt: timestamp("loading_started_at", { withTimezone: true }),
+    loadedAt: timestamp("loaded_at", { withTimezone: true }),
+    transitStartedAt: timestamp("transit_started_at", { withTimezone: true }),
+    unloadingStartedAt: timestamp("unloading_started_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    reconciledAt: timestamp("reconciled_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("material_loads_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("material_loads_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
+    unique("material_loads_tenant_detail_sequence_unique").on(
+      table.tenantId,
+      table.materialDeliveryDetailId,
+      table.sequence,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "material_loads_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialDeliveryDetailId, table.jobId],
+      foreignColumns: [
+        materialDeliveryDetails.tenantId,
+        materialDeliveryDetails.id,
+        materialDeliveryDetails.jobId,
+      ],
+      name: "material_loads_tenant_detail_job_fk",
+    }).onDelete("restrict"),
+    check("material_loads_sequence_check", sql`${table.sequence} > 0`),
+    check(
+      "material_loads_status_check",
+      sql`${table.status} in ('planned', 'ready_for_loading', 'at_supplier', 'loading', 'loaded', 'en_route', 'at_customer', 'unloading', 'partially_delivered', 'delivered', 'reconciling', 'reconciled', 'rejected', 'cancelled')`,
+    ),
+    check(
+      "material_loads_planned_volume_check",
+      sql`${table.plannedVolumeCubicYards} is null or ${table.plannedVolumeCubicYards} >= 0`,
+    ),
+    check(
+      "material_loads_planned_weight_check",
+      sql`${table.plannedWeightPounds} is null or ${table.plannedWeightPounds} >= 0`,
+    ),
+    check(
+      "material_loads_actual_volume_check",
+      sql`${table.actualVolumeCubicYards} is null or ${table.actualVolumeCubicYards} >= 0`,
+    ),
+    check(
+      "material_loads_actual_weight_check",
+      sql`${table.actualWeightPounds} is null or ${table.actualWeightPounds} >= 0`,
+    ),
+    check(
+      "material_loads_capacity_check",
+      sql`${table.capacityResult} in ('evaluation_required', 'pass', 'fail')`,
+    ),
+    check(
+      "material_loads_compatibility_check",
+      sql`${table.compatibilityResult} in ('evaluation_required', 'pass', 'fail', 'not_required')`,
+    ),
+    check(
+      "material_loads_separation_check",
+      sql`${table.separationResult} in ('evaluation_required', 'pass', 'fail', 'not_required')`,
+    ),
+    check(
+      "material_loads_loading_time_check",
+      sql`${table.loadedAt} is null or ${table.loadingStartedAt} is null or ${table.loadedAt} >= ${table.loadingStartedAt}`,
+    ),
+    check(
+      "material_loads_transit_time_check",
+      sql`${table.transitStartedAt} is null or ${table.loadedAt} is null or ${table.transitStartedAt} >= ${table.loadedAt}`,
+    ),
+    check(
+      "material_loads_unloading_time_check",
+      sql`${table.unloadingStartedAt} is null or ${table.transitStartedAt} is null or ${table.unloadingStartedAt} >= ${table.transitStartedAt}`,
+    ),
+    check(
+      "material_loads_delivery_time_check",
+      sql`${table.deliveredAt} is null or ${table.unloadingStartedAt} is null or ${table.deliveredAt} >= ${table.unloadingStartedAt}`,
+    ),
+    check(
+      "material_loads_reconcile_time_check",
+      sql`${table.reconciledAt} is null or ${table.deliveredAt} is null or ${table.reconciledAt} >= ${table.deliveredAt}`,
+    ),
+    index("material_loads_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+  ],
+);
+
+export const materialLoadAssets = pgTable(
+  "material_load_assets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    materialLoadId: uuid("material_load_id").notNull(),
+    assetId: uuid("asset_id").notNull(),
+    role: varchar("role", { length: 30 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("planned"),
+    capacitySnapshot: jsonb("capacity_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("material_load_assets_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("material_load_assets_tenant_load_asset_unique").on(
+      table.tenantId,
+      table.materialLoadId,
+      table.assetId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "material_load_assets_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialLoadId, table.jobId],
+      foreignColumns: [materialLoads.tenantId, materialLoads.id, materialLoads.jobId],
+      name: "material_load_assets_tenant_load_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.assetId],
+      foreignColumns: [assets.tenantId, assets.id],
+      name: "material_load_assets_tenant_asset_fk",
+    }).onDelete("restrict"),
+    check(
+      "material_load_assets_role_check",
+      sql`${table.role} in ('truck', 'trailer', 'equipment')`,
+    ),
+    check(
+      "material_load_assets_status_check",
+      sql`${table.status} in ('planned', 'active', 'used', 'released', 'cancelled')`,
+    ),
+    uniqueIndex("material_load_assets_one_current_role_idx")
+      .on(table.tenantId, table.materialLoadId, table.role)
+      .where(
+        sql`${table.role} in ('truck', 'trailer') and ${table.status} in ('planned', 'active', 'used')`,
+      ),
+    index("material_load_assets_tenant_asset_status_idx").on(
+      table.tenantId,
+      table.assetId,
+      table.status,
+    ),
+  ],
+);
+
+export const materialLoadItems = pgTable(
+  "material_load_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    materialLoadId: uuid("material_load_id").notNull(),
+    acceptedQuoteLineItemId: uuid("accepted_quote_line_item_id"),
+    materialId: uuid("material_id").notNull(),
+    actualMaterialId: uuid("actual_material_id"),
+    plannedSupplierMaterialId: uuid("planned_supplier_material_id"),
+    actualSupplierMaterialId: uuid("actual_supplier_material_id"),
+    supplierRouteStopId: uuid("supplier_route_stop_id"),
+    placementRouteStopId: uuid("placement_route_stop_id"),
+    sequence: integer("sequence").notNull(),
+    loadingSequence: integer("loading_sequence").notNull(),
+    unloadingSequence: integer("unloading_sequence").notNull(),
+    quantityUnit: varchar("quantity_unit", { length: 30 }).notNull(),
+    plannedQuantity: numeric("planned_quantity", { precision: 12, scale: 3 }).notNull(),
+    purchasedQuantity: numeric("purchased_quantity", { precision: 12, scale: 3 }),
+    loadedQuantity: numeric("loaded_quantity", { precision: 12, scale: 3 }),
+    deliveredQuantity: numeric("delivered_quantity", { precision: 12, scale: 3 }),
+    remainingQuantity: numeric("remaining_quantity", { precision: 12, scale: 3 }),
+    unitWeightPounds: numeric("unit_weight_pounds", { precision: 14, scale: 3 }),
+    unitVolumeCubicYards: numeric("unit_volume_cubic_yards", { precision: 14, scale: 3 }),
+    plannedUnitCostCents: bigint("planned_unit_cost_cents", { mode: "number" }),
+    actualUnitCostCents: bigint("actual_unit_cost_cents", { mode: "number" }),
+    compartment: varchar("compartment", { length: 100 }),
+    separationInstructions: text("separation_instructions"),
+    deliveryResult: varchar("delivery_result", { length: 30 }).notNull().default("pending"),
+    remainingDisposition: varchar("remaining_disposition", { length: 40 }),
+    substitutionStatus: varchar("substitution_status", { length: 30 })
+      .notNull()
+      .default("not_required"),
+    varianceStatus: varchar("variance_status", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    reconciledAt: timestamp("reconciled_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("material_load_items_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("material_load_items_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
+    unique("material_load_items_tenant_load_sequence_unique").on(
+      table.tenantId,
+      table.materialLoadId,
+      table.sequence,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "material_load_items_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialLoadId, table.jobId],
+      foreignColumns: [materialLoads.tenantId, materialLoads.id, materialLoads.jobId],
+      name: "material_load_items_tenant_load_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.acceptedQuoteLineItemId],
+      foreignColumns: [quoteLineItems.tenantId, quoteLineItems.id],
+      name: "material_load_items_tenant_quote_line_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialId],
+      foreignColumns: [materials.tenantId, materials.id],
+      name: "material_load_items_tenant_material_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.actualMaterialId],
+      foreignColumns: [materials.tenantId, materials.id],
+      name: "material_load_items_tenant_actual_material_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.plannedSupplierMaterialId],
+      foreignColumns: [supplierMaterials.tenantId, supplierMaterials.id],
+      name: "material_load_items_tenant_planned_supplier_material_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.actualSupplierMaterialId],
+      foreignColumns: [supplierMaterials.tenantId, supplierMaterials.id],
+      name: "material_load_items_tenant_actual_supplier_material_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.jobId, table.supplierRouteStopId],
+      foreignColumns: [routeStops.tenantId, routeStops.jobId, routeStops.id],
+      name: "material_load_items_tenant_supplier_stop_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.jobId, table.placementRouteStopId],
+      foreignColumns: [routeStops.tenantId, routeStops.jobId, routeStops.id],
+      name: "material_load_items_tenant_placement_stop_fk",
+    }).onDelete("restrict"),
+    check("material_load_items_sequence_check", sql`${table.sequence} > 0`),
+    check("material_load_items_loading_sequence_check", sql`${table.loadingSequence} > 0`),
+    check("material_load_items_unloading_sequence_check", sql`${table.unloadingSequence} > 0`),
+    check(
+      "material_load_items_unit_check",
+      sql`${table.quantityUnit} in ('tons', 'cubic_yards', 'loads')`,
+    ),
+    check("material_load_items_planned_quantity_check", sql`${table.plannedQuantity} > 0`),
+    check(
+      "material_load_items_purchased_quantity_check",
+      sql`${table.purchasedQuantity} is null or ${table.purchasedQuantity} >= 0`,
+    ),
+    check(
+      "material_load_items_loaded_quantity_check",
+      sql`${table.loadedQuantity} is null or ${table.loadedQuantity} >= 0`,
+    ),
+    check(
+      "material_load_items_delivered_quantity_check",
+      sql`${table.deliveredQuantity} is null or ${table.deliveredQuantity} >= 0`,
+    ),
+    check(
+      "material_load_items_remaining_quantity_check",
+      sql`${table.remainingQuantity} is null or ${table.remainingQuantity} >= 0`,
+    ),
+    check(
+      "material_load_items_weight_conversion_check",
+      sql`${table.unitWeightPounds} is null or ${table.unitWeightPounds} > 0`,
+    ),
+    check(
+      "material_load_items_volume_conversion_check",
+      sql`${table.unitVolumeCubicYards} is null or ${table.unitVolumeCubicYards} > 0`,
+    ),
+    check(
+      "material_load_items_planned_cost_check",
+      sql`${table.plannedUnitCostCents} is null or ${table.plannedUnitCostCents} >= 0`,
+    ),
+    check(
+      "material_load_items_actual_cost_check",
+      sql`${table.actualUnitCostCents} is null or ${table.actualUnitCostCents} >= 0`,
+    ),
+    check(
+      "material_load_items_delivery_result_check",
+      sql`${table.deliveryResult} in ('pending', 'delivered', 'partially_delivered', 'not_delivered', 'returned', 'cancelled')`,
+    ),
+    check(
+      "material_load_items_remaining_disposition_check",
+      sql`${table.remainingDisposition} is null or ${table.remainingDisposition} in ('none', 'returned_to_supplier', 'retained_by_business', 'left_with_customer', 'disposed', 'follow_up_job', 'other')`,
+    ),
+    check(
+      "material_load_items_substitution_check",
+      sql`${table.substitutionStatus} in ('not_required', 'pending', 'approved', 'rejected', 'cancelled')`,
+    ),
+    check(
+      "material_load_items_variance_check",
+      sql`${table.varianceStatus} in ('evaluation_required', 'none', 'open', 'resolved', 'waived')`,
+    ),
+    index("material_load_items_tenant_job_result_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.deliveryResult,
+    ),
+    index("material_load_items_tenant_supplier_idx").on(
+      table.tenantId,
+      table.actualSupplierMaterialId,
+    ),
+  ],
+);
+
+export const materialLoadValidations = pgTable(
+  "material_load_validations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    materialLoadId: uuid("material_load_id").notNull(),
+    validationType: varchar("validation_type", { length: 30 }).notNull(),
+    result: varchar("result", { length: 30 }).notNull(),
+    capacityResult: varchar("capacity_result", { length: 30 }).notNull(),
+    compatibilityResult: varchar("compatibility_result", { length: 30 }).notNull(),
+    separationResult: varchar("separation_result", { length: 30 }).notNull(),
+    blockers: jsonb("blockers").$type<string[]>().notNull().default([]),
+    warnings: jsonb("warnings").$type<string[]>().notNull().default([]),
+    inputSnapshot: jsonb("input_snapshot").$type<Record<string, unknown>>().notNull(),
+    inputHash: varchar("input_hash", { length: 64 }).notNull(),
+    supersedesValidationId: uuid("supersedes_validation_id"),
+    evaluatedAt: timestamp("evaluated_at", { withTimezone: true }).notNull().defaultNow(),
+    evaluatedBy: uuid("evaluated_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique("material_load_validations_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("material_load_validations_tenant_load_type_hash_unique").on(
+      table.tenantId,
+      table.materialLoadId,
+      table.validationType,
+      table.inputHash,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "material_load_validations_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialLoadId, table.jobId],
+      foreignColumns: [materialLoads.tenantId, materialLoads.id, materialLoads.jobId],
+      name: "material_load_validations_tenant_load_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.supersedesValidationId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "material_load_validations_tenant_previous_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.evaluatedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "material_load_validations_tenant_evaluator_fk",
+    }).onDelete("restrict"),
+    check(
+      "material_load_validations_type_check",
+      sql`${table.validationType} in ('planning', 'dispatch', 'actual')`,
+    ),
+    check(
+      "material_load_validations_result_check",
+      sql`${table.result} in ('ready', 'ready_with_warnings', 'not_ready')`,
+    ),
+    check(
+      "material_load_validations_capacity_check",
+      sql`${table.capacityResult} in ('pass', 'fail')`,
+    ),
+    check(
+      "material_load_validations_compatibility_check",
+      sql`${table.compatibilityResult} in ('pass', 'fail', 'not_required')`,
+    ),
+    check(
+      "material_load_validations_separation_check",
+      sql`${table.separationResult} in ('pass', 'fail', 'not_required')`,
+    ),
+    check(
+      "material_load_validations_failed_safety_check",
+      sql`(${table.capacityResult} <> 'fail' and ${table.compatibilityResult} <> 'fail' and ${table.separationResult} <> 'fail') or ${table.result} = 'not_ready'`,
+    ),
+    check(
+      "material_load_validations_ready_safety_check",
+      sql`${table.result} = 'not_ready' or (${table.capacityResult} = 'pass' and ${table.compatibilityResult} in ('pass', 'not_required') and ${table.separationResult} in ('pass', 'not_required'))`,
+    ),
+    index("material_load_validations_tenant_load_latest_idx").on(
+      table.tenantId,
+      table.materialLoadId,
+      table.validationType,
+      table.evaluatedAt,
+    ),
+  ],
+);
+
+export const materialSubstitutions = pgTable(
+  "material_substitutions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    materialLoadItemId: uuid("material_load_item_id").notNull(),
+    originalMaterialId: uuid("original_material_id").notNull(),
+    replacementMaterialId: uuid("replacement_material_id").notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("requested"),
+    reason: text("reason").notNull(),
+    internalApprovalRequired: boolean("internal_approval_required").notNull().default(true),
+    customerApprovalRequired: boolean("customer_approval_required").notNull().default(false),
+    quoteRevisionRequired: boolean("quote_revision_required").notNull().default(false),
+    capacityRevalidationRequired: boolean("capacity_revalidation_required").notNull().default(true),
+    compatibilityRevalidationRequired: boolean("compatibility_revalidation_required")
+      .notNull()
+      .default(true),
+    requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+    requestedBy: uuid("requested_by").notNull(),
+    customerAuthorizedAt: timestamp("customer_authorized_at", { withTimezone: true }),
+    customerAuthorizationReference: varchar("customer_authorization_reference", { length: 240 }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decidedBy: uuid("decided_by"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("material_substitutions_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "material_substitutions_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialLoadItemId, table.jobId],
+      foreignColumns: [materialLoadItems.tenantId, materialLoadItems.id, materialLoadItems.jobId],
+      name: "material_substitutions_tenant_item_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.originalMaterialId],
+      foreignColumns: [materials.tenantId, materials.id],
+      name: "material_substitutions_tenant_original_material_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.replacementMaterialId],
+      foreignColumns: [materials.tenantId, materials.id],
+      name: "material_substitutions_tenant_replacement_material_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.requestedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "material_substitutions_tenant_requester_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.decidedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "material_substitutions_tenant_decider_fk",
+    }).onDelete("restrict"),
+    check(
+      "material_substitutions_material_check",
+      sql`${table.originalMaterialId} <> ${table.replacementMaterialId}`,
+    ),
+    check(
+      "material_substitutions_status_check",
+      sql`${table.status} in ('requested', 'pending_internal', 'pending_customer', 'approved', 'rejected', 'cancelled')`,
+    ),
+    check(
+      "material_substitutions_decision_check",
+      sql`${table.status} not in ('approved', 'rejected') or (${table.decidedAt} is not null and ${table.decidedBy} is not null)`,
+    ),
+    check(
+      "material_substitutions_customer_approval_check",
+      sql`${table.status} <> 'approved' or not ${table.customerApprovalRequired} or (${table.customerAuthorizedAt} is not null and ${table.customerAuthorizationReference} is not null)`,
+    ),
+    uniqueIndex("material_substitutions_one_pending_idx")
+      .on(table.tenantId, table.materialLoadItemId)
+      .where(sql`${table.status} in ('requested', 'pending_internal', 'pending_customer')`),
+    index("material_substitutions_tenant_job_status_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.status,
+    ),
+  ],
+);
+
+export const materialQuantityVariances = pgTable(
+  "material_quantity_variances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    materialLoadItemId: uuid("material_load_item_id").notNull(),
+    varianceType: varchar("variance_type", { length: 30 }).notNull(),
+    quantityUnit: varchar("quantity_unit", { length: 30 }).notNull(),
+    expectedQuantity: numeric("expected_quantity", { precision: 12, scale: 3 }).notNull(),
+    actualQuantity: numeric("actual_quantity", { precision: 12, scale: 3 }).notNull(),
+    varianceQuantity: numeric("variance_quantity", { precision: 12, scale: 3 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("open"),
+    responsibility: varchar("responsibility", { length: 40 }).notNull().default("unknown"),
+    resolutionType: varchar("resolution_type", { length: 40 }),
+    resolutionReason: text("resolution_reason"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolvedBy: uuid("resolved_by"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("material_quantity_variances_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "material_quantity_variances_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialLoadItemId, table.jobId],
+      foreignColumns: [materialLoadItems.tenantId, materialLoadItems.id, materialLoadItems.jobId],
+      name: "material_quantity_variances_tenant_item_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.resolvedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "material_quantity_variances_tenant_resolver_fk",
+    }).onDelete("restrict"),
+    check(
+      "material_quantity_variances_type_check",
+      sql`${table.varianceType} in ('purchase', 'loading', 'delivery', 'remaining')`,
+    ),
+    check(
+      "material_quantity_variances_unit_check",
+      sql`${table.quantityUnit} in ('tons', 'cubic_yards', 'loads')`,
+    ),
+    check(
+      "material_quantity_variances_quantity_check",
+      sql`${table.expectedQuantity} >= 0 and ${table.actualQuantity} >= 0 and ${table.varianceQuantity} = ${table.actualQuantity} - ${table.expectedQuantity}`,
+    ),
+    check(
+      "material_quantity_variances_status_check",
+      sql`${table.status} in ('open', 'resolved', 'waived')`,
+    ),
+    check(
+      "material_quantity_variances_responsibility_check",
+      sql`${table.responsibility} in ('customer', 'business', 'shared', 'supplier', 'vendor', 'insurance', 'unknown', 'disputed', 'not_applicable')`,
+    ),
+    check(
+      "material_quantity_variances_resolution_type_check",
+      sql`${table.resolutionType} is null or ${table.resolutionType} in ('charge', 'credit', 'no_charge', 'follow_up_job', 'supplier_adjustment', 'customer_acceptance', 'other')`,
+    ),
+    check(
+      "material_quantity_variances_resolution_check",
+      sql`${table.status} = 'open' or (${table.resolutionType} is not null and ${table.resolutionReason} is not null and ${table.resolvedAt} is not null and ${table.resolvedBy} is not null)`,
+    ),
+    uniqueIndex("material_quantity_variances_one_open_idx")
+      .on(table.tenantId, table.materialLoadItemId, table.varianceType)
+      .where(sql`${table.status} = 'open'`),
+    index("material_quantity_variances_tenant_job_status_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.status,
+    ),
+  ],
+);
+
+export const expenses = pgTable(
+  "expenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    expenseNumber: varchar("expense_number", { length: 40 }).notNull(),
+    expenseKind: varchar("expense_kind", { length: 30 }).notNull().default("expense"),
+    expenseType: varchar("expense_type", { length: 40 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("draft"),
+    supplierId: uuid("supplier_id"),
+    supplierLocationId: uuid("supplier_location_id"),
+    receiptDocumentId: uuid("receipt_document_id"),
+    receiptStatus: varchar("receipt_status", { length: 30 }).notNull().default("missing"),
+    receiptWaiverReason: text("receipt_waiver_reason"),
+    receiptWaivedAt: timestamp("receipt_waived_at", { withTimezone: true }),
+    receiptWaivedBy: uuid("receipt_waived_by"),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    description: varchar("description", { length: 300 }).notNull(),
+    externalReference: varchar("external_reference", { length: 160 }),
+    incurredAt: timestamp("incurred_at", { withTimezone: true }).notNull(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: uuid("approved_by"),
+    reversesExpenseId: uuid("reverses_expense_id"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("expenses_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("expenses_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
+    unique("expenses_tenant_number_unique").on(table.tenantId, table.expenseNumber),
+    unique("expenses_tenant_reversal_unique").on(table.tenantId, table.reversesExpenseId),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "expenses_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.supplierId],
+      foreignColumns: [suppliers.tenantId, suppliers.id],
+      name: "expenses_tenant_supplier_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.supplierId, table.supplierLocationId],
+      foreignColumns: [
+        supplierLocations.tenantId,
+        supplierLocations.supplierId,
+        supplierLocations.id,
+      ],
+      name: "expenses_tenant_supplier_location_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.receiptDocumentId],
+      foreignColumns: [documents.tenantId, documents.id],
+      name: "expenses_tenant_receipt_document_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.receiptWaivedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "expenses_tenant_receipt_waiver_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.approvedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "expenses_tenant_approver_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversesExpenseId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "expenses_tenant_reversal_fk",
+    }).onDelete("restrict"),
+    check("expenses_kind_check", sql`${table.expenseKind} in ('expense', 'reversal')`),
+    check(
+      "expenses_type_check",
+      sql`${table.expenseType} in ('material_purchase', 'supplier_fee', 'delivery', 'disposal', 'other')`,
+    ),
+    check(
+      "expenses_status_check",
+      sql`${table.status} in ('draft', 'evidence_required', 'pending_review', 'approved', 'reconciled', 'reversed', 'cancelled')`,
+    ),
+    check(
+      "expenses_supplier_location_check",
+      sql`${table.supplierLocationId} is null or ${table.supplierId} is not null`,
+    ),
+    check(
+      "expenses_receipt_status_check",
+      sql`${table.receiptStatus} in ('missing', 'attached', 'waived', 'not_required')`,
+    ),
+    check(
+      "expenses_receipt_evidence_check",
+      sql`(${table.receiptStatus} <> 'attached' or ${table.receiptDocumentId} is not null) and (${table.receiptStatus} <> 'waived' or (${table.receiptWaiverReason} is not null and ${table.receiptWaivedAt} is not null and ${table.receiptWaivedBy} is not null))`,
+    ),
+    check("expenses_amount_check", sql`${table.amountCents} > 0`),
+    check(
+      "expenses_approval_check",
+      sql`${table.status} not in ('approved', 'reconciled') or (${table.approvedAt} is not null and ${table.approvedBy} is not null and ${table.receiptStatus} in ('attached', 'waived', 'not_required'))`,
+    ),
+    check(
+      "expenses_reversal_check",
+      sql`(${table.expenseKind} = 'expense' and ${table.reversesExpenseId} is null) or (${table.expenseKind} = 'reversal' and ${table.reversesExpenseId} is not null and ${table.receiptStatus} = 'not_required')`,
+    ),
+    index("expenses_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+    index("expenses_tenant_supplier_incurred_idx").on(
+      table.tenantId,
+      table.supplierId,
+      table.incurredAt,
+    ),
+  ],
+);
+
+export const expenseAllocations = pgTable(
+  "expense_allocations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    expenseId: uuid("expense_id").notNull(),
+    materialLoadItemId: uuid("material_load_item_id").notNull(),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("active"),
+    reversedAt: timestamp("reversed_at", { withTimezone: true }),
+    reversedBy: uuid("reversed_by"),
+    reversalReason: text("reversal_reason"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("expense_allocations_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "expense_allocations_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.expenseId, table.jobId],
+      foreignColumns: [expenses.tenantId, expenses.id, expenses.jobId],
+      name: "expense_allocations_tenant_expense_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.materialLoadItemId, table.jobId],
+      foreignColumns: [materialLoadItems.tenantId, materialLoadItems.id, materialLoadItems.jobId],
+      name: "expense_allocations_tenant_item_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "expense_allocations_tenant_reverser_fk",
+    }).onDelete("restrict"),
+    check("expense_allocations_amount_check", sql`${table.amountCents} > 0`),
+    check("expense_allocations_status_check", sql`${table.status} in ('active', 'reversed')`),
+    check(
+      "expense_allocations_reversal_check",
+      sql`${table.status} = 'active' or (${table.reversedAt} is not null and ${table.reversedBy} is not null and ${table.reversalReason} is not null)`,
+    ),
+    uniqueIndex("expense_allocations_one_active_item_idx")
+      .on(table.tenantId, table.expenseId, table.materialLoadItemId)
+      .where(sql`${table.status} = 'active'`),
+    index("expense_allocations_tenant_expense_status_idx").on(
+      table.tenantId,
+      table.expenseId,
+      table.status,
+    ),
+  ],
+);
+
+export const jobCharges = pgTable(
+  "job_charges",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    chargeNumber: varchar("charge_number", { length: 40 }).notNull(),
+    chargeKind: varchar("charge_kind", { length: 30 }).notNull().default("charge"),
+    chargeType: varchar("charge_type", { length: 60 }).notNull(),
+    sourceType: varchar("source_type", { length: 50 }).notNull(),
+    sourceId: uuid("source_id"),
+    dedupeKey: varchar("dedupe_key", { length: 200 }).notNull(),
+    status: varchar("status", { length: 40 }).notNull().default("draft"),
+    responsibility: varchar("responsibility", { length: 40 }).notNull().default("unknown"),
+    evidenceStatus: varchar("evidence_status", { length: 30 }).notNull().default("required"),
+    customerAuthorizationStatus: varchar("customer_authorization_status", { length: 30 })
+      .notNull()
+      .default("not_required"),
+    internalApprovalStatus: varchar("internal_approval_status", { length: 30 })
+      .notNull()
+      .default("required"),
+    quantity: numeric("quantity", { precision: 12, scale: 3 }),
+    unit: varchar("unit", { length: 40 }),
+    rateCents: bigint("rate_cents", { mode: "number" }),
+    calculatedAmountCents: bigint("calculated_amount_cents", { mode: "number" }),
+    proposedAmountCents: bigint("proposed_amount_cents", { mode: "number" }),
+    approvedAmountCents: bigint("approved_amount_cents", { mode: "number" }),
+    invoicedAmountCents: bigint("invoiced_amount_cents", { mode: "number" }).notNull().default(0),
+    creditedAmountCents: bigint("credited_amount_cents", { mode: "number" }).notNull().default(0),
+    calculationSnapshot: jsonb("calculation_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    customerDescription: varchar("customer_description", { length: 300 }).notNull(),
+    taxBehavior: varchar("tax_behavior", { length: 30 }).notNull().default("undetermined"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: uuid("approved_by"),
+    reversesJobChargeId: uuid("reverses_job_charge_id"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("job_charges_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("job_charges_tenant_number_unique").on(table.tenantId, table.chargeNumber),
+    unique("job_charges_tenant_reversal_unique").on(table.tenantId, table.reversesJobChargeId),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "job_charges_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.approvedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "job_charges_tenant_approver_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversesJobChargeId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "job_charges_tenant_reversal_fk",
+    }).onDelete("restrict"),
+    check(
+      "job_charges_kind_check",
+      sql`${table.chargeKind} in ('charge', 'credit', 'no_charge', 'informational', 'reversal')`,
+    ),
+    check(
+      "job_charges_source_type_check",
+      sql`${table.sourceType} in ('material_delivery_detail', 'material_load', 'material_load_item', 'material_substitution', 'quantity_variance', 'route_stop', 'manual')`,
+    ),
+    check(
+      "job_charges_source_check",
+      sql`${table.sourceType} = 'manual' or ${table.sourceId} is not null`,
+    ),
+    check(
+      "job_charges_status_check",
+      sql`${table.status} in ('draft', 'calculating', 'evidence_required', 'responsibility_review', 'awaiting_customer_authorization', 'awaiting_internal_approval', 'approved', 'partially_approved', 'rejected', 'waived', 'disputed', 'ready_to_invoice', 'invoiced', 'partially_invoiced', 'credited', 'reversed', 'resolved', 'cancelled')`,
+    ),
+    check(
+      "job_charges_responsibility_check",
+      sql`${table.responsibility} in ('customer', 'business', 'shared', 'supplier', 'vendor', 'insurance', 'unknown', 'disputed', 'not_applicable')`,
+    ),
+    check(
+      "job_charges_evidence_check",
+      sql`${table.evidenceStatus} in ('required', 'complete', 'waived', 'not_required')`,
+    ),
+    check(
+      "job_charges_customer_authorization_check",
+      sql`${table.customerAuthorizationStatus} in ('not_required', 'required', 'pending', 'authorized', 'declined', 'waived')`,
+    ),
+    check(
+      "job_charges_internal_approval_check",
+      sql`${table.internalApprovalStatus} in ('not_required', 'required', 'pending', 'approved', 'rejected', 'waived')`,
+    ),
+    check("job_charges_quantity_check", sql`${table.quantity} is null or ${table.quantity} >= 0`),
+    check("job_charges_rate_check", sql`${table.rateCents} is null or ${table.rateCents} >= 0`),
+    check(
+      "job_charges_amounts_check",
+      sql`(${table.calculatedAmountCents} is null or ${table.calculatedAmountCents} >= 0) and (${table.proposedAmountCents} is null or ${table.proposedAmountCents} >= 0) and (${table.approvedAmountCents} is null or ${table.approvedAmountCents} >= 0) and ${table.invoicedAmountCents} >= 0 and ${table.creditedAmountCents} >= 0`,
+    ),
+    check(
+      "job_charges_tax_behavior_check",
+      sql`${table.taxBehavior} in ('taxable', 'non_taxable', 'tax_included', 'undetermined')`,
+    ),
+    check(
+      "job_charges_approval_check",
+      sql`${table.status} not in ('approved', 'partially_approved', 'ready_to_invoice', 'invoiced', 'partially_invoiced', 'credited', 'resolved') or (${table.approvedAmountCents} is not null and ${table.approvedAt} is not null and ${table.approvedBy} is not null)`,
+    ),
+    check(
+      "job_charges_reversal_check",
+      sql`(${table.chargeKind} <> 'reversal' and ${table.reversesJobChargeId} is null) or (${table.chargeKind} = 'reversal' and ${table.reversesJobChargeId} is not null)`,
+    ),
+    uniqueIndex("job_charges_one_active_dedupe_idx")
+      .on(table.tenantId, table.jobId, table.dedupeKey)
+      .where(sql`${table.status} not in ('reversed', 'cancelled')`),
+    index("job_charges_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
   ],
 );

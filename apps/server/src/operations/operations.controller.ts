@@ -31,6 +31,8 @@ import { JobsService, jobTransitionActions, type JobTransitionAction } from "./j
 import {
   AssetDto,
   AssetListResponseDto,
+  AssignMaterialLoadAssetDto,
+  AttachMaterialEvidenceDto,
   ChecklistDto,
   ChecklistItemDto,
   CompleteChecklistItemDto,
@@ -38,23 +40,60 @@ import {
   ContractDto,
   CreateAssetDto,
   CreateChecklistDto,
+  CreateExpenseAllocationDto,
+  CreateExpenseDto,
+  CreateJobChargeDto,
+  CreateMaterialLoadDto,
+  CreateMaterialQuantityVarianceDto,
   CreateRouteStopDto,
   CreateScheduleBlockDto,
   EvaluateReadinessDto,
+  EvaluateMaterialLoadSafetyDto,
+  ExpenseActionDto,
+  ExpenseAllocationDto,
+  ExpenseDto,
+  InvoiceReadinessDto,
+  JobChargeActionDto,
+  JobChargeDto,
   JobDetailDto,
   JobListResponseDto,
   LifecycleActionDto,
+  MaterialDeliveryDto,
+  MaterialEvidenceDto,
+  MaterialLoadAssetDto,
+  MaterialLoadDto,
+  MaterialLoadItemDto,
+  MaterialLoadItemInputDto,
+  MaterialLoadExecutionDto,
+  MaterialLoadTransitionDto,
+  MaterialLoadValidationDto,
+  MaterialQuantityVarianceDto,
   ProjectDetailDto,
   ProjectListResponseDto,
   PublicContractDto,
   ReadinessEvaluationDto,
+  RecordMaterialQuantitiesDto,
+  ResolveMaterialQuantityVarianceDto,
   RouteStopDto,
+  SaveMaterialDeliveryPlanDto,
   ScheduleBlockDto,
   ScheduleCalendarResponseDto,
   SendContractDto,
   SendContractResponseDto,
   SignContractDto,
 } from "./operations.dto.js";
+import {
+  expenseActions,
+  jobChargeActions,
+  materialLoadExecutionActions,
+  materialVarianceActions,
+  MaterialDeliveryExecutionService,
+  type ExpenseAction,
+  type JobChargeAction,
+  type MaterialLoadExecutionAction,
+  type MaterialVarianceAction,
+} from "./material-delivery-execution.service.js";
+import { MaterialDeliveryService } from "./material-delivery.service.js";
 import {
   ProjectsService,
   projectTransitionActions,
@@ -271,6 +310,298 @@ export class JobsController {
   }
 }
 
+@ApiTags("Material Delivery")
+@Controller()
+export class MaterialDeliveryController {
+  public constructor(
+    @Inject(MaterialDeliveryService) private readonly materialDelivery: MaterialDeliveryService,
+    @Inject(MaterialDeliveryExecutionService)
+    private readonly execution: MaterialDeliveryExecutionService,
+  ) {}
+
+  @Get("jobs/:id/material-delivery")
+  @RequirePermissions("projects:read")
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiOperation({ operationId: "getJobMaterialDelivery" })
+  @ApiOkResponse({ type: MaterialDeliveryDto })
+  public get(@Param("id", uuidPipe) jobId: string): Promise<MaterialDeliveryDto> {
+    return this.materialDelivery.get(jobId);
+  }
+
+  @Post("jobs/:id/material-delivery")
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: SaveMaterialDeliveryPlanDto })
+  @ApiOperation({ operationId: "saveJobMaterialDeliveryPlan" })
+  @ApiCreatedResponse({ type: MaterialDeliveryDto })
+  public savePlan(
+    @Param("id", uuidPipe) jobId: string,
+    @Body() body: SaveMaterialDeliveryPlanDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialDeliveryDto> {
+    return this.materialDelivery.savePlan(jobId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("jobs/:id/material-loads")
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: CreateMaterialLoadDto })
+  @ApiOperation({ operationId: "createJobMaterialLoad" })
+  @ApiCreatedResponse({ type: MaterialLoadDto })
+  public createLoad(
+    @Param("id", uuidPipe) jobId: string,
+    @Body() body: CreateMaterialLoadDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialLoadDto> {
+    return this.materialDelivery.createLoad(jobId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-loads/:id/items")
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: MaterialLoadItemInputDto })
+  @ApiOperation({ operationId: "createMaterialLoadItem" })
+  @ApiCreatedResponse({ type: MaterialLoadItemDto })
+  public createItem(
+    @Param("id", uuidPipe) loadId: string,
+    @Body() body: MaterialLoadItemInputDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialLoadItemDto> {
+    return this.materialDelivery.createItem(loadId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-load-items/:id/actions/revise")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: MaterialLoadItemInputDto })
+  @ApiOperation({ operationId: "reviseMaterialLoadItem" })
+  @ApiOkResponse({ type: MaterialLoadItemDto })
+  public reviseItem(
+    @Param("id", uuidPipe) itemId: string,
+    @Body() body: MaterialLoadItemInputDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialLoadItemDto> {
+    return this.materialDelivery.reviseItem(itemId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-loads/:id/assets")
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: AssignMaterialLoadAssetDto })
+  @ApiOperation({ operationId: "assignMaterialLoadAsset" })
+  @ApiCreatedResponse({ type: MaterialLoadAssetDto })
+  public assignAsset(
+    @Param("id", uuidPipe) loadId: string,
+    @Body() body: AssignMaterialLoadAssetDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialLoadAssetDto> {
+    return this.materialDelivery.assignAsset(loadId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-loads/:id/actions/evaluate-safety")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: EvaluateMaterialLoadSafetyDto })
+  @ApiOperation({ operationId: "evaluateMaterialLoadSafety" })
+  @ApiOkResponse({ type: MaterialLoadValidationDto })
+  public evaluateSafety(
+    @Param("id", uuidPipe) loadId: string,
+    @Body() body: EvaluateMaterialLoadSafetyDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialLoadValidationDto> {
+    return this.materialDelivery.evaluateSafety(loadId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-loads/:id/actions/:action")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ enum: materialLoadExecutionActions, name: "action" })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: MaterialLoadTransitionDto })
+  @ApiOperation({ operationId: "transitionMaterialLoadExecution" })
+  @ApiOkResponse({ type: MaterialLoadExecutionDto })
+  public transitionLoad(
+    @Param("id", uuidPipe) loadId: string,
+    @Param("action") action: string,
+    @Body() body: MaterialLoadTransitionDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialLoadExecutionDto> {
+    if (!isMaterialLoadExecutionAction(action)) throw actionNotFound("Material Load");
+    return this.execution.transitionLoad(loadId, action, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-load-items/:id/actions/record-quantities")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: RecordMaterialQuantitiesDto })
+  @ApiOperation({ operationId: "recordMaterialLoadItemQuantities" })
+  @ApiOkResponse({ type: MaterialLoadItemDto })
+  public recordQuantities(
+    @Param("id", uuidPipe) itemId: string,
+    @Body() body: RecordMaterialQuantitiesDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialLoadItemDto> {
+    return this.execution.recordQuantities(itemId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-load-items/:id/documents")
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: AttachMaterialEvidenceDto })
+  @ApiOperation({ operationId: "attachMaterialDeliveryEvidence" })
+  @ApiCreatedResponse({ type: MaterialEvidenceDto })
+  public attachEvidence(
+    @Param("id", uuidPipe) itemId: string,
+    @Body() body: AttachMaterialEvidenceDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialEvidenceDto> {
+    return this.execution.attachEvidence(itemId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-load-items/:id/variances")
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: CreateMaterialQuantityVarianceDto })
+  @ApiOperation({ operationId: "createMaterialQuantityVariance" })
+  @ApiCreatedResponse({ type: MaterialQuantityVarianceDto })
+  public createVariance(
+    @Param("id", uuidPipe) itemId: string,
+    @Body() body: CreateMaterialQuantityVarianceDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialQuantityVarianceDto> {
+    return this.execution.createVariance(itemId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("material-quantity-variances/:id/actions/:action")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("operations:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ enum: materialVarianceActions, name: "action" })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: ResolveMaterialQuantityVarianceDto })
+  @ApiOperation({ operationId: "resolveMaterialQuantityVariance" })
+  @ApiOkResponse({ type: MaterialQuantityVarianceDto })
+  public resolveVariance(
+    @Param("id", uuidPipe) varianceId: string,
+    @Param("action") action: string,
+    @Body() body: ResolveMaterialQuantityVarianceDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<MaterialQuantityVarianceDto> {
+    if (!isMaterialVarianceAction(action)) throw actionNotFound("Material Quantity Variance");
+    return this.execution.resolveVariance(varianceId, action, body, requireIdempotencyKey(key));
+  }
+
+  @Post("jobs/:id/expenses")
+  @RequirePermissions("finance:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: CreateExpenseDto })
+  @ApiOperation({ operationId: "createMaterialDeliveryExpense" })
+  @ApiCreatedResponse({ type: ExpenseDto })
+  public createExpense(
+    @Param("id", uuidPipe) jobId: string,
+    @Body() body: CreateExpenseDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<ExpenseDto> {
+    return this.execution.createExpense(jobId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("expenses/:id/allocations")
+  @RequirePermissions("finance:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: CreateExpenseAllocationDto })
+  @ApiOperation({ operationId: "allocateMaterialDeliveryExpense" })
+  @ApiCreatedResponse({ type: ExpenseAllocationDto })
+  public allocateExpense(
+    @Param("id", uuidPipe) expenseId: string,
+    @Body() body: CreateExpenseAllocationDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<ExpenseAllocationDto> {
+    return this.execution.allocateExpense(expenseId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("expenses/:id/actions/:action")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("finance:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ enum: expenseActions, name: "action" })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: ExpenseActionDto })
+  @ApiOperation({ operationId: "transitionMaterialDeliveryExpense" })
+  @ApiOkResponse({ type: ExpenseDto })
+  public transitionExpense(
+    @Param("id", uuidPipe) expenseId: string,
+    @Param("action") action: string,
+    @Body() body: ExpenseActionDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<ExpenseDto> {
+    if (!isExpenseAction(action)) throw actionNotFound("Expense");
+    return this.execution.transitionExpense(expenseId, action, body, requireIdempotencyKey(key));
+  }
+
+  @Post("jobs/:id/job-charges")
+  @RequirePermissions("finance:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: CreateJobChargeDto })
+  @ApiOperation({ operationId: "createOperationalJobCharge" })
+  @ApiCreatedResponse({ type: JobChargeDto })
+  public createJobCharge(
+    @Param("id", uuidPipe) jobId: string,
+    @Body() body: CreateJobChargeDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<JobChargeDto> {
+    return this.execution.createJobCharge(jobId, body, requireIdempotencyKey(key));
+  }
+
+  @Post("job-charges/:id/actions/:action")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("finance:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ enum: jobChargeActions, name: "action" })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: JobChargeActionDto })
+  @ApiOperation({ operationId: "transitionOperationalJobCharge" })
+  @ApiOkResponse({ type: JobChargeDto })
+  public transitionJobCharge(
+    @Param("id", uuidPipe) chargeId: string,
+    @Param("action") action: string,
+    @Body() body: JobChargeActionDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<JobChargeDto> {
+    if (!isJobChargeAction(action)) throw actionNotFound("Job Charge");
+    return this.execution.transitionJobCharge(chargeId, action, body, requireIdempotencyKey(key));
+  }
+
+  @Post("jobs/:id/actions/evaluate-invoice-readiness")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("finance:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiOperation({ operationId: "evaluateMaterialDeliveryInvoiceReadiness" })
+  @ApiOkResponse({ type: InvoiceReadinessDto })
+  public evaluateInvoiceReadiness(
+    @Param("id", uuidPipe) jobId: string,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<InvoiceReadinessDto> {
+    return this.execution.evaluateInvoiceReadiness(jobId, requireIdempotencyKey(key));
+  }
+}
+
 @ApiTags("Scheduling and Assets")
 @Controller()
 export class SchedulingController {
@@ -399,6 +730,22 @@ function isProjectAction(value: string): value is ProjectTransitionAction {
 
 function isJobAction(value: string): value is JobTransitionAction {
   return jobTransitionActions.some((action) => action === value);
+}
+
+function isMaterialLoadExecutionAction(value: string): value is MaterialLoadExecutionAction {
+  return materialLoadExecutionActions.some((action) => action === value);
+}
+
+function isMaterialVarianceAction(value: string): value is MaterialVarianceAction {
+  return materialVarianceActions.some((action) => action === value);
+}
+
+function isExpenseAction(value: string): value is ExpenseAction {
+  return expenseActions.some((action) => action === value);
+}
+
+function isJobChargeAction(value: string): value is JobChargeAction {
+  return jobChargeActions.some((action) => action === value);
 }
 
 function actionNotFound(entity: string): ApiException {

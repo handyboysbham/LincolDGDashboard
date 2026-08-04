@@ -43,6 +43,13 @@
       "when": 1785782919514,
       "tag": "0005_contract_link_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785785525037,
+      "tag": "0006_material_delivery_data_foundation",
+      "breakpoints": true
     }
   ]
 }

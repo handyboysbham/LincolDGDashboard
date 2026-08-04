@@ -123,13 +123,24 @@ existing Projects, enables `btree_gist`, and creates the operational tables, ten
 immutability triggers, closed-Job guards, and the active Asset Reservation exclusion constraint.
 Migration `0005` records a request hash for Contract-link command idempotency.
 
+The Sprint 1.6.0 Material Delivery data foundation is implemented by migration `0006`. It adds the
+delivery Detail, physical Load, Load Asset, Load Item, immutable safety evaluation, substitution,
+quantity variance, Expense, Expense Allocation, and Job Charge records. Assets gain canonical
+cubic-yard capacity alongside the existing weight capacity. Tenant-and-Job composite foreign keys
+keep all operational and financial children within one Job; Route Stops and Documents remain shared
+records referenced by the delivery model.
+
 ### Projects and operations
 
 - projects
 - jobs
 - material_delivery_details
 - material_loads
+- material_load_assets
 - material_load_items
+- material_load_validations
+- material_substitutions
+- material_quantity_variances
 - dump_trailer_rental_details
 - disposal_loads
 - schedule_blocks
@@ -182,6 +193,14 @@ Migration `0005` records a request hash for Contract-link command idempotency.
 - Applied Allocations cannot be edited or deleted.
 - Unique provider transaction ID when present.
 - Unique active Job Charge dedupe key.
+- One Material Delivery Detail per Job, and it may only belong to a Material Delivery Job.
+- Material Load children, Route Stops, Expenses, Allocations, variances, substitutions, and Job
+  Charges are constrained to the same tenant and Job.
+- Ready Material Load Validations cannot contain failed capacity, compatibility, or separation
+  results; validation evidence is append-only.
+- Active Expense Allocations cannot exceed their Expense amount under concurrent writes, and an
+  approved or reconciled Expense must be fully allocated.
+- One open variance per type and one pending substitution are allowed per Material Load Item.
 - No overlapping active Asset Reservation for the same asset.
 - Tenant-aware foreign keys prevent cross-tenant relationships.
 - A Lead has exactly one supported service type and its complete matching detail fields.
@@ -194,14 +213,17 @@ Migration `0005` records a request hash for Contract-link command idempotency.
 - Contract-link tokens are Contract scoped, expiring, revocable, stored only as hashes, and retain
   the canonical send-request hash for conflict-safe replay.
 - Contract commercial content is immutable after business signature; all Contract Signatures and Job
-  Events are append-only.
+  Events are append-only. Material Load Validations are immutable, Material Delivery operational
+  records are not hard-deleted, and Expense, Expense Allocation, and Job Charge corrections preserve
+  history through reversals or controlled status changes.
 - Closed Jobs reject ordinary updates to the Job and shared operational child records until an
   audited reopening command records `reopened_at`.
 
 Every implemented tenant table has forced Row-Level Security. Runtime policies compare `tenant_id`
-with `app.current_tenant_id`; duplicate lookups and all pricing, Estimate, Quote, acceptance, and
-Project, Contract, Job, scheduling, asset, readiness, checklist, route, event, and hold queries are
-subject to the same tenant boundary.
+with `app.current_tenant_id`; duplicate lookups and all pricing, Estimate, Quote, acceptance,
+Project, Contract, Job, scheduling, asset, readiness, checklist, route, event, hold, Material
+Delivery, Expense, Expense Allocation, and Job Charge queries are subject to the same tenant
+boundary.
 
 ## Derived values
 

@@ -196,6 +196,17 @@ Convert accepted work into independently scheduled operational Jobs.
 
 ## Sprint 1.6.0 — Material Delivery Operations
 
+Implementation status: data foundation and the verified planning/safety application phase completed
+on 2026-08-03. Migration `0006` and the Drizzle schema own the data model. Explicit idempotent REST
+commands now create/revise the plan, Loads, Items, and hauling configuration, calculate fixed-point
+totals, append safety evidence, and gate schedule/dispatch readiness. PostgreSQL integration
+coverage, OpenAPI, and the generated client are current. Driver/evidence/reconciliation commands,
+supplier Expense reconciliation, variance resolution, operational Job Charges, and invoice-readiness
+code are implemented, and the OpenAPI/generated-client artifacts are current. The PostgreSQL-backed
+Phase 3 journey is written and awaiting execution. Web workflows and the operational acceptance
+journey remain in progress. See the
+[Sprint 1.6.0 implementation plan](plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md).
+
 ### Goal
 
 Execute a multi-material delivery through operational and invoice readiness.

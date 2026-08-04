@@ -61,7 +61,17 @@ Material Delivery:
 Material Delivery Job
 └── Material Delivery Detail
     └── Material Loads
+        ├── Material Load Assets
+        ├── Material Load Validations
         └── Material Load Items
+            ├── Material Substitutions
+            ├── Material Quantity Variances
+            └── Expense Allocations
+
+Material Delivery Job
+├── Expenses
+│   └── Expense Allocations
+└── Job Charges
 ```
 
 Dump Trailer Rental:
@@ -104,7 +114,11 @@ Payment
 | Project → Jobs                   | 1 to many   |
 | Material Delivery Job → Detail   | 1 to 1      |
 | Material Delivery Job → Loads    | 1 to many   |
+| Material Load → Assets           | 1 to many   |
+| Material Load → Validations      | 1 to many   |
 | Material Load → Items            | 1 to many   |
+| Material Load Item → Variances   | 1 to many   |
+| Material Load Item → Allocations | 1 to many   |
 | Rental Job → Rental Detail       | 1 to 1      |
 | Rental Job → Disposal Loads      | 1 to many   |
 | Job → Schedule Blocks            | 1 to many   |
@@ -128,7 +142,11 @@ Payment
 - Service-specific Detail owns service planning and result.
 - Schedule Block owns calendar time.
 - Asset Reservation owns continuing asset occupancy.
+- Material Load owns one physical hauling configuration within a continuous scheduled Job.
+- Material Load Item owns one material/source/placement and its reconciled quantity facts.
+- Material Load Validation owns immutable capacity, compatibility, and separation evidence.
 - Expense owns actual company cost.
+- Expense Allocation applies company cost to a Material Load Item without changing billing.
 - Job Charge owns the decision to bill or credit after acceptance.
 - Invoice owns customer billing obligation.
 - Payment owns money received.

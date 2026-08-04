@@ -39,6 +39,7 @@ Do not rely on chat history after a decision has been consolidated into these fi
 - [Build Sequence](implementation/build-sequence.md)
 - [V1 Sprint Roadmap](implementation/sprints.md)
 - [Acceptance Journeys](implementation/acceptance-journeys.md)
+- [Sprint 1.6.0 Material Delivery Operations Plan](implementation/plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md)
 - [Codex Handoff](implementation/codex-handoff.md)
 
 ## Runbooks

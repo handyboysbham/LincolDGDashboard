@@ -548,6 +548,278 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/jobs/{id}/material-delivery": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getJobMaterialDelivery"];
+    put?: never;
+    post: operations["saveJobMaterialDeliveryPlan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/material-loads": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createJobMaterialLoad"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-loads/{id}/items": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createMaterialLoadItem"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-load-items/{id}/actions/revise": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reviseMaterialLoadItem"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-loads/{id}/assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["assignMaterialLoadAsset"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-loads/{id}/actions/evaluate-safety": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["evaluateMaterialLoadSafety"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-loads/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionMaterialLoadExecution"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-load-items/{id}/actions/record-quantities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["recordMaterialLoadItemQuantities"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-load-items/{id}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["attachMaterialDeliveryEvidence"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-load-items/{id}/variances": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createMaterialQuantityVariance"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/material-quantity-variances/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["resolveMaterialQuantityVariance"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/expenses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createMaterialDeliveryExpense"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/expenses/{id}/allocations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["allocateMaterialDeliveryExpense"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/expenses/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionMaterialDeliveryExpense"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/job-charges": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createOperationalJobCharge"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/job-charges/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionOperationalJobCharge"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/actions/evaluate-invoice-readiness": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["evaluateMaterialDeliveryInvoiceReadiness"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/assets": {
     parameters: {
       query?: never;
@@ -1528,6 +1800,363 @@ export interface components {
     CompleteChecklistItemDto: {
       response?: string;
     };
+    MaterialLoadAssetDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      assetNumber: string;
+      role: string;
+      status: string;
+      capacitySnapshot: {
+        [key: string]: unknown;
+      };
+    };
+    MaterialEvidenceDto: {
+      /** Format: uuid */
+      documentId: string;
+      originalFilename: string;
+      mediaType: string;
+      purpose: string;
+    };
+    MaterialLoadItemDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      materialId: string;
+      /** Format: uuid */
+      acceptedQuoteLineItemId?: string | null;
+      sequence: number;
+      loadingSequence: number;
+      unloadingSequence: number;
+      quantityUnit: string;
+      plannedQuantity: string;
+      unitWeightPounds: string;
+      unitVolumeCubicYards: string;
+      /** Format: uuid */
+      supplierRouteStopId: string;
+      /** Format: uuid */
+      placementRouteStopId: string;
+      compartment?: string | null;
+      separationInstructions?: string | null;
+      /** Format: uuid */
+      actualMaterialId?: string | null;
+      /** Format: uuid */
+      actualSupplierMaterialId?: string | null;
+      purchasedQuantity?: string | null;
+      loadedQuantity?: string | null;
+      deliveredQuantity?: string | null;
+      remainingQuantity?: string | null;
+      actualUnitCostCents?: number | null;
+      deliveryResult: string;
+      remainingDisposition?: string | null;
+      varianceStatus: string;
+      evidence: components["schemas"]["MaterialEvidenceDto"][];
+    };
+    MaterialLoadValidationDto: {
+      /** Format: uuid */
+      id: string;
+      validationType: string;
+      result: string;
+      capacityResult: string;
+      compatibilityResult: string;
+      separationResult: string;
+      blockers: string[];
+      warnings: string[];
+      inputHash: string;
+      /** Format: date-time */
+      evaluatedAt: string;
+    };
+    MaterialLoadDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      sequence: number;
+      status: string;
+      plannedVolumeCubicYards?: string | null;
+      plannedWeightPounds?: string | null;
+      actualVolumeCubicYards?: string | null;
+      actualWeightPounds?: string | null;
+      capacityResult: string;
+      compatibilityResult: string;
+      separationResult: string;
+      assets: components["schemas"]["MaterialLoadAssetDto"][];
+      items: components["schemas"]["MaterialLoadItemDto"][];
+      validations: components["schemas"]["MaterialLoadValidationDto"][];
+    };
+    MaterialDeliveryDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      status: string;
+      deliveryType: string;
+      plannedLoadCount: number;
+      plannedVolumeCubicYards?: string | null;
+      plannedWeightPounds?: string | null;
+      actualDeliveredVolumeCubicYards?: string | null;
+      actualDeliveredWeightPounds?: string | null;
+      capacityStatus: string;
+      compatibilityStatus: string;
+      receiptStatus: string;
+      placementEvidenceStatus: string;
+      partialDelivery: boolean;
+      invoiceReadiness: string;
+      loads: components["schemas"]["MaterialLoadDto"][];
+    };
+    SaveMaterialDeliveryPlanDto: {
+      /** @enum {string} */
+      deliveryType: "bulk" | "placed" | "spread";
+      plannedLoadCount: number;
+      /** @default true */
+      placementEvidenceRequired: boolean;
+    };
+    CreateMaterialLoadDto: {
+      sequence: number;
+    };
+    MaterialLoadItemInputDto: {
+      /** Format: uuid */
+      acceptedQuoteLineItemId?: string;
+      /** Format: uuid */
+      materialId: string;
+      /** Format: uuid */
+      supplierRouteStopId: string;
+      /** Format: uuid */
+      placementRouteStopId: string;
+      sequence: number;
+      loadingSequence: number;
+      unloadingSequence: number;
+      /** @enum {string} */
+      quantityUnit: "tons" | "cubic_yards" | "loads";
+      plannedQuantity: string;
+      unitWeightPounds: string;
+      unitVolumeCubicYards: string;
+      plannedUnitCostCents?: number;
+      compartment?: string;
+      separationInstructions?: string;
+    };
+    AssignMaterialLoadAssetDto: {
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      role: "truck" | "trailer" | "equipment";
+    };
+    EvaluateMaterialLoadSafetyDto: {
+      /** @enum {string} */
+      validationType: "planning" | "dispatch" | "actual";
+      compatibilityConfirmed: boolean;
+      separationConfirmed: boolean;
+    };
+    MaterialLoadTransitionDto: {
+      /** Format: date-time */
+      occurredAt?: string;
+      notes?: string;
+    };
+    MaterialLoadExecutionDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      sequence: number;
+      status: string;
+      /** Format: date-time */
+      loadingStartedAt?: string | null;
+      /** Format: date-time */
+      loadedAt?: string | null;
+      /** Format: date-time */
+      transitStartedAt?: string | null;
+      /** Format: date-time */
+      unloadingStartedAt?: string | null;
+      /** Format: date-time */
+      deliveredAt?: string | null;
+      /** Format: date-time */
+      reconciledAt?: string | null;
+    };
+    RecordMaterialQuantitiesDto: {
+      /** Format: uuid */
+      actualMaterialId?: string;
+      /** Format: uuid */
+      actualSupplierMaterialId?: string;
+      purchasedQuantity?: string;
+      loadedQuantity?: string;
+      deliveredQuantity?: string;
+      remainingQuantity?: string;
+      actualUnitCostCents?: number;
+      /** @enum {string} */
+      deliveryResult?:
+        "pending" | "delivered" | "partially_delivered" | "not_delivered" | "returned";
+      /** @enum {string} */
+      remainingDisposition?:
+        | "none"
+        | "returned_to_supplier"
+        | "retained_by_business"
+        | "left_with_customer"
+        | "disposed"
+        | "follow_up_job"
+        | "other";
+    };
+    AttachMaterialEvidenceDto: {
+      /** Format: uuid */
+      documentId: string;
+      /** @enum {string} */
+      purpose: "supplier_ticket" | "supplier_receipt" | "placement_evidence" | "delivery_photo";
+    };
+    CreateMaterialQuantityVarianceDto: {
+      /** @enum {string} */
+      varianceType: "purchase" | "loading" | "delivery" | "remaining";
+      expectedQuantity: string;
+      actualQuantity: string;
+      /** @enum {string} */
+      responsibility:
+        | "customer"
+        | "business"
+        | "shared"
+        | "supplier"
+        | "vendor"
+        | "insurance"
+        | "unknown"
+        | "disputed"
+        | "not_applicable";
+    };
+    MaterialQuantityVarianceDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      materialLoadItemId: string;
+      varianceType: string;
+      quantityUnit: string;
+      expectedQuantity: string;
+      actualQuantity: string;
+      varianceQuantity: string;
+      status: string;
+      responsibility: string;
+      resolutionType?: string | null;
+    };
+    ResolveMaterialQuantityVarianceDto: {
+      /** @enum {string} */
+      resolutionType:
+        | "charge"
+        | "credit"
+        | "no_charge"
+        | "follow_up_job"
+        | "supplier_adjustment"
+        | "customer_acceptance"
+        | "other";
+      reason: string;
+    };
+    CreateExpenseDto: {
+      /** @enum {string} */
+      expenseType: "material_purchase" | "supplier_fee" | "delivery" | "disposal" | "other";
+      /** Format: uuid */
+      supplierId?: string;
+      /** Format: uuid */
+      supplierLocationId?: string;
+      /** Format: uuid */
+      receiptDocumentId?: string;
+      amountCents: number;
+      description: string;
+      externalReference?: string;
+      /** Format: date-time */
+      incurredAt: string;
+    };
+    ExpenseAllocationDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      materialLoadItemId: string;
+      amountCents: number;
+      status: string;
+    };
+    ExpenseDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      expenseNumber: string;
+      expenseType: string;
+      status: string;
+      amountCents: number;
+      receiptStatus: string;
+      allocations: components["schemas"]["ExpenseAllocationDto"][];
+    };
+    CreateExpenseAllocationDto: {
+      /** Format: uuid */
+      materialLoadItemId: string;
+      amountCents: number;
+    };
+    ExpenseActionDto: {
+      /** Format: uuid */
+      receiptDocumentId?: string;
+      reason?: string;
+    };
+    CreateJobChargeDto: {
+      /** @enum {string} */
+      chargeKind: "charge" | "credit" | "no_charge" | "informational";
+      chargeType: string;
+      /** @enum {string} */
+      sourceType:
+        | "material_delivery_detail"
+        | "material_load"
+        | "material_load_item"
+        | "quantity_variance"
+        | "route_stop"
+        | "manual";
+      /** Format: uuid */
+      sourceId?: string;
+      dedupeKey: string;
+      /** @enum {string} */
+      responsibility:
+        "customer" | "business" | "shared" | "supplier" | "vendor" | "insurance" | "not_applicable";
+      /** @enum {string} */
+      evidenceStatus: "complete" | "waived" | "not_required";
+      /** @enum {string} */
+      customerAuthorizationStatus: "not_required" | "authorized" | "waived";
+      /** @enum {string} */
+      internalApprovalStatus: "not_required" | "approved" | "waived";
+      quantity?: string;
+      unit?: string;
+      rateCents?: number;
+      proposedAmountCents?: number;
+      calculationSnapshot: {
+        [key: string]: unknown;
+      };
+      customerDescription: string;
+      /** @enum {string} */
+      taxBehavior: "taxable" | "non_taxable" | "tax_included";
+      /** Format: date-time */
+      occurredAt: string;
+    };
+    JobChargeDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      chargeNumber: string;
+      chargeKind: string;
+      chargeType: string;
+      sourceType: string;
+      /** Format: uuid */
+      sourceId?: string | null;
+      dedupeKey: string;
+      status: string;
+      responsibility: string;
+      calculatedAmountCents?: number | null;
+      proposedAmountCents?: number | null;
+      approvedAmountCents?: number | null;
+      customerDescription: string;
+    };
+    JobChargeActionDto: {
+      approvedAmountCents?: number;
+      reason?: string;
+    };
+    InvoiceReadinessDto: {
+      result: string;
+      blockers: string[];
+      warnings: string[];
+      /** Format: date-time */
+      evaluatedAt: string;
+    };
     AssetDto: {
       /** Format: uuid */
       id: string;
@@ -1536,6 +2165,7 @@ export interface components {
       assetType: string;
       status: string;
       capacityWeight?: string | null;
+      capacityVolumeCubicYards?: string | null;
     };
     AssetListResponseDto: {
       items: components["schemas"]["AssetDto"][];
@@ -1546,6 +2176,7 @@ export interface components {
       /** @enum {string} */
       assetType: "truck" | "trailer" | "equipment";
       capacityWeight?: string;
+      capacityVolumeCubicYards?: string;
     };
     ScheduleCalendarResponseDto: {
       items: components["schemas"]["ScheduleBlockDto"][];
@@ -2753,6 +3384,496 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ChecklistItemDto"];
+        };
+      };
+    };
+  };
+  getJobMaterialDelivery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialDeliveryDto"];
+        };
+      };
+    };
+  };
+  saveJobMaterialDeliveryPlan: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SaveMaterialDeliveryPlanDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialDeliveryDto"];
+        };
+      };
+    };
+  };
+  createJobMaterialLoad: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateMaterialLoadDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialLoadDto"];
+        };
+      };
+    };
+  };
+  createMaterialLoadItem: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaterialLoadItemInputDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialLoadItemDto"];
+        };
+      };
+    };
+  };
+  reviseMaterialLoadItem: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaterialLoadItemInputDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialLoadItemDto"];
+        };
+      };
+    };
+  };
+  assignMaterialLoadAsset: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssignMaterialLoadAssetDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialLoadAssetDto"];
+        };
+      };
+    };
+  };
+  evaluateMaterialLoadSafety: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EvaluateMaterialLoadSafetyDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialLoadValidationDto"];
+        };
+      };
+    };
+  };
+  transitionMaterialLoadExecution: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action:
+          | "ready-for-loading"
+          | "arrive-supplier"
+          | "start-loading"
+          | "mark-loaded"
+          | "start-transit"
+          | "arrive-customer"
+          | "start-unloading"
+          | "complete-delivery"
+          | "start-reconciliation"
+          | "reconcile";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaterialLoadTransitionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialLoadExecutionDto"];
+        };
+      };
+    };
+  };
+  recordMaterialLoadItemQuantities: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RecordMaterialQuantitiesDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialLoadItemDto"];
+        };
+      };
+    };
+  };
+  attachMaterialDeliveryEvidence: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AttachMaterialEvidenceDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialEvidenceDto"];
+        };
+      };
+    };
+  };
+  createMaterialQuantityVariance: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateMaterialQuantityVarianceDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialQuantityVarianceDto"];
+        };
+      };
+    };
+  };
+  resolveMaterialQuantityVariance: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action: "resolve" | "waive";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ResolveMaterialQuantityVarianceDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialQuantityVarianceDto"];
+        };
+      };
+    };
+  };
+  createMaterialDeliveryExpense: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateExpenseDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExpenseDto"];
+        };
+      };
+    };
+  };
+  allocateMaterialDeliveryExpense: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateExpenseAllocationDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExpenseAllocationDto"];
+        };
+      };
+    };
+  };
+  transitionMaterialDeliveryExpense: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action: "waive-receipt" | "approve" | "reconcile" | "reverse" | "cancel";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ExpenseActionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExpenseDto"];
+        };
+      };
+    };
+  };
+  createOperationalJobCharge: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateJobChargeDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["JobChargeDto"];
+        };
+      };
+    };
+  };
+  transitionOperationalJobCharge: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action: "approve" | "reverse" | "cancel";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["JobChargeActionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["JobChargeDto"];
+        };
+      };
+    };
+  };
+  evaluateMaterialDeliveryInvoiceReadiness: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceReadinessDto"];
         };
       };
     };

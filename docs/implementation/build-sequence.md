@@ -97,6 +97,13 @@ Exit:
 
 ## Stage 4 — Material Delivery vertical slice
 
+Status: the Sprint 1.6.0 implementation plan, database foundation, and verified planning/safety
+application phase are complete. Driver execution, evidence, cost reconciliation, and operational
+charge code are implemented, and the OpenAPI/generated-client artifacts are current. The
+PostgreSQL-backed Phase 3 journey is written and awaiting execution. Web and final acceptance phases
+remain. See the
+[Material Delivery Operations plan](plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md).
+
 Build:
 
 - Material Delivery Detail

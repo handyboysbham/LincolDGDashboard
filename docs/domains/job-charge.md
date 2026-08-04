@@ -135,6 +135,19 @@ Examples to prevent:
 - two failed-pickup charges for the same event
 - both weight and disposal-cost overage without accepted authorization
 
+Sprint 1.6.0 migration `0006` enforces one active dedupe key per tenant and Job. Job Charge amount
+fields use integer cents, operational quantity uses controlled decimal precision, and every Charge
+retains its source type, source identifier, calculation snapshot, responsibility, evidence,
+authorization, approval, tax behavior, and customer description. Approved facts are immutable;
+corrections use a Credit, No-Charge decision, cancellation before approval, or a linked reversal
+rather than deletion.
+
+The Sprint 1.6.0 application command validates that an operational source belongs to the same Job,
+calculates quantity-times-rate amounts with fixed-point arithmetic, allocates a tenant-scoped Charge
+number, and rejects duplicate active dedupe keys. Approval produces Ready to Invoice only after
+evidence, responsibility, authorization, and internal approval are resolved. Cancellation is limited
+to drafts; approved corrections create a linked reversal.
+
 ## Ready to Invoice
 
 Requires:

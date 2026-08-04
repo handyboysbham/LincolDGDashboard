@@ -35,6 +35,21 @@ assignments, readiness, financial status, and closure.
 - Supplier tickets and costs are required before financial reconciliation unless an approved
   exception exists.
 
+## Implemented data foundation
+
+Sprint 1.6.0 migration `0006` implements `material_delivery_details` as a tenant-scoped, one-to-one
+child of Job. The database verifies that the parent has service type `material_delivery`; a Dump
+Trailer Rental Job cannot own this Detail.
+
+The Detail stores overall planning and completion summaries plus planned and actual load, volume,
+and weight totals. Physical execution remains normalized into Material Loads and Items. Every
+delivery child carries `job_id`, and composite foreign keys prove that Loads, Items, validations,
+substitutions, variances, Expenses, Allocations, and Job Charges stay in the same tenant and Job.
+
+Accepted operational records are not hard-deleted. Closed Jobs reject ordinary edits to all new
+delivery children until the existing controlled reopen transition returns the Job to Planning. All
+tenant-owned records use forced Row-Level Security.
+
 ## Scheduling
 
 Material Delivery uses one Schedule Block.
@@ -61,3 +76,9 @@ Material Delivery is operationally complete when:
 
 Invoice readiness additionally requires required supplier receipts, Expenses, Expense Allocations,
 and variance resolution.
+
+Planning, safety, driver execution, evidence, reconciliation, cost, charge, and invoice-readiness
+commands now own the operational lifecycle with Audit Events and transactional outbox events.
+Driver/staff web workflows and final `MD-E2E-001` verification are specified in the
+[Sprint 1.6.0 implementation plan](../implementation/plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md)
+and remain subsequent Sprint phases.

@@ -1372,6 +1372,887 @@
         "tags": ["Jobs"]
       }
     },
+    "/api/v1/jobs/{id}/material-delivery": {
+      "get": {
+        "operationId": "getJobMaterialDelivery",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDeliveryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      },
+      "post": {
+        "operationId": "saveJobMaterialDeliveryPlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMaterialDeliveryPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDeliveryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/jobs/{id}/material-loads": {
+      "post": {
+        "operationId": "createJobMaterialLoad",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialLoadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialLoadDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-loads/{id}/items": {
+      "post": {
+        "operationId": "createMaterialLoadItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialLoadItemInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialLoadItemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-load-items/{id}/actions/revise": {
+      "post": {
+        "operationId": "reviseMaterialLoadItem",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialLoadItemInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialLoadItemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-loads/{id}/assets": {
+      "post": {
+        "operationId": "assignMaterialLoadAsset",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignMaterialLoadAssetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialLoadAssetDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-loads/{id}/actions/evaluate-safety": {
+      "post": {
+        "operationId": "evaluateMaterialLoadSafety",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateMaterialLoadSafetyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialLoadValidationDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-loads/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionMaterialLoadExecution",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "ready-for-loading",
+                "arrive-supplier",
+                "start-loading",
+                "mark-loaded",
+                "start-transit",
+                "arrive-customer",
+                "start-unloading",
+                "complete-delivery",
+                "start-reconciliation",
+                "reconcile"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialLoadTransitionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialLoadExecutionDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-load-items/{id}/actions/record-quantities": {
+      "post": {
+        "operationId": "recordMaterialLoadItemQuantities",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordMaterialQuantitiesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialLoadItemDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-load-items/{id}/documents": {
+      "post": {
+        "operationId": "attachMaterialDeliveryEvidence",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachMaterialEvidenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialEvidenceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-load-items/{id}/variances": {
+      "post": {
+        "operationId": "createMaterialQuantityVariance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialQuantityVarianceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialQuantityVarianceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/material-quantity-variances/{id}/actions/{action}": {
+      "post": {
+        "operationId": "resolveMaterialQuantityVariance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["resolve", "waive"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveMaterialQuantityVarianceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialQuantityVarianceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/jobs/{id}/expenses": {
+      "post": {
+        "operationId": "createMaterialDeliveryExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/expenses/{id}/allocations": {
+      "post": {
+        "operationId": "allocateMaterialDeliveryExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseAllocationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseAllocationDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/expenses/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionMaterialDeliveryExpense",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["waive-receipt", "approve", "reconcile", "reverse", "cancel"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpenseActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/jobs/{id}/job-charges": {
+      "post": {
+        "operationId": "createOperationalJobCharge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobChargeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobChargeDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/job-charges/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionOperationalJobCharge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["approve", "reverse", "cancel"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobChargeActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobChargeDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
+    "/api/v1/jobs/{id}/actions/evaluate-invoice-readiness": {
+      "post": {
+        "operationId": "evaluateMaterialDeliveryInvoiceReadiness",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceReadinessDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
     "/api/v1/assets": {
       "get": {
         "operationId": "listAssets",
@@ -4056,6 +4937,1074 @@
           }
         }
       },
+      "MaterialLoadAssetDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetNumber": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "capacitySnapshot": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": ["id", "assetId", "assetNumber", "role", "status", "capacitySnapshot"]
+      },
+      "MaterialEvidenceDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originalFilename": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        },
+        "required": ["documentId", "originalFilename", "mediaType", "purpose"]
+      },
+      "MaterialLoadItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptedQuoteLineItemId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "loadingSequence": {
+            "type": "number"
+          },
+          "unloadingSequence": {
+            "type": "number"
+          },
+          "quantityUnit": {
+            "type": "string"
+          },
+          "plannedQuantity": {
+            "type": "string"
+          },
+          "unitWeightPounds": {
+            "type": "string"
+          },
+          "unitVolumeCubicYards": {
+            "type": "string"
+          },
+          "supplierRouteStopId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "placementRouteStopId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "compartment": {
+            "type": "string",
+            "nullable": true
+          },
+          "separationInstructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualMaterialId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "actualSupplierMaterialId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "purchasedQuantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "loadedQuantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveredQuantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "remainingQuantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualUnitCostCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "deliveryResult": {
+            "type": "string"
+          },
+          "remainingDisposition": {
+            "type": "string",
+            "nullable": true
+          },
+          "varianceStatus": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialEvidenceDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "materialId",
+          "sequence",
+          "loadingSequence",
+          "unloadingSequence",
+          "quantityUnit",
+          "plannedQuantity",
+          "unitWeightPounds",
+          "unitVolumeCubicYards",
+          "supplierRouteStopId",
+          "placementRouteStopId",
+          "deliveryResult",
+          "varianceStatus",
+          "evidence"
+        ]
+      },
+      "MaterialLoadValidationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "validationType": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "capacityResult": {
+            "type": "string"
+          },
+          "compatibilityResult": {
+            "type": "string"
+          },
+          "separationResult": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "inputHash": {
+            "type": "string"
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "validationType",
+          "result",
+          "capacityResult",
+          "compatibilityResult",
+          "separationResult",
+          "blockers",
+          "warnings",
+          "inputHash",
+          "evaluatedAt"
+        ]
+      },
+      "MaterialLoadDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "plannedVolumeCubicYards": {
+            "type": "string",
+            "nullable": true
+          },
+          "plannedWeightPounds": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualVolumeCubicYards": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualWeightPounds": {
+            "type": "string",
+            "nullable": true
+          },
+          "capacityResult": {
+            "type": "string"
+          },
+          "compatibilityResult": {
+            "type": "string"
+          },
+          "separationResult": {
+            "type": "string"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialLoadAssetDto"
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialLoadItemDto"
+            }
+          },
+          "validations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialLoadValidationDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "sequence",
+          "status",
+          "capacityResult",
+          "compatibilityResult",
+          "separationResult",
+          "assets",
+          "items",
+          "validations"
+        ]
+      },
+      "MaterialDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "deliveryType": {
+            "type": "string"
+          },
+          "plannedLoadCount": {
+            "type": "number"
+          },
+          "plannedVolumeCubicYards": {
+            "type": "string",
+            "nullable": true
+          },
+          "plannedWeightPounds": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualDeliveredVolumeCubicYards": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualDeliveredWeightPounds": {
+            "type": "string",
+            "nullable": true
+          },
+          "capacityStatus": {
+            "type": "string"
+          },
+          "compatibilityStatus": {
+            "type": "string"
+          },
+          "receiptStatus": {
+            "type": "string"
+          },
+          "placementEvidenceStatus": {
+            "type": "string"
+          },
+          "partialDelivery": {
+            "type": "boolean"
+          },
+          "invoiceReadiness": {
+            "type": "string"
+          },
+          "loads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialLoadDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "status",
+          "deliveryType",
+          "plannedLoadCount",
+          "capacityStatus",
+          "compatibilityStatus",
+          "receiptStatus",
+          "placementEvidenceStatus",
+          "partialDelivery",
+          "invoiceReadiness",
+          "loads"
+        ]
+      },
+      "SaveMaterialDeliveryPlanDto": {
+        "type": "object",
+        "properties": {
+          "deliveryType": {
+            "type": "string",
+            "enum": ["bulk", "placed", "spread"]
+          },
+          "plannedLoadCount": {
+            "type": "number",
+            "maximum": 20,
+            "minimum": 1
+          },
+          "placementEvidenceRequired": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": ["deliveryType", "plannedLoadCount"]
+      },
+      "CreateMaterialLoadDto": {
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "number",
+            "maximum": 20,
+            "minimum": 1
+          }
+        },
+        "required": ["sequence"]
+      },
+      "MaterialLoadItemInputDto": {
+        "type": "object",
+        "properties": {
+          "acceptedQuoteLineItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierRouteStopId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "placementRouteStopId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number",
+            "maximum": 50,
+            "minimum": 1
+          },
+          "loadingSequence": {
+            "type": "number",
+            "maximum": 50,
+            "minimum": 1
+          },
+          "unloadingSequence": {
+            "type": "number",
+            "maximum": 50,
+            "minimum": 1
+          },
+          "quantityUnit": {
+            "type": "string",
+            "enum": ["tons", "cubic_yards", "loads"]
+          },
+          "plannedQuantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "unitWeightPounds": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "unitVolumeCubicYards": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "plannedUnitCostCents": {
+            "type": "number",
+            "minimum": 0
+          },
+          "compartment": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "separationInstructions": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "materialId",
+          "supplierRouteStopId",
+          "placementRouteStopId",
+          "sequence",
+          "loadingSequence",
+          "unloadingSequence",
+          "quantityUnit",
+          "plannedQuantity",
+          "unitWeightPounds",
+          "unitVolumeCubicYards"
+        ]
+      },
+      "AssignMaterialLoadAssetDto": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["truck", "trailer", "equipment"]
+          }
+        },
+        "required": ["assetId", "role"]
+      },
+      "EvaluateMaterialLoadSafetyDto": {
+        "type": "object",
+        "properties": {
+          "validationType": {
+            "type": "string",
+            "enum": ["planning", "dispatch", "actual"]
+          },
+          "compatibilityConfirmed": {
+            "type": "boolean"
+          },
+          "separationConfirmed": {
+            "type": "boolean"
+          }
+        },
+        "required": ["validationType", "compatibilityConfirmed", "separationConfirmed"]
+      },
+      "MaterialLoadTransitionDto": {
+        "type": "object",
+        "properties": {
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      },
+      "MaterialLoadExecutionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "loadingStartedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "loadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "transitStartedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "unloadingStartedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reconciledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": ["id", "jobId", "sequence", "status"]
+      },
+      "RecordMaterialQuantitiesDto": {
+        "type": "object",
+        "properties": {
+          "actualMaterialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actualSupplierMaterialId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purchasedQuantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "loadedQuantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "deliveredQuantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "remainingQuantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "actualUnitCostCents": {
+            "type": "number",
+            "minimum": 0
+          },
+          "deliveryResult": {
+            "type": "string",
+            "enum": ["pending", "delivered", "partially_delivered", "not_delivered", "returned"]
+          },
+          "remainingDisposition": {
+            "type": "string",
+            "enum": [
+              "none",
+              "returned_to_supplier",
+              "retained_by_business",
+              "left_with_customer",
+              "disposed",
+              "follow_up_job",
+              "other"
+            ]
+          }
+        }
+      },
+      "AttachMaterialEvidenceDto": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": ["supplier_ticket", "supplier_receipt", "placement_evidence", "delivery_photo"]
+          }
+        },
+        "required": ["documentId", "purpose"]
+      },
+      "CreateMaterialQuantityVarianceDto": {
+        "type": "object",
+        "properties": {
+          "varianceType": {
+            "type": "string",
+            "enum": ["purchase", "loading", "delivery", "remaining"]
+          },
+          "expectedQuantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "actualQuantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "responsibility": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "business",
+              "shared",
+              "supplier",
+              "vendor",
+              "insurance",
+              "unknown",
+              "disputed",
+              "not_applicable"
+            ]
+          }
+        },
+        "required": ["varianceType", "expectedQuantity", "actualQuantity", "responsibility"]
+      },
+      "MaterialQuantityVarianceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialLoadItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "varianceType": {
+            "type": "string"
+          },
+          "quantityUnit": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "type": "string"
+          },
+          "actualQuantity": {
+            "type": "string"
+          },
+          "varianceQuantity": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "responsibility": {
+            "type": "string"
+          },
+          "resolutionType": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "materialLoadItemId",
+          "varianceType",
+          "quantityUnit",
+          "expectedQuantity",
+          "actualQuantity",
+          "varianceQuantity",
+          "status",
+          "responsibility"
+        ]
+      },
+      "ResolveMaterialQuantityVarianceDto": {
+        "type": "object",
+        "properties": {
+          "resolutionType": {
+            "type": "string",
+            "enum": [
+              "charge",
+              "credit",
+              "no_charge",
+              "follow_up_job",
+              "supplier_adjustment",
+              "customer_acceptance",
+              "other"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["resolutionType", "reason"]
+      },
+      "CreateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "expenseType": {
+            "type": "string",
+            "enum": ["material_purchase", "supplier_fee", "delivery", "disposal", "other"]
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receiptDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "number",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "externalReference": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "incurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["expenseType", "amountCents", "description", "incurredAt"]
+      },
+      "ExpenseAllocationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialLoadItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "materialLoadItemId", "amountCents", "status"]
+      },
+      "ExpenseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expenseNumber": {
+            "type": "string"
+          },
+          "expenseType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "receiptStatus": {
+            "type": "string"
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseAllocationDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "expenseNumber",
+          "expenseType",
+          "status",
+          "amountCents",
+          "receiptStatus",
+          "allocations"
+        ]
+      },
+      "CreateExpenseAllocationDto": {
+        "type": "object",
+        "properties": {
+          "materialLoadItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": ["materialLoadItemId", "amountCents"]
+      },
+      "ExpenseActionDto": {
+        "type": "object",
+        "properties": {
+          "receiptDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      },
+      "CreateJobChargeDto": {
+        "type": "object",
+        "properties": {
+          "chargeKind": {
+            "type": "string",
+            "enum": ["charge", "credit", "no_charge", "informational"]
+          },
+          "chargeType": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "material_delivery_detail",
+              "material_load",
+              "material_load_item",
+              "quantity_variance",
+              "route_stop",
+              "manual"
+            ]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dedupeKey": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "responsibility": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "business",
+              "shared",
+              "supplier",
+              "vendor",
+              "insurance",
+              "not_applicable"
+            ]
+          },
+          "evidenceStatus": {
+            "type": "string",
+            "enum": ["complete", "waived", "not_required"]
+          },
+          "customerAuthorizationStatus": {
+            "type": "string",
+            "enum": ["not_required", "authorized", "waived"]
+          },
+          "internalApprovalStatus": {
+            "type": "string",
+            "enum": ["not_required", "approved", "waived"]
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,8})(?:\\.\\d{1,3})?$"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "rateCents": {
+            "type": "number",
+            "minimum": 0
+          },
+          "proposedAmountCents": {
+            "type": "number",
+            "minimum": 0
+          },
+          "calculationSnapshot": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "customerDescription": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "taxBehavior": {
+            "type": "string",
+            "enum": ["taxable", "non_taxable", "tax_included"]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "chargeKind",
+          "chargeType",
+          "sourceType",
+          "dedupeKey",
+          "responsibility",
+          "evidenceStatus",
+          "customerAuthorizationStatus",
+          "internalApprovalStatus",
+          "calculationSnapshot",
+          "customerDescription",
+          "taxBehavior",
+          "occurredAt"
+        ]
+      },
+      "JobChargeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chargeNumber": {
+            "type": "string"
+          },
+          "chargeKind": {
+            "type": "string"
+          },
+          "chargeType": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "dedupeKey": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "responsibility": {
+            "type": "string"
+          },
+          "calculatedAmountCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "proposedAmountCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "approvedAmountCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "customerDescription": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "chargeNumber",
+          "chargeKind",
+          "chargeType",
+          "sourceType",
+          "dedupeKey",
+          "status",
+          "responsibility",
+          "customerDescription"
+        ]
+      },
+      "JobChargeActionDto": {
+        "type": "object",
+        "properties": {
+          "approvedAmountCents": {
+            "type": "number",
+            "minimum": 0
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      },
+      "InvoiceReadinessDto": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["result", "blockers", "warnings", "evaluatedAt"]
+      },
       "AssetDto": {
         "type": "object",
         "properties": {
@@ -4076,6 +6025,10 @@
             "type": "string"
           },
           "capacityWeight": {
+            "type": "string",
+            "nullable": true
+          },
+          "capacityVolumeCubicYards": {
             "type": "string",
             "nullable": true
           }
@@ -4110,6 +6063,10 @@
             "enum": ["truck", "trailer", "equipment"]
           },
           "capacityWeight": {
+            "type": "string",
+            "pattern": "^\\d+(\\.\\d{1,3})?$"
+          },
+          "capacityVolumeCubicYards": {
             "type": "string",
             "pattern": "^\\d+(\\.\\d{1,3})?$"
           }

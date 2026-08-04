@@ -114,6 +114,12 @@ assignments, and active Asset Reservations. Dispatch and completion have separat
 evaluations. Holds restore the prior status when released. Closed Jobs reject ordinary updates;
 reasoned reopening returns to Planning and records `reopened_at`.
 
+For Material Delivery, schedule confirmation additionally requires one current planning-safety
+evaluation for every active Material Load. Dispatch readiness requires a current dispatch-safety
+evaluation. Capacity, compatibility, or separation failure produces `not_ready`; there is no
+override transition. Revising a planned Item or hauling Asset invalidates the Load summary and
+requires a new immutable evaluation.
+
 ## Material Load
 
 ```text
@@ -131,6 +137,17 @@ Planned
 ```
 
 Partial delivery is a nonterminal state requiring remaining-quantity disposition.
+
+Planning commands create the Detail, Loads, Items, supplier/customer Route Stop relationships, and
+hauling Asset snapshots while the Job is in Planning or Needs Scheduling. Safety evaluation is an
+explicit idempotent command: planning evaluation is allowed before schedule confirmation, while
+dispatch evaluation requires a Scheduled Job.
+
+Driver execution requires an Active Job and follows the ordered Load lifecycle. Purchased and loaded
+quantities are recorded before an immutable actual-load safety evaluation; departure is blocked when
+that evaluation is missing, stale, or unsafe. Delivery completion requires delivered and remaining
+quantities, a delivery result, remaining-material disposition, and placement evidence when required.
+Reconciliation additionally requires supplier tickets and resolved quantity variances.
 
 ## Rental operational state
 
@@ -174,6 +191,11 @@ Alternatives:
 ```text
 Rejected | Waived | Disputed | Credited | Reversed | Cancelled
 ```
+
+Operational Job Charges are created through an idempotent command with a stable per-Job dedupe key.
+Quantity-times-rate calculations use server-side fixed-point arithmetic and historical calculation
+snapshots. Approval requires resolved evidence, responsibility, customer authorization, and internal
+approval. Corrections use a linked reversal rather than mutation or deletion.
 
 ## Invoice
 
