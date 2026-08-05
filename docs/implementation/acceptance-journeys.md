@@ -100,6 +100,10 @@
 
 ## MD-E2E-001 — Multi-Material Delivery
 
+Implementation status: Sprint 1.6.0 verifies the PostgreSQL-backed operational portion through steps
+9–16, including the staff and mobile driver production routes. Sprint 1.7.0 will extend the same
+canonical journey through final invoicing, payment allocation, and financial completion.
+
 ### Configuration
 
 - Four cubic yards of #57 gravel at $32 per yard

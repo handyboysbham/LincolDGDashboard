@@ -78,7 +78,8 @@ Invoice readiness additionally requires required supplier receipts, Expenses, Ex
 and variance resolution.
 
 Planning, safety, driver execution, evidence, reconciliation, cost, charge, and invoice-readiness
-commands now own the operational lifecycle with Audit Events and transactional outbox events.
-Driver/staff web workflows and final `MD-E2E-001` verification are specified in the
-[Sprint 1.6.0 implementation plan](../implementation/plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md)
-and remain subsequent Sprint phases.
+commands now own the operational lifecycle with Audit Events and transactional outbox events. The
+staff Job workspace and mobile driver routes use those commands through the generated API client.
+The operational portion of `MD-E2E-001` is PostgreSQL-backed and verified; invoice and payment
+completion remain Sprint 1.7.0. Implementation details are recorded in the
+[Sprint 1.6.0 implementation plan](../implementation/plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md).

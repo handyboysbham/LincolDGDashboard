@@ -22,6 +22,7 @@ describe("operations controller authorization", () => {
     [JobsController, "transition", ["operations:manage"]],
     [JobsController, "evaluate", ["operations:manage"]],
     [MaterialDeliveryController, "get", ["projects:read"]],
+    [MaterialDeliveryController, "listMaterials", ["projects:read"]],
     [MaterialDeliveryController, "savePlan", ["operations:manage"]],
     [MaterialDeliveryController, "createLoad", ["operations:manage"]],
     [MaterialDeliveryController, "createItem", ["operations:manage"]],

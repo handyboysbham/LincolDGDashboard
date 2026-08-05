@@ -1372,6 +1372,26 @@
         "tags": ["Jobs"]
       }
     },
+    "/api/v1/materials": {
+      "get": {
+        "operationId": "listMaterialCatalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialCatalogResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Material Delivery"]
+      }
+    },
     "/api/v1/jobs/{id}/material-delivery": {
       "get": {
         "operationId": "getJobMaterialDelivery",
@@ -4937,6 +4957,34 @@
           }
         }
       },
+      "MaterialCatalogItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "defaultUnit": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "defaultUnit"]
+      },
+      "MaterialCatalogResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialCatalogItemDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
       "MaterialLoadAssetDto": {
         "type": "object",
         "properties": {
@@ -5075,6 +5123,18 @@
           },
           "varianceStatus": {
             "type": "string"
+          },
+          "materialName": {
+            "type": "string",
+            "nullable": true
+          },
+          "supplierStopLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "placementStopLabel": {
+            "type": "string",
+            "nullable": true
           },
           "evidence": {
             "type": "array",
@@ -5229,6 +5289,185 @@
           "validations"
         ]
       },
+      "MaterialQuantityVarianceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialLoadItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "varianceType": {
+            "type": "string"
+          },
+          "quantityUnit": {
+            "type": "string"
+          },
+          "expectedQuantity": {
+            "type": "string"
+          },
+          "actualQuantity": {
+            "type": "string"
+          },
+          "varianceQuantity": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "responsibility": {
+            "type": "string"
+          },
+          "resolutionType": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "materialLoadItemId",
+          "varianceType",
+          "quantityUnit",
+          "expectedQuantity",
+          "actualQuantity",
+          "varianceQuantity",
+          "status",
+          "responsibility"
+        ]
+      },
+      "ExpenseAllocationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "materialLoadItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "materialLoadItemId", "amountCents", "status"]
+      },
+      "ExpenseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expenseNumber": {
+            "type": "string"
+          },
+          "expenseType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "receiptStatus": {
+            "type": "string"
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseAllocationDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "expenseNumber",
+          "expenseType",
+          "status",
+          "amountCents",
+          "receiptStatus",
+          "allocations"
+        ]
+      },
+      "JobChargeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chargeNumber": {
+            "type": "string"
+          },
+          "chargeKind": {
+            "type": "string"
+          },
+          "chargeType": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "dedupeKey": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "responsibility": {
+            "type": "string"
+          },
+          "calculatedAmountCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "proposedAmountCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "approvedAmountCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "customerDescription": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "chargeNumber",
+          "chargeKind",
+          "chargeType",
+          "sourceType",
+          "dedupeKey",
+          "status",
+          "responsibility",
+          "customerDescription"
+        ]
+      },
       "MaterialDeliveryDto": {
         "type": "object",
         "properties": {
@@ -5288,6 +5527,24 @@
             "items": {
               "$ref": "#/components/schemas/MaterialLoadDto"
             }
+          },
+          "variances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialQuantityVarianceDto"
+            }
+          },
+          "expenses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseDto"
+            }
+          },
+          "jobCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobChargeDto"
+            }
           }
         },
         "required": [
@@ -5302,7 +5559,10 @@
           "placementEvidenceStatus",
           "partialDelivery",
           "invoiceReadiness",
-          "loads"
+          "loads",
+          "variances",
+          "expenses",
+          "jobCharges"
         ]
       },
       "SaveMaterialDeliveryPlanDto": {
@@ -5599,55 +5859,6 @@
         },
         "required": ["varianceType", "expectedQuantity", "actualQuantity", "responsibility"]
       },
-      "MaterialQuantityVarianceDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "materialLoadItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "varianceType": {
-            "type": "string"
-          },
-          "quantityUnit": {
-            "type": "string"
-          },
-          "expectedQuantity": {
-            "type": "string"
-          },
-          "actualQuantity": {
-            "type": "string"
-          },
-          "varianceQuantity": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "responsibility": {
-            "type": "string"
-          },
-          "resolutionType": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "materialLoadItemId",
-          "varianceType",
-          "quantityUnit",
-          "expectedQuantity",
-          "actualQuantity",
-          "varianceQuantity",
-          "status",
-          "responsibility"
-        ]
-      },
       "ResolveMaterialQuantityVarianceDto": {
         "type": "object",
         "properties": {
@@ -5707,70 +5918,6 @@
           }
         },
         "required": ["expenseType", "amountCents", "description", "incurredAt"]
-      },
-      "ExpenseAllocationDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "materialLoadItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "amountCents": {
-            "type": "number"
-          },
-          "status": {
-            "type": "string"
-          }
-        },
-        "required": ["id", "materialLoadItemId", "amountCents", "status"]
-      },
-      "ExpenseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "jobId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "expenseNumber": {
-            "type": "string"
-          },
-          "expenseType": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "amountCents": {
-            "type": "number"
-          },
-          "receiptStatus": {
-            "type": "string"
-          },
-          "allocations": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ExpenseAllocationDto"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "jobId",
-          "expenseNumber",
-          "expenseType",
-          "status",
-          "amountCents",
-          "receiptStatus",
-          "allocations"
-        ]
       },
       "CreateExpenseAllocationDto": {
         "type": "object",
@@ -5899,72 +6046,6 @@
           "customerDescription",
           "taxBehavior",
           "occurredAt"
-        ]
-      },
-      "JobChargeDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "jobId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "chargeNumber": {
-            "type": "string"
-          },
-          "chargeKind": {
-            "type": "string"
-          },
-          "chargeType": {
-            "type": "string"
-          },
-          "sourceType": {
-            "type": "string"
-          },
-          "sourceId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "dedupeKey": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "responsibility": {
-            "type": "string"
-          },
-          "calculatedAmountCents": {
-            "type": "number",
-            "nullable": true
-          },
-          "proposedAmountCents": {
-            "type": "number",
-            "nullable": true
-          },
-          "approvedAmountCents": {
-            "type": "number",
-            "nullable": true
-          },
-          "customerDescription": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "jobId",
-          "chargeNumber",
-          "chargeKind",
-          "chargeType",
-          "sourceType",
-          "dedupeKey",
-          "status",
-          "responsibility",
-          "customerDescription"
         ]
       },
       "JobChargeActionDto": {

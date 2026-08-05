@@ -59,6 +59,7 @@ import {
   JobListResponseDto,
   LifecycleActionDto,
   MaterialDeliveryDto,
+  MaterialCatalogResponseDto,
   MaterialEvidenceDto,
   MaterialLoadAssetDto,
   MaterialLoadDto,
@@ -318,6 +319,14 @@ export class MaterialDeliveryController {
     @Inject(MaterialDeliveryExecutionService)
     private readonly execution: MaterialDeliveryExecutionService,
   ) {}
+
+  @Get("materials")
+  @RequirePermissions("projects:read")
+  @ApiOperation({ operationId: "listMaterialCatalog" })
+  @ApiOkResponse({ type: MaterialCatalogResponseDto })
+  public listMaterials(): Promise<MaterialCatalogResponseDto> {
+    return this.materialDelivery.listMaterials();
+  }
 
   @Get("jobs/:id/material-delivery")
   @RequirePermissions("projects:read")

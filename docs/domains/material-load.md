@@ -159,6 +159,7 @@ An Item is reconciled only when:
 The schema and database guards are implemented by migration `0006`. Explicit REST commands now own
 planning, hauling configuration, driver lifecycle, independent actual quantities, actual-load
 safety, Document evidence, quantity variances, Expense reconciliation, operational Job Charges, and
-invoice readiness. Web surfaces and final PostgreSQL acceptance verification remain later work in
-the
+invoice readiness. The staff planner/reconciliation workspace and mobile driver workflow use the
+generated client, and the PostgreSQL-backed operational acceptance journey is verified. Invoice and
+payment completion remain Sprint 1.7.0; details are maintained in the
 [Sprint 1.6.0 implementation plan](../implementation/plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md).

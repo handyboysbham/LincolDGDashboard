@@ -295,8 +295,22 @@ export class MaterialLoadItemDto {
   @ApiPropertyOptional({ nullable: true, type: String }) public remainingDisposition!:
     string | null;
   @ApiProperty({ type: String }) public varianceStatus!: string;
+  @ApiPropertyOptional({ nullable: true, type: String }) public materialName?: string | null;
+  @ApiPropertyOptional({ nullable: true, type: String }) public supplierStopLabel?: string | null;
+  @ApiPropertyOptional({ nullable: true, type: String }) public placementStopLabel?: string | null;
   @ApiProperty({ isArray: true, type: () => MaterialEvidenceDto })
   public evidence!: MaterialEvidenceDto[];
+}
+
+export class MaterialCatalogItemDto {
+  @ApiProperty({ format: "uuid", type: String }) public id!: string;
+  @ApiProperty({ type: String }) public name!: string;
+  @ApiProperty({ type: String }) public defaultUnit!: string;
+}
+
+export class MaterialCatalogResponseDto {
+  @ApiProperty({ isArray: true, type: MaterialCatalogItemDto })
+  public items!: MaterialCatalogItemDto[];
 }
 
 export class MaterialLoadValidationDto {
@@ -356,6 +370,10 @@ export class MaterialDeliveryDto {
   @ApiProperty({ type: Boolean }) public partialDelivery!: boolean;
   @ApiProperty({ type: String }) public invoiceReadiness!: string;
   @ApiProperty({ isArray: true, type: MaterialLoadDto }) public loads!: MaterialLoadDto[];
+  @ApiProperty({ isArray: true, type: () => MaterialQuantityVarianceDto })
+  public variances!: MaterialQuantityVarianceDto[];
+  @ApiProperty({ isArray: true, type: () => ExpenseDto }) public expenses!: ExpenseDto[];
+  @ApiProperty({ isArray: true, type: () => JobChargeDto }) public jobCharges!: JobChargeDto[];
 }
 
 export class SaveMaterialDeliveryPlanDto {

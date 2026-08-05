@@ -165,7 +165,7 @@ describe(
       await adminPool?.end();
     });
 
-    it("accepts one immutable Quote into one Project and one conflict-safe scheduled Job", async () => {
+    it("MD-E2E-001 executes one immutable Quote through a reconciled multi-material delivery", async () => {
       const leadId = await createEstimatingLead("canonical", "Canonical Customer");
       const estimate = await createEstimate(leadId, "canonical");
       expect(estimate).toMatchObject({
@@ -446,32 +446,58 @@ describe(
           tenantId,
         }),
       );
-      const supplierStop = await command(
+      const gravelSupplierStop = await command(
         "POST",
         `/api/v1/jobs/${jobId}/route-stops`,
-        "material-supplier-stop",
+        "material-gravel-supplier-stop",
         {
-          label: "Canonical supplier yard",
+          label: "Canonical limestone supplier yard",
           locationSnapshot: { city: "Lincoln", region: "NE" },
           sequence: 1,
           stopType: "supplier",
         },
       );
-      expect(supplierStop.statusCode).toBe(201);
-      const supplierStopId = supplierStop.json<{ id: string }>().id;
-      const placementStop = await command(
+      expect(gravelSupplierStop.statusCode).toBe(201);
+      const gravelSupplierStopId = gravelSupplierStop.json<{ id: string }>().id;
+      const sandSupplierStop = await command(
         "POST",
         `/api/v1/jobs/${jobId}/route-stops`,
-        "material-placement-stop",
+        "material-sand-supplier-stop",
+        {
+          label: "Canonical sand supplier yard",
+          locationSnapshot: { city: "Waverly", region: "NE" },
+          sequence: 2,
+          stopType: "supplier",
+        },
+      );
+      expect(sandSupplierStop.statusCode).toBe(201);
+      const sandSupplierStopId = sandSupplierStop.json<{ id: string }>().id;
+      const drivewayPlacementStop = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/route-stops`,
+        "material-driveway-placement-stop",
         {
           label: "Customer driveway placement",
           locationSnapshot: { city: "Lincoln", region: "NE" },
-          sequence: 2,
+          sequence: 3,
           stopType: "customer",
         },
       );
-      expect(placementStop.statusCode).toBe(201);
-      const placementStopId = placementStop.json<{ id: string }>().id;
+      expect(drivewayPlacementStop.statusCode).toBe(201);
+      const drivewayPlacementStopId = drivewayPlacementStop.json<{ id: string }>().id;
+      const garagePlacementStop = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/route-stops`,
+        "material-garage-placement-stop",
+        {
+          label: "Customer garage placement",
+          locationSnapshot: { city: "Lincoln", region: "NE" },
+          sequence: 4,
+          stopType: "customer",
+        },
+      );
+      expect(garagePlacementStop.statusCode).toBe(201);
+      const garagePlacementStopId = garagePlacementStop.json<{ id: string }>().id;
       const planPayload = {
         deliveryType: "placed",
         placementEvidenceRequired: true,
@@ -504,12 +530,12 @@ describe(
         compartment: "Separated front compartment",
         loadingSequence: 1,
         materialId: limestone.id,
-        placementRouteStopId: placementStopId,
+        placementRouteStopId: drivewayPlacementStopId,
         plannedQuantity: "4.000",
         quantityUnit: "cubic_yards",
         separationInstructions: "Keep limestone separated from sand",
         sequence: 1,
-        supplierRouteStopId: supplierStopId,
+        supplierRouteStopId: gravelSupplierStopId,
         unitVolumeCubicYards: "1.000",
         unitWeightPounds: "1500.000",
         unloadingSequence: 1,
@@ -525,12 +551,12 @@ describe(
         compartment: "Separated rear compartment",
         loadingSequence: 2,
         materialId: sandId,
-        placementRouteStopId: placementStopId,
+        placementRouteStopId: garagePlacementStopId,
         plannedQuantity: "3.333",
         quantityUnit: "cubic_yards",
         separationInstructions: "Keep masonry sand separated from limestone",
         sequence: 2,
-        supplierRouteStopId: supplierStopId,
+        supplierRouteStopId: sandSupplierStopId,
         unitVolumeCubicYards: "1.000",
         unitWeightPounds: "1500.000",
         unloadingSequence: 2,
@@ -1067,6 +1093,41 @@ describe(
         "material-invoice-readiness-ready",
       );
       expect(invoiceReadiness.json()).toMatchObject({ blockers: [], result: "ready" });
+      const materialCatalog = await fastify.inject({ method: "GET", url: "/api/v1/materials" });
+      expect(materialCatalog.statusCode).toBe(200);
+      expect(materialCatalog.json<{ items: { name: string }[] }>().items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "Canonical limestone" }),
+          expect.objectContaining({ name: "Canonical masonry sand" }),
+        ]),
+      );
+      const deliveryReadModel = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/jobs/${jobId}/material-delivery`,
+      });
+      expect(deliveryReadModel.statusCode).toBe(200);
+      expect(deliveryReadModel.json()).toMatchObject({
+        expenses: [{ amountCents: 12_800 }, { amountCents: 5_600 }],
+        invoiceReadiness: "ready",
+        jobCharges: [{ calculatedAmountCents: 280, status: "ready_to_invoice" }],
+        loads: [
+          {
+            items: [
+              {
+                materialName: "Canonical limestone",
+                placementStopLabel: "Customer driveway placement",
+                supplierStopLabel: "Canonical limestone supplier yard",
+              },
+              {
+                materialName: "Canonical masonry sand",
+                placementStopLabel: "Customer garage placement",
+                supplierStopLabel: "Canonical sand supplier yard",
+              },
+            ],
+          },
+        ],
+        variances: [{ status: "resolved", varianceType: "purchase" }],
+      });
       const routeStop = await command(
         "POST",
         `/api/v1/jobs/${jobId}/route-stops`,
@@ -1074,7 +1135,7 @@ describe(
         {
           label: "Customer exit check",
           locationSnapshot: { city: "Lincoln", region: "NE" },
-          sequence: 3,
+          sequence: 5,
           stopType: "customer",
         },
       );
@@ -1121,7 +1182,7 @@ describe(
         "POST",
         `/api/v1/jobs/${jobId}/route-stops`,
         "job-route-after-close",
-        { label: "Late stop", locationSnapshot: {}, sequence: 4, stopType: "other" },
+        { label: "Late stop", locationSnapshot: {}, sequence: 6, stopType: "other" },
       );
       expect(lockedStop.statusCode).toBe(409);
       const reopened = await command("POST", `/api/v1/jobs/${jobId}/actions/reopen`, "job-reopen", {

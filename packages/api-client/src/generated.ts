@@ -548,6 +548,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/materials": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listMaterialCatalog"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/jobs/{id}/material-delivery": {
     parameters: {
       query?: never;
@@ -1800,6 +1816,15 @@ export interface components {
     CompleteChecklistItemDto: {
       response?: string;
     };
+    MaterialCatalogItemDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      defaultUnit: string;
+    };
+    MaterialCatalogResponseDto: {
+      items: components["schemas"]["MaterialCatalogItemDto"][];
+    };
     MaterialLoadAssetDto: {
       /** Format: uuid */
       id: string;
@@ -1851,6 +1876,9 @@ export interface components {
       deliveryResult: string;
       remainingDisposition?: string | null;
       varianceStatus: string;
+      materialName?: string | null;
+      supplierStopLabel?: string | null;
+      placementStopLabel?: string | null;
       evidence: components["schemas"]["MaterialEvidenceDto"][];
     };
     MaterialLoadValidationDto: {
@@ -1885,6 +1913,59 @@ export interface components {
       items: components["schemas"]["MaterialLoadItemDto"][];
       validations: components["schemas"]["MaterialLoadValidationDto"][];
     };
+    MaterialQuantityVarianceDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      materialLoadItemId: string;
+      varianceType: string;
+      quantityUnit: string;
+      expectedQuantity: string;
+      actualQuantity: string;
+      varianceQuantity: string;
+      status: string;
+      responsibility: string;
+      resolutionType?: string | null;
+    };
+    ExpenseAllocationDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      materialLoadItemId: string;
+      amountCents: number;
+      status: string;
+    };
+    ExpenseDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      expenseNumber: string;
+      expenseType: string;
+      status: string;
+      amountCents: number;
+      receiptStatus: string;
+      allocations: components["schemas"]["ExpenseAllocationDto"][];
+    };
+    JobChargeDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      chargeNumber: string;
+      chargeKind: string;
+      chargeType: string;
+      sourceType: string;
+      /** Format: uuid */
+      sourceId?: string | null;
+      dedupeKey: string;
+      status: string;
+      responsibility: string;
+      calculatedAmountCents?: number | null;
+      proposedAmountCents?: number | null;
+      approvedAmountCents?: number | null;
+      customerDescription: string;
+    };
     MaterialDeliveryDto: {
       /** Format: uuid */
       id: string;
@@ -1904,6 +1985,9 @@ export interface components {
       partialDelivery: boolean;
       invoiceReadiness: string;
       loads: components["schemas"]["MaterialLoadDto"][];
+      variances: components["schemas"]["MaterialQuantityVarianceDto"][];
+      expenses: components["schemas"]["ExpenseDto"][];
+      jobCharges: components["schemas"]["JobChargeDto"][];
     };
     SaveMaterialDeliveryPlanDto: {
       /** @enum {string} */
@@ -2019,20 +2103,6 @@ export interface components {
         | "disputed"
         | "not_applicable";
     };
-    MaterialQuantityVarianceDto: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      materialLoadItemId: string;
-      varianceType: string;
-      quantityUnit: string;
-      expectedQuantity: string;
-      actualQuantity: string;
-      varianceQuantity: string;
-      status: string;
-      responsibility: string;
-      resolutionType?: string | null;
-    };
     ResolveMaterialQuantityVarianceDto: {
       /** @enum {string} */
       resolutionType:
@@ -2059,26 +2129,6 @@ export interface components {
       externalReference?: string;
       /** Format: date-time */
       incurredAt: string;
-    };
-    ExpenseAllocationDto: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      materialLoadItemId: string;
-      amountCents: number;
-      status: string;
-    };
-    ExpenseDto: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      jobId: string;
-      expenseNumber: string;
-      expenseType: string;
-      status: string;
-      amountCents: number;
-      receiptStatus: string;
-      allocations: components["schemas"]["ExpenseAllocationDto"][];
     };
     CreateExpenseAllocationDto: {
       /** Format: uuid */
@@ -2126,25 +2176,6 @@ export interface components {
       taxBehavior: "taxable" | "non_taxable" | "tax_included";
       /** Format: date-time */
       occurredAt: string;
-    };
-    JobChargeDto: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      jobId: string;
-      chargeNumber: string;
-      chargeKind: string;
-      chargeType: string;
-      sourceType: string;
-      /** Format: uuid */
-      sourceId?: string | null;
-      dedupeKey: string;
-      status: string;
-      responsibility: string;
-      calculatedAmountCents?: number | null;
-      proposedAmountCents?: number | null;
-      approvedAmountCents?: number | null;
-      customerDescription: string;
     };
     JobChargeActionDto: {
       approvedAmountCents?: number;
@@ -3384,6 +3415,25 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ChecklistItemDto"];
+        };
+      };
+    };
+  };
+  listMaterialCatalog: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialCatalogResponseDto"];
         };
       };
     };

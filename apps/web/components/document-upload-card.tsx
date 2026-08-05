@@ -24,10 +24,18 @@ type UploadState =
   | { message: string; name: "error" };
 
 interface DocumentUploadCardProps {
+  allowCustomerLink?: boolean;
+  kicker?: string;
   onAvailable?: (document: { id: string; originalFilename: string }) => Promise<void> | void;
+  title?: string;
 }
 
-export function DocumentUploadCard({ onAvailable }: DocumentUploadCardProps = {}) {
+export function DocumentUploadCard({
+  allowCustomerLink = true,
+  kicker = "Secure documents",
+  onAvailable,
+  title = "Upload a file",
+}: DocumentUploadCardProps = {}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>({ name: "idle" });
   const [customerLink, setCustomerLink] = useState<string>();
@@ -115,8 +123,8 @@ export function DocumentUploadCard({ onAvailable }: DocumentUploadCardProps = {}
     <section className="panel upload-card">
       <div className="panel-heading compact">
         <div>
-          <span className="panel-kicker">Secure documents</span>
-          <h2>Upload a file</h2>
+          <span className="panel-kicker">{kicker}</span>
+          <h2>{title}</h2>
         </div>
         <ShieldCheck aria-hidden="true" className="security-icon" size={22} />
       </div>
@@ -194,9 +202,11 @@ export function DocumentUploadCard({ onAvailable }: DocumentUploadCardProps = {}
             <button onClick={() => void download(state.documentId)} type="button">
               <Download size={15} /> Download
             </button>
-            <button onClick={() => void share(state.documentId)} type="button">
-              <Link2 size={15} /> Customer link
-            </button>
+            {allowCustomerLink && (
+              <button onClick={() => void share(state.documentId)} type="button">
+                <Link2 size={15} /> Customer link
+              </button>
+            )}
           </div>
           {customerLink && (
             <button className="copy-link" onClick={() => void copyLink()} type="button">

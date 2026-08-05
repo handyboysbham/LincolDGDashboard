@@ -14,6 +14,7 @@ import { type SyntheticEvent, useCallback, useEffect, useState } from "react";
 
 import { apiErrorMessage, getApiClient } from "../lib/api-client";
 import { humanizeCommercialValue, shortDate } from "../lib/commercial-format";
+import { MaterialDeliveryWorkspace } from "./material-delivery-workspace";
 
 type Job = components["schemas"]["JobDetailDto"];
 type State = { name: "loading" } | { message: string; name: "error" } | { job: Job; name: "ready" };
@@ -70,10 +71,11 @@ export function JobDetail({ jobId }: { jobId: string }) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const label = textValue(data, "label");
+    const stopType = textValue(data, "stopType") === "supplier" ? "supplier" : "customer";
     const sequence = state.name === "ready" ? state.job.routeStops.length + 1 : 1;
     setBusy(true);
     const response = await getApiClient().POST("/api/v1/jobs/{id}/route-stops", {
-      body: { label, locationSnapshot: { label }, sequence, stopType: "customer" },
+      body: { label, locationSnapshot: { label }, sequence, stopType },
       params: { header: { "Idempotency-Key": crypto.randomUUID() }, path: { id: jobId } },
     });
     if (!response.data) setActionError(apiErrorMessage(response.error));
@@ -182,6 +184,7 @@ export function JobDetail({ jobId }: { jobId: string }) {
           <AlertTriangle size={17} /> {actionError}
         </div>
       )}
+      {job.serviceType === "material_delivery" && <MaterialDeliveryWorkspace job={job} />}
       <div className="operations-detail-grid">
         <main className="operations-stack">
           <section className="panel operations-section">
@@ -228,6 +231,13 @@ export function JobDetail({ jobId }: { jobId: string }) {
               <label>
                 <span className="visually-hidden">New route stop label</span>
                 <input name="label" placeholder="Add customer or supplier stop" required />
+              </label>
+              <label>
+                <span className="visually-hidden">Route stop type</span>
+                <select aria-label="Route stop type" name="stopType">
+                  <option value="customer">Customer placement</option>
+                  <option value="supplier">Supplier</option>
+                </select>
               </label>
               <button className="button button-secondary" disabled={busy}>
                 Add stop

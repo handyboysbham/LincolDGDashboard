@@ -2,6 +2,9 @@ import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import {
   assets,
   auditEvents,
+  expenseAllocations,
+  expenses,
+  jobCharges,
   jobEvents,
   jobs,
   materialDeliveryDetails,
@@ -9,6 +12,7 @@ import {
   materialLoadItems,
   materialLoadValidations,
   materialLoads,
+  materialQuantityVariances,
   materials,
   outboxEvents,
   projects,
@@ -33,12 +37,16 @@ import type {
   AssignMaterialLoadAssetDto,
   CreateMaterialLoadDto,
   EvaluateMaterialLoadSafetyDto,
+  ExpenseDto,
+  JobChargeDto,
+  MaterialCatalogResponseDto,
   MaterialDeliveryDto,
   MaterialLoadAssetDto,
   MaterialLoadDto,
   MaterialLoadItemDto,
   MaterialLoadItemInputDto,
   MaterialLoadValidationDto,
+  MaterialQuantityVarianceDto,
   SaveMaterialDeliveryPlanDto,
 } from "./operations.dto.js";
 
@@ -66,6 +74,18 @@ export class MaterialDeliveryService {
     return withTenantTransaction(this.database, actor.tenantId, (transaction) =>
       this.getDetail(transaction, actor.tenantId, jobId),
     );
+  }
+
+  public async listMaterials(): Promise<MaterialCatalogResponseDto> {
+    const actor = this.context.actor();
+    return withTenantTransaction(this.database, actor.tenantId, async (transaction) => {
+      const records = await transaction
+        .select({ defaultUnit: materials.defaultUnit, id: materials.id, name: materials.name })
+        .from(materials)
+        .where(and(eq(materials.tenantId, actor.tenantId), eq(materials.status, "active")))
+        .orderBy(asc(materials.name));
+      return { items: records };
+    });
   }
 
   public async savePlan(
@@ -996,14 +1016,48 @@ export class MaterialDeliveryService {
         ),
       )
       .orderBy(asc(materialLoads.sequence));
+    const [variances, expenseRecords, allocations, chargeRecords] = await Promise.all([
+      transaction
+        .select()
+        .from(materialQuantityVariances)
+        .where(
+          and(
+            eq(materialQuantityVariances.tenantId, tenantId),
+            eq(materialQuantityVariances.jobId, jobId),
+          ),
+        )
+        .orderBy(asc(materialQuantityVariances.createdAt)),
+      transaction
+        .select()
+        .from(expenses)
+        .where(and(eq(expenses.tenantId, tenantId), eq(expenses.jobId, jobId)))
+        .orderBy(asc(expenses.incurredAt)),
+      transaction
+        .select()
+        .from(expenseAllocations)
+        .where(and(eq(expenseAllocations.tenantId, tenantId), eq(expenseAllocations.jobId, jobId)))
+        .orderBy(asc(expenseAllocations.createdAt)),
+      transaction
+        .select()
+        .from(jobCharges)
+        .where(and(eq(jobCharges.tenantId, tenantId), eq(jobCharges.jobId, jobId)))
+        .orderBy(asc(jobCharges.occurredAt)),
+    ]);
     return {
       actualDeliveredVolumeCubicYards: detail.actualDeliveredVolumeCubicYards,
       actualDeliveredWeightPounds: detail.actualDeliveredWeightPounds,
       capacityStatus: detail.capacityStatus,
       compatibilityStatus: detail.compatibilityStatus,
       deliveryType: detail.deliveryType,
+      expenses: expenseRecords.map((expense) =>
+        expenseDto(
+          expense,
+          allocations.filter((allocation) => allocation.expenseId === expense.id),
+        ),
+      ),
       id: detail.id,
       invoiceReadiness: detail.invoiceReadiness,
+      jobCharges: chargeRecords.map(jobChargeDto),
       jobId: detail.jobId,
       loads: await Promise.all(
         loads.map((load) => this.getLoadDetail(transaction, tenantId, load)),
@@ -1015,6 +1069,7 @@ export class MaterialDeliveryService {
       plannedWeightPounds: detail.plannedWeightPounds,
       receiptStatus: detail.receiptStatus,
       status: detail.status,
+      variances: variances.map(varianceDto),
     };
   }
 
@@ -1050,6 +1105,32 @@ export class MaterialDeliveryService {
         ),
       )
       .orderBy(asc(materialLoadItems.sequence));
+    const itemMaterialIds = [...new Set(items.map((item) => item.materialId))];
+    const itemStopIds = [
+      ...new Set(
+        items.flatMap((item) =>
+          [item.supplierRouteStopId, item.placementRouteStopId].filter(
+            (value): value is string => value !== null,
+          ),
+        ),
+      ),
+    ];
+    const [itemMaterials, itemStops] = await Promise.all([
+      itemMaterialIds.length === 0
+        ? Promise.resolve([])
+        : transaction
+            .select({ id: materials.id, name: materials.name })
+            .from(materials)
+            .where(and(eq(materials.tenantId, tenantId), inArray(materials.id, itemMaterialIds))),
+      itemStopIds.length === 0
+        ? Promise.resolve([])
+        : transaction
+            .select({ id: routeStops.id, label: routeStops.label })
+            .from(routeStops)
+            .where(and(eq(routeStops.tenantId, tenantId), inArray(routeStops.id, itemStopIds))),
+    ]);
+    const materialNames = new Map(itemMaterials.map((material) => [material.id, material.name]));
+    const stopLabels = new Map(itemStops.map((stop) => [stop.id, stop.label]));
     const validations = await transaction
       .select()
       .from(materialLoadValidations)
@@ -1076,15 +1157,21 @@ export class MaterialDeliveryService {
             entityType: "MaterialLoadItem",
             tenantId,
           });
-          return materialLoadItemDto(
-            item,
-            evidence.map(({ document, purpose }) => ({
+          return materialLoadItemDto(item, {
+            evidence: evidence.map(({ document, purpose }) => ({
               documentId: document.id,
               mediaType: document.mediaType,
               originalFilename: document.originalFilename,
               purpose,
             })),
-          );
+            materialName: materialNames.get(item.materialId) ?? null,
+            placementStopLabel: item.placementRouteStopId
+              ? (stopLabels.get(item.placementRouteStopId) ?? null)
+              : null,
+            supplierStopLabel: item.supplierRouteStopId
+              ? (stopLabels.get(item.supplierRouteStopId) ?? null)
+              : null,
+          });
         }),
       ),
       jobId: load.jobId,
@@ -1366,7 +1453,12 @@ function materialLoadAssetDto(
 
 function materialLoadItemDto(
   item: typeof materialLoadItems.$inferSelect,
-  evidence: MaterialLoadItemDto["evidence"] = [],
+  detail: {
+    evidence?: MaterialLoadItemDto["evidence"];
+    materialName?: string | null;
+    placementStopLabel?: string | null;
+    supplierStopLabel?: string | null;
+  } = {},
 ): MaterialLoadItemDto {
   if (!item.supplierRouteStopId || !item.placementRouteStopId) {
     throw new Error("Material Load Item Route Stops are incomplete");
@@ -1382,12 +1474,14 @@ function materialLoadItemDto(
     compartment: item.compartment,
     deliveredQuantity: item.deliveredQuantity,
     deliveryResult: item.deliveryResult,
-    evidence,
+    evidence: detail.evidence ?? [],
     id: item.id,
     loadedQuantity: item.loadedQuantity,
     loadingSequence: item.loadingSequence,
     materialId: item.materialId,
+    materialName: detail.materialName ?? null,
     placementRouteStopId: item.placementRouteStopId,
+    placementStopLabel: detail.placementStopLabel ?? null,
     plannedQuantity: item.plannedQuantity,
     purchasedQuantity: item.purchasedQuantity,
     quantityUnit: item.quantityUnit,
@@ -1396,10 +1490,68 @@ function materialLoadItemDto(
     separationInstructions: item.separationInstructions,
     sequence: item.sequence,
     supplierRouteStopId: item.supplierRouteStopId,
+    supplierStopLabel: detail.supplierStopLabel ?? null,
     unitVolumeCubicYards: item.unitVolumeCubicYards,
     unitWeightPounds: item.unitWeightPounds,
     unloadingSequence: item.unloadingSequence,
     varianceStatus: item.varianceStatus,
+  };
+}
+
+function varianceDto(
+  variance: typeof materialQuantityVariances.$inferSelect,
+): MaterialQuantityVarianceDto {
+  return {
+    actualQuantity: variance.actualQuantity,
+    expectedQuantity: variance.expectedQuantity,
+    id: variance.id,
+    materialLoadItemId: variance.materialLoadItemId,
+    quantityUnit: variance.quantityUnit,
+    resolutionType: variance.resolutionType,
+    responsibility: variance.responsibility,
+    status: variance.status,
+    varianceQuantity: variance.varianceQuantity,
+    varianceType: variance.varianceType,
+  };
+}
+
+function expenseDto(
+  expense: typeof expenses.$inferSelect,
+  allocations: (typeof expenseAllocations.$inferSelect)[],
+): ExpenseDto {
+  return {
+    allocations: allocations.map((allocation) => ({
+      amountCents: allocation.amountCents,
+      id: allocation.id,
+      materialLoadItemId: allocation.materialLoadItemId,
+      status: allocation.status,
+    })),
+    amountCents: expense.amountCents,
+    expenseNumber: expense.expenseNumber,
+    expenseType: expense.expenseType,
+    id: expense.id,
+    jobId: expense.jobId,
+    receiptStatus: expense.receiptStatus,
+    status: expense.status,
+  };
+}
+
+function jobChargeDto(charge: typeof jobCharges.$inferSelect): JobChargeDto {
+  return {
+    approvedAmountCents: charge.approvedAmountCents,
+    calculatedAmountCents: charge.calculatedAmountCents,
+    chargeKind: charge.chargeKind,
+    chargeNumber: charge.chargeNumber,
+    chargeType: charge.chargeType,
+    customerDescription: charge.customerDescription,
+    dedupeKey: charge.dedupeKey,
+    id: charge.id,
+    jobId: charge.jobId,
+    proposedAmountCents: charge.proposedAmountCents,
+    responsibility: charge.responsibility,
+    sourceId: charge.sourceId,
+    sourceType: charge.sourceType,
+    status: charge.status,
   };
 }
 

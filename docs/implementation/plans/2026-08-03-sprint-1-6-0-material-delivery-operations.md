@@ -8,10 +8,10 @@ load-safety evidence, delivered quantities, placement evidence, operational vari
 decisions as separate records.
 
 Phase 1 establishes the implementation plan and database model. Phase 2 implements the planning and
-safety application layer. Phase 3 implements driver execution, actual-load safety, evidence,
+safety application layer. Phases 3 and 4 implement driver execution, actual-load safety, evidence,
 quantity reconciliation, supplier Expenses and Allocations, operational Job Charges, and invoice
-readiness. Staff web workflows and final operational acceptance verification remain later Sprint
-work.
+readiness. Phase 5 adds the staff dispatcher/reconciliation workspace, mobile driver workflow, and
+the verified operational portion of the canonical Material Delivery acceptance journey.
 
 ## Source documents
 
@@ -113,9 +113,9 @@ execution, evidence, reconciliation, cost, charge, and readiness commands are im
 - calculate or resolve deduplicated operational Job Charges
 - evaluate operational completion and invoice readiness
 
-Every command will lock the affected Job and aggregate when concurrency matters, validate the
-current state and permission, write Audit Events and Job Events, enqueue outbox events, and commit
-atomically through the existing idempotency boundary.
+Every command locks the affected Job and aggregate records when concurrency matters, validates the
+current state and permission, writes Audit Events and Job Events, enqueues outbox events, and
+commits atomically through the existing idempotency boundary.
 
 ## API surface
 
@@ -131,6 +131,7 @@ Implemented in Phase 2:
 
 Implemented in Phase 3:
 
+- `GET /api/v1/materials`
 - `POST /api/v1/material-loads/:id/actions/:action`
 - `POST /api/v1/material-load-items/:id/actions/record-quantities`
 - `POST /api/v1/material-load-items/:id/substitutions`
@@ -147,7 +148,7 @@ Implemented in Phase 3:
 All staff mutations require an `Idempotency-Key`. Server responses expose derived totals and
 readiness; browser calculations are never authoritative.
 
-## Planned web surfaces
+## Implemented web surfaces
 
 - extend `/jobs/:id` with a Material Delivery summary and readiness blockers
 - add a dispatcher load planner for materials, suppliers, placement areas, and asset configuration
@@ -157,8 +158,10 @@ readiness; browser calculations are never authoritative.
   and operational Job Charges
 - show safety failures as blocking results without an override control
 
-The web phase will reuse the existing staff shell, responsive operational styling, generated API
-client, and explicit loading, empty, error, conflict, and success states.
+The web phase reuses the existing staff shell, responsive operational styling, generated API client,
+and explicit loading, empty, error, conflict, and success states. Driver routes use a mobile-first
+shell with large touch targets and keep dispatcher-only readiness and reconciliation commands out of
+the driver flow.
 
 ## Delivery phases
 
@@ -238,8 +241,8 @@ The operational portion of `MD-E2E-001` must prove:
 - [x] planning, safety, driver, evidence, reconciliation, and readiness commands are implemented
 - [ ] every transition has success, invalid-state, permission, tenant, and concurrency coverage
 - [x] OpenAPI and generated client artifacts are current
-- [ ] dispatcher, driver, and reconciliation web surfaces are complete
-- [ ] the operational portion of `MD-E2E-001` passes
+- [x] dispatcher, driver, and reconciliation web surfaces are complete
+- [x] the operational portion of `MD-E2E-001` passes
 - [x] unsafe or overweight dispatch has no override path
 - [x] missing receipts block invoice readiness
 - [x] duplicate operational charges are prevented through the application boundary
@@ -275,6 +278,22 @@ The operational portion of `MD-E2E-001` must prove:
 - [x] operational completion and invoice readiness are independently gated
 - [x] every command is idempotent and writes Job, Audit, and outbox events atomically
 - [x] controller permission metadata and unit tests are current
-- [ ] the PostgreSQL-backed Phase 3 journey passes
+- [x] the PostgreSQL-backed Phase 3 journey passes
 - [x] OpenAPI and generated client artifacts are current for Phase 3
 - [x] `pnpm check` passes with the complete Phase 3 changes
+
+## Phase 5 web-and-acceptance checklist
+
+- [x] the tenant-scoped material catalog and complete delivery read model are available through the
+      generated API client
+- [x] the staff Job workspace covers plan, Load, Item, Route Stop, asset, safety, dispatch,
+      variance, Expense, Allocation, Job Charge, reconciliation, and invoice-readiness operations
+- [x] the mobile driver workspace exposes only the next valid execution command and captures actual
+      quantities, delivery results, tickets, receipts, and placement evidence
+- [x] authoritative totals, safety results, charge calculations, and readiness decisions remain on
+      the server
+- [x] loading, empty, error, conflict, and success states are explicit across staff and driver views
+- [x] staff and driver production routes pass the web acceptance suite
+- [x] the PostgreSQL-backed operational portion of `MD-E2E-001` passes with two materials, supplier
+      Expenses, exact Allocations, a resolved variance, and a deduplicated operational charge
+- [x] OpenAPI and generated client artifacts are current for Phase 5
