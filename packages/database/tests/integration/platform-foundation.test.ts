@@ -16,7 +16,11 @@ import {
   contacts,
   createDatabase,
   createDatabasePool,
+  customerCreditApplications,
+  customerCredits,
   customerAccounts,
+  depositApplications,
+  depositBalances,
   documentPublicLinks,
   documents,
   estimateVersions,
@@ -25,6 +29,9 @@ import {
   expenses,
   executeIdempotent,
   IdempotencyConflictError,
+  invoiceLineItems,
+  invoices,
+  invoiceVersions,
   jobCharges,
   jobs,
   localSeedIds,
@@ -39,12 +46,15 @@ import {
   materials,
   organizations,
   outboxEvents,
+  paymentAllocations,
+  payments,
   pricingPolicies,
   pricingVersions,
   projects,
   quoteLineItems,
   quoteVersions,
   quotes,
+  refunds,
   roles,
   routeStops,
   runMigrations,
@@ -213,8 +223,12 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "contract_public_links",
         "contract_signatures",
         "contracts",
+        "customer_credit_applications",
+        "customer_credits",
         "customer_accounts",
         "delivery_zones",
+        "deposit_applications",
+        "deposit_balances",
         "document_links",
         "document_public_links",
         "documents",
@@ -232,6 +246,11 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "job_charges",
         "job_events",
         "jobs",
+        "invoice_adjustments",
+        "invoice_deliveries",
+        "invoice_line_items",
+        "invoice_versions",
+        "invoices",
         "material_delivery_details",
         "material_load_assets",
         "material_load_items",
@@ -243,6 +262,8 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "organizations",
         "operational_holds",
         "outbox_events",
+        "payment_allocations",
+        "payments",
         "materials",
         "pricing_calculation_results",
         "pricing_policies",
@@ -258,6 +279,7 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "quote_versions",
         "quotes",
         "readiness_evaluations",
+        "refunds",
         "roles",
         "route_stops",
         "scheduled_jobs",
@@ -284,12 +306,21 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       "contract_public_links",
       "contract_signatures",
       "contracts",
+      "customer_credit_applications",
+      "customer_credits",
+      "deposit_applications",
+      "deposit_balances",
       "expense_allocations",
       "expenses",
       "job_assignments",
       "job_charges",
       "job_events",
       "jobs",
+      "invoice_adjustments",
+      "invoice_deliveries",
+      "invoice_line_items",
+      "invoice_versions",
+      "invoices",
       "material_delivery_details",
       "material_load_assets",
       "material_load_items",
@@ -298,7 +329,10 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       "material_quantity_variances",
       "material_substitutions",
       "operational_holds",
+      "payment_allocations",
+      "payments",
       "readiness_evaluations",
+      "refunds",
       "route_stops",
       "schedule_blocks",
     ];
@@ -317,6 +351,296 @@ describe("Sprint 1.0.0 platform data foundation", () => {
     );
     expect(result.rows).toHaveLength(tenantTables.length);
     expect(result.rows.every((row) => row.relrowsecurity && row.relforcerowsecurity)).toBe(true);
+  });
+
+  it("preserves posted obligations and serializes Payment, Deposit, Credit, and Refund value", async () => {
+    const createPostedInvoice = async (
+      invoiceNumber: string,
+      invoiceType: "deposit" | "final",
+      totalCents: number,
+    ) => {
+      const invoiceId = randomUUID();
+      const invoiceVersionId = randomUUID();
+      const lineItemId = randomUUID();
+      await withTenantTransaction(runtime(), tenantA, async (transaction) => {
+        await transaction.insert(invoices).values({
+          customerAccountId: materialFixture.customerId,
+          id: invoiceId,
+          invoiceNumber,
+          invoiceType,
+          jobId: materialFixture.materialJobId,
+          projectId: materialFixture.projectId,
+          tenantId: tenantA,
+        });
+        await transaction.insert(invoiceVersions).values({
+          amountDueCents: totalCents,
+          billingIdentitySnapshot: { customer: "Material Delivery Fixture" },
+          calculationSnapshot: { totalCents },
+          contentHash: randomUUID().replaceAll("-", "").padEnd(64, "0"),
+          id: invoiceVersionId,
+          invoiceId,
+          preparedBy: userA,
+          subtotalCents: totalCents,
+          tenantId: tenantA,
+          totalCents,
+          versionNumber: 1,
+        });
+        await transaction.insert(invoiceLineItems).values({
+          acceptedQuoteLineItemId: materialFixture.gravelQuoteLineId,
+          description: invoiceType === "deposit" ? "Required advance payment" : "Accepted service",
+          id: lineItemId,
+          invoiceId,
+          invoiceVersionId,
+          lineType: "accepted_quote",
+          sequence: 1,
+          sourceId: materialFixture.gravelQuoteLineId,
+          sourceSnapshot: { acceptedQuoteVersionId: materialFixture.quoteVersionId },
+          sourceType: "accepted_quote_line",
+          subtotalCents: totalCents,
+          tenantId: tenantA,
+          totalCents,
+        });
+        const postedAt = new Date();
+        await transaction
+          .update(invoiceVersions)
+          .set({ postedAt, postedBy: userA, status: "posted" })
+          .where(eq(invoiceVersions.id, invoiceVersionId));
+        await transaction
+          .update(invoices)
+          .set({
+            dueDate: "2026-08-14",
+            issueDate: "2026-08-04",
+            postedAt,
+            status: "posted",
+          })
+          .where(eq(invoices.id, invoiceId));
+      });
+      return { invoiceId, invoiceVersionId, lineItemId };
+    };
+
+    const depositInvoice = await createPostedInvoice("INV-2026-00001", "deposit", 18_500);
+    const finalInvoice = await createPostedInvoice("INV-2026-00002", "final", 42_000);
+
+    await expectDatabaseFailure(
+      withTenantTransaction(migratorDatabase(), tenantA, (transaction) =>
+        transaction
+          .update(invoiceVersions)
+          .set({ totalCents: 42_001 })
+          .where(eq(invoiceVersions.id, finalInvoice.invoiceVersionId)),
+      ),
+      "Posted Invoice Versions are immutable",
+    );
+    await expectDatabaseFailure(
+      withTenantTransaction(migratorDatabase(), tenantA, (transaction) =>
+        transaction
+          .update(invoiceLineItems)
+          .set({ description: "Mutated posted line" })
+          .where(eq(invoiceLineItems.id, finalInvoice.lineItemId)),
+      ),
+      "Posted Invoice Line Items are immutable",
+    );
+
+    const paymentId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(payments).values({
+        amountCents: 18_500,
+        customerAccountId: materialFixture.customerId,
+        id: paymentId,
+        payerSnapshot: { displayName: "Material Delivery Fixture" },
+        paymentMethod: "zelle",
+        paymentNumber: "PAY-2026-00001",
+        projectId: materialFixture.projectId,
+        receivedAt: new Date(),
+        receivingAccountReference: "company-zelle-primary",
+        settledAt: new Date(),
+        status: "settled",
+        tenantId: tenantA,
+        verifiedAt: new Date(),
+        verifiedBy: userA,
+      }),
+    );
+
+    const paymentAllocationId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(paymentAllocations).values({
+        allocationKey: "deposit-payment-application",
+        amountCents: 18_500,
+        appliedBy: userA,
+        customerAccountId: materialFixture.customerId,
+        id: paymentAllocationId,
+        invoiceId: depositInvoice.invoiceId,
+        paymentId,
+        tenantId: tenantA,
+      }),
+    );
+    await expectDatabaseFailure(
+      withTenantTransaction(migratorDatabase(), tenantA, (transaction) =>
+        transaction
+          .update(paymentAllocations)
+          .set({ amountCents: 18_499 })
+          .where(eq(paymentAllocations.id, paymentAllocationId)),
+      ),
+      "payment_allocations entries are append-only",
+    );
+
+    const depositBalanceId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(depositBalances).values({
+        customerAccountId: materialFixture.customerId,
+        depositType: "advance_payment",
+        id: depositBalanceId,
+        originalAmountCents: 18_500,
+        projectId: materialFixture.projectId,
+        sourcePaymentAllocationId: paymentAllocationId,
+        tenantId: tenantA,
+      }),
+    );
+    const depositApplicationId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(depositApplications).values({
+        amountCents: 18_500,
+        applicationKey: "final-invoice-deposit-application",
+        appliedBy: userA,
+        customerAccountId: materialFixture.customerId,
+        depositBalanceId,
+        id: depositApplicationId,
+        invoiceId: finalInvoice.invoiceId,
+        projectId: materialFixture.projectId,
+        tenantId: tenantA,
+      }),
+    );
+    await expectDatabaseFailure(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(depositApplications).values({
+          amountCents: 1,
+          applicationKey: "duplicate-final-invoice-deposit-application",
+          appliedBy: userA,
+          customerAccountId: materialFixture.customerId,
+          depositBalanceId,
+          invoiceId: finalInvoice.invoiceId,
+          projectId: materialFixture.projectId,
+          tenantId: tenantA,
+        }),
+      ),
+      "Deposit Application exceeds available Deposit amount",
+    );
+
+    const customerCreditId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(customerCredits).values({
+        creditNumber: "CRD-2026-00001",
+        customerAccountId: materialFixture.customerId,
+        description: "Approved customer accommodation",
+        id: customerCreditId,
+        originalAmountCents: 1_000,
+        projectId: materialFixture.projectId,
+        sourceId: randomUUID(),
+        sourceType: "manual",
+        tenantId: tenantA,
+      }),
+    );
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(customerCreditApplications).values({
+        amountCents: 400,
+        applicationKey: "final-invoice-credit-application",
+        appliedBy: userA,
+        customerAccountId: materialFixture.customerId,
+        customerCreditId,
+        invoiceId: finalInvoice.invoiceId,
+        tenantId: tenantA,
+      }),
+    );
+
+    const concurrencyCreditId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(customerCredits).values({
+        creditNumber: "CRD-2026-00002",
+        customerAccountId: materialFixture.customerId,
+        description: "Concurrency guard fixture",
+        id: concurrencyCreditId,
+        originalAmountCents: 1_000,
+        projectId: materialFixture.projectId,
+        sourceId: randomUUID(),
+        sourceType: "manual",
+        tenantId: tenantA,
+      }),
+    );
+    const concurrentCreditApplications = await Promise.allSettled([
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(customerCreditApplications).values({
+          amountCents: 700,
+          applicationKey: "concurrent-credit-application-a",
+          appliedBy: userA,
+          customerAccountId: materialFixture.customerId,
+          customerCreditId: concurrencyCreditId,
+          invoiceId: finalInvoice.invoiceId,
+          tenantId: tenantA,
+        }),
+      ),
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(customerCreditApplications).values({
+          amountCents: 700,
+          applicationKey: "concurrent-credit-application-b",
+          appliedBy: userA,
+          customerAccountId: materialFixture.customerId,
+          customerCreditId: concurrencyCreditId,
+          invoiceId: finalInvoice.invoiceId,
+          tenantId: tenantA,
+        }),
+      ),
+    ]);
+    expect(
+      concurrentCreditApplications.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(
+      concurrentCreditApplications.filter((result) => result.status === "rejected"),
+    ).toHaveLength(1);
+
+    const refundId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(refunds).values({
+        amountCents: 600,
+        approvedAt: new Date(),
+        approvedBy: userA,
+        currency: "USD",
+        customerAccountId: materialFixture.customerId,
+        customerCreditId,
+        id: refundId,
+        originalMethod: "check",
+        payeeSnapshot: { displayName: "Material Delivery Fixture" },
+        processedAt: new Date(),
+        projectId: materialFixture.projectId,
+        reason: "Return unused customer credit",
+        refundMethod: "check",
+        refundNumber: "REF-2026-00001",
+        settledAt: new Date(),
+        sourceType: "customer_credit",
+        status: "settled",
+        tenantId: tenantA,
+      }),
+    );
+    await expectDatabaseFailure(
+      withTenantTransaction(migratorDatabase(), tenantA, (transaction) =>
+        transaction.update(refunds).set({ reason: "Changed" }).where(eq(refunds.id, refundId)),
+      ),
+      "Settled Refunds are immutable",
+    );
+
+    const tenantBInvoices = await withTenantTransaction(runtime(), tenantB, (transaction) =>
+      transaction.select().from(invoices),
+    );
+    expect(tenantBInvoices).toEqual([]);
+    await expect(
+      withTenantTransaction(runtime(), tenantB, (transaction) =>
+        transaction.insert(invoices).values({
+          customerAccountId: materialFixture.customerId,
+          invoiceNumber: "INV-CROSS-TENANT",
+          invoiceType: "final",
+          projectId: materialFixture.projectId,
+          tenantId: tenantB,
+        }),
+      ),
+    ).rejects.toThrow();
   });
 
   it("enforces Material Delivery service, tenant, same-Job, stop, and closed-Job boundaries", async () => {

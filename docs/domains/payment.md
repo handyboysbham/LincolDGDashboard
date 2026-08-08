@@ -1,5 +1,10 @@
 # Payment, Allocation, Customer Credit, and Refund
 
+Implementation note: Sprint 1.7.0 Phase 1 establishes Payment, append-only Allocation, Deposit,
+Customer Credit, Application, and Refund records in migration `0007_finance_data_foundation.sql`.
+Database guards serialize available-value checks, reject over-application, and preserve settled
+history; lifecycle commands and APIs continue in later Sprint 1.7 phases.
+
 ## Payment
 
 Payment records one receipt of money from or on behalf of a customer.

@@ -130,6 +130,12 @@ cubic-yard capacity alongside the existing weight capacity. Tenant-and-Job compo
 keep all operational and financial children within one Job; Route Stops and Documents remain shared
 records referenced by the delivery model.
 
+The Sprint 1.7.0 financial data foundation is implemented by migration `0007`. It adds Invoice
+parents, immutable posted Versions and Line Items, Adjustments, delivery evidence, Payments,
+append-only Payment Allocations, Deposit Balances and Applications, Customer Credits and
+Applications, and Refunds. Database guards serialize every source-value and Invoice-balance check,
+reject over-application under concurrency, and preserve settled financial history.
+
 ### Projects and operations
 
 - projects
@@ -169,6 +175,7 @@ records referenced by the delivery model.
 - deposit_balances
 - deposit_applications
 - customer_credits
+- customer_credit_applications
 - refunds
 
 ### Shared collaboration
@@ -189,8 +196,12 @@ records referenced by the delivery model.
 - Unique version number within each parent.
 - No negative financial amounts where prohibited.
 - Gross weight cannot be less than tare weight.
-- Posted Invoice Versions are immutable.
-- Applied Allocations cannot be edited or deleted.
+- Posted Invoice Versions, their Line Items, and posted Adjustments are immutable.
+- Applied Allocations, Deposit Applications, and Customer Credit Applications cannot be edited or
+  deleted; corrections use linked reversal entries.
+- Settled Refunds are immutable.
+- Payment, Deposit, and Customer Credit applications serialize source availability and Invoice
+  eligibility checks before accepting value.
 - Unique provider transaction ID when present.
 - Unique active Job Charge dedupe key.
 - One Material Delivery Detail per Job, and it may only belong to a Material Delivery Job.
@@ -222,8 +233,8 @@ records referenced by the delivery model.
 Every implemented tenant table has forced Row-Level Security. Runtime policies compare `tenant_id`
 with `app.current_tenant_id`; duplicate lookups and all pricing, Estimate, Quote, acceptance,
 Project, Contract, Job, scheduling, asset, readiness, checklist, route, event, hold, Material
-Delivery, Expense, Expense Allocation, and Job Charge queries are subject to the same tenant
-boundary.
+Delivery, Expense, Expense Allocation, Job Charge, Invoice, Payment, Allocation, Deposit, Customer
+Credit, and Refund queries are subject to the same tenant boundary.
 
 ## Derived values
 

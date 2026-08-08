@@ -119,6 +119,9 @@ Exit:
 
 ## Stage 5 — Finance foundation
 
+Status: the Sprint 1.7.0 Phase 1 database foundation is complete in migration `0007`. Invoice
+commands, API contracts, and web workflows continue in the remaining Sprint 1.7 phases.
+
 Build:
 
 - Job Charges

@@ -50,6 +50,13 @@
       "when": 1785785525037,
       "tag": "0006_material_delivery_data_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785899312777,
+      "tag": "0007_finance_data_foundation",
+      "breakpoints": true
     }
   ]
 }

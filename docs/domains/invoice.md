@@ -1,5 +1,10 @@
 # Invoice Architecture
 
+Implementation note: Sprint 1.7.0 Phase 1 establishes the tenant-scoped Invoice, Version, Line Item,
+Adjustment, and Delivery tables in migration `0007_finance_data_foundation.sql`. The database
+already enforces posted-record immutability and serialized Invoice eligibility; application commands
+and API workflows begin in Phase 2.
+
 ## Structure
 
 ```text

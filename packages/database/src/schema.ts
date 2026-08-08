@@ -1583,6 +1583,11 @@ export const projects = pgTable(
   },
   (table) => [
     unique("projects_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("projects_tenant_id_customer_unique").on(
+      table.tenantId,
+      table.id,
+      table.customerAccountId,
+    ),
     unique("projects_tenant_number_unique").on(table.tenantId, table.projectNumber),
     unique("projects_tenant_accepted_quote_unique").on(
       table.tenantId,
@@ -1802,6 +1807,7 @@ export const jobs = pgTable(
   },
   (table) => [
     unique("jobs_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("jobs_tenant_id_project_unique").on(table.tenantId, table.id, table.projectId),
     unique("jobs_tenant_number_unique").on(table.tenantId, table.jobNumber),
     foreignKey({
       columns: [table.tenantId, table.projectId],
@@ -3263,6 +3269,7 @@ export const jobCharges = pgTable(
   },
   (table) => [
     unique("job_charges_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("job_charges_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
     unique("job_charges_tenant_number_unique").on(table.tenantId, table.chargeNumber),
     unique("job_charges_tenant_reversal_unique").on(table.tenantId, table.reversesJobChargeId),
     foreignKey({
@@ -3334,5 +3341,1005 @@ export const jobCharges = pgTable(
       .on(table.tenantId, table.jobId, table.dedupeKey)
       .where(sql`${table.status} not in ('reversed', 'cancelled')`),
     index("job_charges_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+  ],
+);
+
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id").notNull(),
+    jobId: uuid("job_id"),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    invoiceNumber: varchar("invoice_number", { length: 40 }).notNull(),
+    invoiceType: varchar("invoice_type", { length: 40 }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+    status: varchar("status", { length: 40 }).notNull().default("draft"),
+    issueDate: date("issue_date"),
+    dueDate: date("due_date"),
+    postedAt: timestamp("posted_at", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    viewedAt: timestamp("viewed_at", { withTimezone: true }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    voidedAt: timestamp("voided_at", { withTimezone: true }),
+    voidReason: text("void_reason"),
+    replacesInvoiceId: uuid("replaces_invoice_id"),
+    replacedByInvoiceId: uuid("replaced_by_invoice_id"),
+    disputeSummary: jsonb("dispute_summary").$type<Record<string, unknown>>().notNull().default({}),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("invoices_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("invoices_tenant_id_customer_unique").on(
+      table.tenantId,
+      table.id,
+      table.customerAccountId,
+    ),
+    unique("invoices_tenant_id_project_customer_unique").on(
+      table.tenantId,
+      table.id,
+      table.projectId,
+      table.customerAccountId,
+    ),
+    unique("invoices_tenant_number_unique").on(table.tenantId, table.invoiceNumber),
+    foreignKey({
+      columns: [table.tenantId, table.projectId, table.customerAccountId],
+      foreignColumns: [projects.tenantId, projects.id, projects.customerAccountId],
+      name: "invoices_tenant_project_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.jobId, table.projectId],
+      foreignColumns: [jobs.tenantId, jobs.id, jobs.projectId],
+      name: "invoices_tenant_job_project_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.replacesInvoiceId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "invoices_tenant_replaces_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.replacedByInvoiceId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "invoices_tenant_replaced_by_fk",
+    }).onDelete("restrict"),
+    check(
+      "invoices_type_check",
+      sql`${table.invoiceType} in ('deposit', 'final', 'additional_charge', 'credit_memo')`,
+    ),
+    check("invoices_currency_check", sql`${table.currency} ~ '^[A-Z]{3}$'`),
+    check(
+      "invoices_status_check",
+      sql`${table.status} in ('draft', 'review_required', 'ready_to_post', 'posted', 'sent', 'viewed', 'partially_paid', 'paid', 'past_due', 'disputed', 'collection_hold', 'adjusted', 'credited', 'written_off', 'voided', 'replaced', 'resolved', 'archived')`,
+    ),
+    check(
+      "invoices_dates_check",
+      sql`${table.issueDate} is null or ${table.dueDate} is null or ${table.dueDate} >= ${table.issueDate}`,
+    ),
+    check(
+      "invoices_posted_check",
+      sql`${table.status} not in ('posted', 'sent', 'viewed', 'partially_paid', 'paid', 'past_due', 'disputed', 'collection_hold', 'adjusted', 'credited', 'written_off', 'voided', 'replaced', 'resolved', 'archived') or (${table.issueDate} is not null and ${table.dueDate} is not null and ${table.postedAt} is not null)`,
+    ),
+    check(
+      "invoices_void_check",
+      sql`${table.status} <> 'voided' or (${table.voidedAt} is not null and ${table.voidReason} is not null)`,
+    ),
+    check(
+      "invoices_replacement_self_check",
+      sql`${table.replacesInvoiceId} is null or ${table.replacesInvoiceId} <> ${table.id}`,
+    ),
+    index("invoices_tenant_customer_status_idx").on(
+      table.tenantId,
+      table.customerAccountId,
+      table.status,
+      table.createdAt,
+    ),
+    index("invoices_tenant_project_type_idx").on(
+      table.tenantId,
+      table.projectId,
+      table.invoiceType,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const invoiceVersions = pgTable(
+  "invoice_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    invoiceId: uuid("invoice_id").notNull(),
+    versionNumber: integer("version_number").notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("draft"),
+    billingIdentitySnapshot: jsonb("billing_identity_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull(),
+    termsSnapshot: jsonb("terms_snapshot").$type<Record<string, unknown>>().notNull().default({}),
+    calculationSnapshot: jsonb("calculation_snapshot").$type<Record<string, unknown>>().notNull(),
+    contentHash: varchar("content_hash", { length: 64 }).notNull(),
+    subtotalCents: bigint("subtotal_cents", { mode: "number" }).notNull(),
+    discountCents: bigint("discount_cents", { mode: "number" }).notNull().default(0),
+    taxCents: bigint("tax_cents", { mode: "number" }).notNull().default(0),
+    totalCents: bigint("total_cents", { mode: "number" }).notNull(),
+    depositApplicationCents: bigint("deposit_application_cents", { mode: "number" })
+      .notNull()
+      .default(0),
+    customerCreditApplicationCents: bigint("customer_credit_application_cents", {
+      mode: "number",
+    })
+      .notNull()
+      .default(0),
+    amountDueCents: bigint("amount_due_cents", { mode: "number" }).notNull(),
+    preparedAt: timestamp("prepared_at", { withTimezone: true }).notNull().defaultNow(),
+    preparedBy: uuid("prepared_by").notNull(),
+    postedAt: timestamp("posted_at", { withTimezone: true }),
+    postedBy: uuid("posted_by"),
+    supersedesInvoiceVersionId: uuid("supersedes_invoice_version_id"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("invoice_versions_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("invoice_versions_tenant_id_invoice_unique").on(
+      table.tenantId,
+      table.id,
+      table.invoiceId,
+    ),
+    unique("invoice_versions_tenant_invoice_version_unique").on(
+      table.tenantId,
+      table.invoiceId,
+      table.versionNumber,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceId],
+      foreignColumns: [invoices.tenantId, invoices.id],
+      name: "invoice_versions_tenant_invoice_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.preparedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "invoice_versions_tenant_preparer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.postedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "invoice_versions_tenant_poster_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.supersedesInvoiceVersionId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "invoice_versions_tenant_supersedes_fk",
+    }).onDelete("restrict"),
+    check("invoice_versions_number_check", sql`${table.versionNumber} > 0`),
+    check(
+      "invoice_versions_status_check",
+      sql`${table.status} in ('draft', 'review_required', 'ready_to_post', 'posted', 'superseded', 'voided')`,
+    ),
+    check("invoice_versions_hash_check", sql`length(${table.contentHash}) = 64`),
+    check(
+      "invoice_versions_amounts_check",
+      sql`${table.subtotalCents} >= 0 and ${table.discountCents} >= 0 and ${table.taxCents} >= 0 and ${table.totalCents} >= 0 and ${table.depositApplicationCents} >= 0 and ${table.customerCreditApplicationCents} >= 0 and ${table.amountDueCents} >= 0`,
+    ),
+    check(
+      "invoice_versions_total_check",
+      sql`${table.totalCents} = ${table.subtotalCents} - ${table.discountCents} + ${table.taxCents}`,
+    ),
+    check(
+      "invoice_versions_amount_due_check",
+      sql`${table.amountDueCents} = ${table.totalCents} - ${table.depositApplicationCents} - ${table.customerCreditApplicationCents}`,
+    ),
+    check(
+      "invoice_versions_posted_check",
+      sql`${table.status} <> 'posted' or (${table.postedAt} is not null and ${table.postedBy} is not null)`,
+    ),
+    uniqueIndex("invoice_versions_one_posted_idx")
+      .on(table.tenantId, table.invoiceId)
+      .where(sql`${table.status} = 'posted'`),
+    index("invoice_versions_tenant_invoice_status_idx").on(
+      table.tenantId,
+      table.invoiceId,
+      table.status,
+      table.versionNumber,
+    ),
+  ],
+);
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    projectId: uuid("project_id"),
+    paymentNumber: varchar("payment_number", { length: 40 }).notNull(),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+    paymentMethod: varchar("payment_method", { length: 30 }).notNull(),
+    receivingAccountReference: varchar("receiving_account_reference", { length: 160 }).notNull(),
+    providerName: varchar("provider_name", { length: 80 }),
+    providerTransactionId: varchar("provider_transaction_id", { length: 200 }),
+    status: varchar("status", { length: 40 }).notNull().default("draft"),
+    payerSnapshot: jsonb("payer_snapshot").$type<Record<string, unknown>>().notNull(),
+    evidenceDocumentId: uuid("evidence_document_id"),
+    receiptStatus: varchar("receipt_status", { length: 30 }).notNull().default("missing"),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull(),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    verifiedBy: uuid("verified_by"),
+    settledAt: timestamp("settled_at", { withTimezone: true }),
+    reversedAt: timestamp("reversed_at", { withTimezone: true }),
+    reversedBy: uuid("reversed_by"),
+    reversalReason: text("reversal_reason"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("payments_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("payments_tenant_id_customer_unique").on(
+      table.tenantId,
+      table.id,
+      table.customerAccountId,
+    ),
+    unique("payments_tenant_number_unique").on(table.tenantId, table.paymentNumber),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId],
+      foreignColumns: [customerAccounts.tenantId, customerAccounts.id],
+      name: "payments_tenant_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.projectId, table.customerAccountId],
+      foreignColumns: [projects.tenantId, projects.id, projects.customerAccountId],
+      name: "payments_tenant_project_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.evidenceDocumentId],
+      foreignColumns: [documents.tenantId, documents.id],
+      name: "payments_tenant_evidence_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.verifiedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "payments_tenant_verifier_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "payments_tenant_reverser_fk",
+    }).onDelete("restrict"),
+    check("payments_amount_check", sql`${table.amountCents} > 0`),
+    check("payments_currency_check", sql`${table.currency} ~ '^[A-Z]{3}$'`),
+    check(
+      "payments_method_check",
+      sql`${table.paymentMethod} in ('cash', 'zelle', 'venmo', 'cash_app', 'paypal', 'card', 'bank_transfer', 'check')`,
+    ),
+    check(
+      "payments_status_check",
+      sql`${table.status} in ('draft', 'pending', 'verification_required', 'verified', 'processing', 'settled', 'partially_allocated', 'fully_allocated', 'partially_refunded', 'refunded', 'failed', 'reversed', 'disputed', 'on_hold', 'resolved', 'cancelled')`,
+    ),
+    check(
+      "payments_receipt_check",
+      sql`${table.receiptStatus} in ('missing', 'attached', 'issued', 'waived', 'not_required')`,
+    ),
+    check(
+      "payments_verification_check",
+      sql`${table.status} not in ('verified', 'processing', 'settled', 'partially_allocated', 'fully_allocated', 'partially_refunded', 'refunded', 'reversed', 'resolved') or (${table.verifiedAt} is not null and ${table.verifiedBy} is not null)`,
+    ),
+    check(
+      "payments_settlement_check",
+      sql`${table.status} not in ('settled', 'partially_allocated', 'fully_allocated', 'partially_refunded', 'refunded', 'reversed', 'resolved') or ${table.settledAt} is not null`,
+    ),
+    check(
+      "payments_reversal_check",
+      sql`${table.status} <> 'reversed' or (${table.reversedAt} is not null and ${table.reversedBy} is not null and ${table.reversalReason} is not null)`,
+    ),
+    uniqueIndex("payments_provider_transaction_unique")
+      .on(table.tenantId, table.providerName, table.providerTransactionId)
+      .where(sql`${table.providerTransactionId} is not null`),
+    index("payments_tenant_customer_received_idx").on(
+      table.tenantId,
+      table.customerAccountId,
+      table.receivedAt,
+    ),
+    index("payments_tenant_status_idx").on(table.tenantId, table.status, table.receivedAt),
+  ],
+);
+
+export const paymentAllocations = pgTable(
+  "payment_allocations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    paymentId: uuid("payment_id").notNull(),
+    invoiceId: uuid("invoice_id").notNull(),
+    entryKind: varchar("entry_kind", { length: 20 }).notNull().default("application"),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    allocationKey: varchar("allocation_key", { length: 200 }).notNull(),
+    reversesPaymentAllocationId: uuid("reverses_payment_allocation_id"),
+    reason: text("reason"),
+    appliedAt: timestamp("applied_at", { withTimezone: true }).notNull().defaultNow(),
+    appliedBy: uuid("applied_by").notNull(),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("payment_allocations_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("payment_allocations_tenant_key_unique").on(table.tenantId, table.allocationKey),
+    unique("payment_allocations_tenant_reversal_unique").on(
+      table.tenantId,
+      table.reversesPaymentAllocationId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.paymentId, table.customerAccountId],
+      foreignColumns: [payments.tenantId, payments.id, payments.customerAccountId],
+      name: "payment_allocations_tenant_payment_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceId, table.customerAccountId],
+      foreignColumns: [invoices.tenantId, invoices.id, invoices.customerAccountId],
+      name: "payment_allocations_tenant_invoice_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversesPaymentAllocationId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "payment_allocations_tenant_reversal_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.appliedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "payment_allocations_tenant_actor_fk",
+    }).onDelete("restrict"),
+    check("payment_allocations_kind_check", sql`${table.entryKind} in ('application', 'reversal')`),
+    check("payment_allocations_amount_check", sql`${table.amountCents} > 0`),
+    check(
+      "payment_allocations_reversal_check",
+      sql`(${table.entryKind} = 'application' and ${table.reversesPaymentAllocationId} is null) or (${table.entryKind} = 'reversal' and ${table.reversesPaymentAllocationId} is not null and ${table.reason} is not null)`,
+    ),
+    index("payment_allocations_tenant_payment_idx").on(
+      table.tenantId,
+      table.paymentId,
+      table.appliedAt,
+    ),
+    index("payment_allocations_tenant_invoice_idx").on(
+      table.tenantId,
+      table.invoiceId,
+      table.appliedAt,
+    ),
+  ],
+);
+
+export const depositBalances = pgTable(
+  "deposit_balances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id").notNull(),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    sourcePaymentAllocationId: uuid("source_payment_allocation_id").notNull(),
+    depositType: varchar("deposit_type", { length: 40 }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+    originalAmountCents: bigint("original_amount_cents", { mode: "number" }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("available"),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolutionReason: text("resolution_reason"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("deposit_balances_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("deposit_balances_tenant_id_project_customer_unique").on(
+      table.tenantId,
+      table.id,
+      table.projectId,
+      table.customerAccountId,
+    ),
+    unique("deposit_balances_tenant_source_unique").on(
+      table.tenantId,
+      table.sourcePaymentAllocationId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.projectId, table.customerAccountId],
+      foreignColumns: [projects.tenantId, projects.id, projects.customerAccountId],
+      name: "deposit_balances_tenant_project_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.sourcePaymentAllocationId],
+      foreignColumns: [paymentAllocations.tenantId, paymentAllocations.id],
+      name: "deposit_balances_tenant_source_allocation_fk",
+    }).onDelete("restrict"),
+    check(
+      "deposit_balances_type_check",
+      sql`${table.depositType} in ('advance_payment', 'refundable_security', 'split_advance', 'split_security')`,
+    ),
+    check("deposit_balances_currency_check", sql`${table.currency} ~ '^[A-Z]{3}$'`),
+    check("deposit_balances_amount_check", sql`${table.originalAmountCents} > 0`),
+    check(
+      "deposit_balances_status_check",
+      sql`${table.status} in ('available', 'partially_applied', 'fully_applied', 'partially_refunded', 'refunded', 'retained', 'converted_to_credit', 'on_hold', 'disputed', 'resolved')`,
+    ),
+    check(
+      "deposit_balances_resolution_check",
+      sql`${table.status} not in ('refunded', 'retained', 'converted_to_credit', 'resolved') or (${table.resolvedAt} is not null and ${table.resolutionReason} is not null)`,
+    ),
+    index("deposit_balances_tenant_project_status_idx").on(
+      table.tenantId,
+      table.projectId,
+      table.status,
+    ),
+  ],
+);
+
+export const depositApplications = pgTable(
+  "deposit_applications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id").notNull(),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    depositBalanceId: uuid("deposit_balance_id").notNull(),
+    invoiceId: uuid("invoice_id").notNull(),
+    entryKind: varchar("entry_kind", { length: 20 }).notNull().default("application"),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    applicationKey: varchar("application_key", { length: 200 }).notNull(),
+    reversesDepositApplicationId: uuid("reverses_deposit_application_id"),
+    reason: text("reason"),
+    appliedAt: timestamp("applied_at", { withTimezone: true }).notNull().defaultNow(),
+    appliedBy: uuid("applied_by").notNull(),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("deposit_applications_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("deposit_applications_tenant_key_unique").on(table.tenantId, table.applicationKey),
+    unique("deposit_applications_tenant_reversal_unique").on(
+      table.tenantId,
+      table.reversesDepositApplicationId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.depositBalanceId, table.projectId, table.customerAccountId],
+      foreignColumns: [
+        depositBalances.tenantId,
+        depositBalances.id,
+        depositBalances.projectId,
+        depositBalances.customerAccountId,
+      ],
+      name: "deposit_applications_tenant_balance_project_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceId, table.projectId, table.customerAccountId],
+      foreignColumns: [
+        invoices.tenantId,
+        invoices.id,
+        invoices.projectId,
+        invoices.customerAccountId,
+      ],
+      name: "deposit_applications_tenant_invoice_project_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversesDepositApplicationId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "deposit_applications_tenant_reversal_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.appliedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "deposit_applications_tenant_actor_fk",
+    }).onDelete("restrict"),
+    check(
+      "deposit_applications_kind_check",
+      sql`${table.entryKind} in ('application', 'reversal')`,
+    ),
+    check("deposit_applications_amount_check", sql`${table.amountCents} > 0`),
+    check(
+      "deposit_applications_reversal_check",
+      sql`(${table.entryKind} = 'application' and ${table.reversesDepositApplicationId} is null) or (${table.entryKind} = 'reversal' and ${table.reversesDepositApplicationId} is not null and ${table.reason} is not null)`,
+    ),
+    index("deposit_applications_tenant_balance_idx").on(
+      table.tenantId,
+      table.depositBalanceId,
+      table.appliedAt,
+    ),
+    index("deposit_applications_tenant_invoice_idx").on(
+      table.tenantId,
+      table.invoiceId,
+      table.appliedAt,
+    ),
+  ],
+);
+
+export const customerCredits = pgTable(
+  "customer_credits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    projectId: uuid("project_id"),
+    creditNumber: varchar("credit_number", { length: 40 }).notNull(),
+    sourceType: varchar("source_type", { length: 40 }).notNull(),
+    sourceId: uuid("source_id").notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+    originalAmountCents: bigint("original_amount_cents", { mode: "number" }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("available"),
+    description: varchar("description", { length: 300 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    resolutionReason: text("resolution_reason"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("customer_credits_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("customer_credits_tenant_id_customer_unique").on(
+      table.tenantId,
+      table.id,
+      table.customerAccountId,
+    ),
+    unique("customer_credits_tenant_number_unique").on(table.tenantId, table.creditNumber),
+    unique("customer_credits_tenant_source_unique").on(
+      table.tenantId,
+      table.sourceType,
+      table.sourceId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId],
+      foreignColumns: [customerAccounts.tenantId, customerAccounts.id],
+      name: "customer_credits_tenant_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.projectId, table.customerAccountId],
+      foreignColumns: [projects.tenantId, projects.id, projects.customerAccountId],
+      name: "customer_credits_tenant_project_customer_fk",
+    }).onDelete("restrict"),
+    check(
+      "customer_credits_source_check",
+      sql`${table.sourceType} in ('unapplied_payment', 'overpayment', 'credit_memo', 'released_deposit', 'allocation_reversal', 'adjustment', 'manual')`,
+    ),
+    check("customer_credits_currency_check", sql`${table.currency} ~ '^[A-Z]{3}$'`),
+    check("customer_credits_amount_check", sql`${table.originalAmountCents} > 0`),
+    check(
+      "customer_credits_status_check",
+      sql`${table.status} in ('available', 'partially_applied', 'fully_applied', 'on_hold', 'partially_refunded', 'refunded', 'reversed', 'disputed', 'resolved')`,
+    ),
+    check(
+      "customer_credits_resolution_check",
+      sql`${table.status} not in ('refunded', 'reversed', 'resolved') or (${table.resolvedAt} is not null and ${table.resolutionReason} is not null)`,
+    ),
+    index("customer_credits_tenant_customer_status_idx").on(
+      table.tenantId,
+      table.customerAccountId,
+      table.status,
+    ),
+  ],
+);
+
+export const customerCreditApplications = pgTable(
+  "customer_credit_applications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    customerCreditId: uuid("customer_credit_id").notNull(),
+    invoiceId: uuid("invoice_id").notNull(),
+    entryKind: varchar("entry_kind", { length: 20 }).notNull().default("application"),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    applicationKey: varchar("application_key", { length: 200 }).notNull(),
+    reversesCustomerCreditApplicationId: uuid("reverses_customer_credit_application_id"),
+    reason: text("reason"),
+    appliedAt: timestamp("applied_at", { withTimezone: true }).notNull().defaultNow(),
+    appliedBy: uuid("applied_by").notNull(),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("customer_credit_applications_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("customer_credit_applications_tenant_key_unique").on(
+      table.tenantId,
+      table.applicationKey,
+    ),
+    unique("customer_credit_applications_tenant_reversal_unique").on(
+      table.tenantId,
+      table.reversesCustomerCreditApplicationId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.customerCreditId, table.customerAccountId],
+      foreignColumns: [
+        customerCredits.tenantId,
+        customerCredits.id,
+        customerCredits.customerAccountId,
+      ],
+      name: "customer_credit_applications_tenant_credit_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceId, table.customerAccountId],
+      foreignColumns: [invoices.tenantId, invoices.id, invoices.customerAccountId],
+      name: "customer_credit_applications_tenant_invoice_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversesCustomerCreditApplicationId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "customer_credit_applications_tenant_reversal_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.appliedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "customer_credit_applications_tenant_actor_fk",
+    }).onDelete("restrict"),
+    check(
+      "customer_credit_applications_kind_check",
+      sql`${table.entryKind} in ('application', 'reversal')`,
+    ),
+    check("customer_credit_applications_amount_check", sql`${table.amountCents} > 0`),
+    check(
+      "customer_credit_applications_reversal_check",
+      sql`(${table.entryKind} = 'application' and ${table.reversesCustomerCreditApplicationId} is null) or (${table.entryKind} = 'reversal' and ${table.reversesCustomerCreditApplicationId} is not null and ${table.reason} is not null)`,
+    ),
+    index("customer_credit_applications_tenant_credit_idx").on(
+      table.tenantId,
+      table.customerCreditId,
+      table.appliedAt,
+    ),
+    index("customer_credit_applications_tenant_invoice_idx").on(
+      table.tenantId,
+      table.invoiceId,
+      table.appliedAt,
+    ),
+  ],
+);
+
+export const refunds = pgTable(
+  "refunds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    projectId: uuid("project_id"),
+    refundNumber: varchar("refund_number", { length: 40 }).notNull(),
+    sourceType: varchar("source_type", { length: 30 }).notNull(),
+    paymentId: uuid("payment_id"),
+    depositBalanceId: uuid("deposit_balance_id"),
+    customerCreditId: uuid("customer_credit_id"),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+    refundMethod: varchar("refund_method", { length: 30 }).notNull(),
+    originalMethod: varchar("original_method", { length: 30 }),
+    payeeSnapshot: jsonb("payee_snapshot").$type<Record<string, unknown>>().notNull(),
+    status: varchar("status", { length: 40 }).notNull().default("draft"),
+    reason: text("reason").notNull(),
+    alternateMethodReason: text("alternate_method_reason"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: uuid("approved_by"),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    settledAt: timestamp("settled_at", { withTimezone: true }),
+    providerName: varchar("provider_name", { length: 80 }),
+    providerRefundId: varchar("provider_refund_id", { length: 200 }),
+    reversesRefundId: uuid("reverses_refund_id"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("refunds_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("refunds_tenant_number_unique").on(table.tenantId, table.refundNumber),
+    unique("refunds_tenant_reversal_unique").on(table.tenantId, table.reversesRefundId),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId],
+      foreignColumns: [customerAccounts.tenantId, customerAccounts.id],
+      name: "refunds_tenant_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.projectId, table.customerAccountId],
+      foreignColumns: [projects.tenantId, projects.id, projects.customerAccountId],
+      name: "refunds_tenant_project_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.paymentId, table.customerAccountId],
+      foreignColumns: [payments.tenantId, payments.id, payments.customerAccountId],
+      name: "refunds_tenant_payment_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.customerCreditId, table.customerAccountId],
+      foreignColumns: [
+        customerCredits.tenantId,
+        customerCredits.id,
+        customerCredits.customerAccountId,
+      ],
+      name: "refunds_tenant_credit_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.depositBalanceId],
+      foreignColumns: [depositBalances.tenantId, depositBalances.id],
+      name: "refunds_tenant_deposit_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.approvedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "refunds_tenant_approver_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversesRefundId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "refunds_tenant_reversal_fk",
+    }).onDelete("restrict"),
+    check(
+      "refunds_source_check",
+      sql`(${table.sourceType} = 'payment' and ${table.paymentId} is not null and ${table.depositBalanceId} is null and ${table.customerCreditId} is null) or (${table.sourceType} = 'deposit' and ${table.paymentId} is null and ${table.depositBalanceId} is not null and ${table.customerCreditId} is null) or (${table.sourceType} = 'customer_credit' and ${table.paymentId} is null and ${table.depositBalanceId} is null and ${table.customerCreditId} is not null)`,
+    ),
+    check("refunds_amount_check", sql`${table.amountCents} > 0`),
+    check("refunds_currency_check", sql`${table.currency} ~ '^[A-Z]{3}$'`),
+    check(
+      "refunds_method_check",
+      sql`${table.refundMethod} in ('cash', 'zelle', 'venmo', 'cash_app', 'paypal', 'card', 'bank_transfer', 'check')`,
+    ),
+    check(
+      "refunds_status_check",
+      sql`${table.status} in ('draft', 'review_required', 'pending_approval', 'approved', 'processing', 'partially_processed', 'processed', 'settled', 'failed', 'cancelled', 'reversed', 'disputed', 'resolved')`,
+    ),
+    check(
+      "refunds_approval_check",
+      sql`${table.status} not in ('approved', 'processing', 'partially_processed', 'processed', 'settled', 'reversed', 'resolved') or (${table.approvedAt} is not null and ${table.approvedBy} is not null)`,
+    ),
+    check(
+      "refunds_alternate_method_check",
+      sql`${table.originalMethod} is null or ${table.refundMethod} = ${table.originalMethod} or (${table.alternateMethodReason} is not null and ${table.approvedBy} is not null)`,
+    ),
+    check(
+      "refunds_settlement_check",
+      sql`${table.status} <> 'settled' or (${table.processedAt} is not null and ${table.settledAt} is not null)`,
+    ),
+    uniqueIndex("refunds_provider_reference_unique")
+      .on(table.tenantId, table.providerName, table.providerRefundId)
+      .where(sql`${table.providerRefundId} is not null`),
+    index("refunds_tenant_customer_status_idx").on(
+      table.tenantId,
+      table.customerAccountId,
+      table.status,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const invoiceAdjustments = pgTable(
+  "invoice_adjustments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    invoiceId: uuid("invoice_id").notNull(),
+    adjustmentNumber: varchar("adjustment_number", { length: 40 }).notNull(),
+    adjustmentType: varchar("adjustment_type", { length: 40 }).notNull(),
+    direction: varchar("direction", { length: 20 }).notNull(),
+    amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("draft"),
+    reason: text("reason").notNull(),
+    sourceType: varchar("source_type", { length: 50 }),
+    sourceId: uuid("source_id"),
+    effectiveAt: timestamp("effective_at", { withTimezone: true }).notNull(),
+    newDueDate: date("new_due_date"),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    approvedBy: uuid("approved_by"),
+    postedAt: timestamp("posted_at", { withTimezone: true }),
+    postedBy: uuid("posted_by"),
+    reversesInvoiceAdjustmentId: uuid("reverses_invoice_adjustment_id"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("invoice_adjustments_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("invoice_adjustments_tenant_number_unique").on(table.tenantId, table.adjustmentNumber),
+    unique("invoice_adjustments_tenant_reversal_unique").on(
+      table.tenantId,
+      table.reversesInvoiceAdjustmentId,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceId],
+      foreignColumns: [invoices.tenantId, invoices.id],
+      name: "invoice_adjustments_tenant_invoice_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.approvedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "invoice_adjustments_tenant_approver_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.postedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "invoice_adjustments_tenant_poster_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reversesInvoiceAdjustmentId],
+      foreignColumns: [table.tenantId, table.id],
+      name: "invoice_adjustments_tenant_reversal_fk",
+    }).onDelete("restrict"),
+    check(
+      "invoice_adjustments_type_check",
+      sql`${table.adjustmentType} in ('additional_charge', 'credit', 'tax_adjustment', 'deposit_application_reversal', 'write_off', 'charge_reversal', 'due_date_extension', 'void', 'replacement')`,
+    ),
+    check("invoice_adjustments_direction_check", sql`${table.direction} in ('debit', 'credit')`),
+    check("invoice_adjustments_amount_check", sql`${table.amountCents} >= 0`),
+    check(
+      "invoice_adjustments_due_date_check",
+      sql`${table.adjustmentType} <> 'due_date_extension' or (${table.newDueDate} is not null and ${table.amountCents} = 0)`,
+    ),
+    check(
+      "invoice_adjustments_status_check",
+      sql`${table.status} in ('draft', 'pending_approval', 'approved', 'posted', 'reversed', 'cancelled')`,
+    ),
+    check(
+      "invoice_adjustments_approval_check",
+      sql`${table.status} not in ('approved', 'posted', 'reversed') or (${table.approvedAt} is not null and ${table.approvedBy} is not null)`,
+    ),
+    check(
+      "invoice_adjustments_posted_check",
+      sql`${table.status} <> 'posted' or (${table.postedAt} is not null and ${table.postedBy} is not null)`,
+    ),
+    index("invoice_adjustments_tenant_invoice_status_idx").on(
+      table.tenantId,
+      table.invoiceId,
+      table.status,
+      table.effectiveAt,
+    ),
+  ],
+);
+
+export const invoiceDeliveries = pgTable(
+  "invoice_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    invoiceId: uuid("invoice_id").notNull(),
+    invoiceVersionId: uuid("invoice_version_id").notNull(),
+    channel: varchar("channel", { length: 20 }).notNull(),
+    destinationSnapshot: jsonb("destination_snapshot").$type<Record<string, unknown>>().notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("pending"),
+    providerReference: varchar("provider_reference", { length: 200 }),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    viewedAt: timestamp("viewed_at", { withTimezone: true }),
+    failureReason: text("failure_reason"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("invoice_deliveries_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceVersionId, table.invoiceId],
+      foreignColumns: [invoiceVersions.tenantId, invoiceVersions.id, invoiceVersions.invoiceId],
+      name: "invoice_deliveries_tenant_version_invoice_fk",
+    }).onDelete("restrict"),
+    check(
+      "invoice_deliveries_channel_check",
+      sql`${table.channel} in ('email', 'text', 'link', 'manual')`,
+    ),
+    check(
+      "invoice_deliveries_status_check",
+      sql`${table.status} in ('pending', 'sent', 'delivered', 'failed', 'viewed')`,
+    ),
+    check(
+      "invoice_deliveries_failure_check",
+      sql`${table.status} <> 'failed' or ${table.failureReason} is not null`,
+    ),
+    index("invoice_deliveries_tenant_invoice_attempt_idx").on(
+      table.tenantId,
+      table.invoiceId,
+      table.attemptedAt,
+    ),
+  ],
+);
+
+export const invoiceLineItems = pgTable(
+  "invoice_line_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    invoiceId: uuid("invoice_id").notNull(),
+    invoiceVersionId: uuid("invoice_version_id").notNull(),
+    sequence: integer("sequence").notNull(),
+    lineType: varchar("line_type", { length: 40 }).notNull(),
+    direction: varchar("direction", { length: 20 }).notNull().default("debit"),
+    sourceType: varchar("source_type", { length: 50 }).notNull(),
+    sourceId: uuid("source_id"),
+    acceptedQuoteLineItemId: uuid("accepted_quote_line_item_id"),
+    jobChargeId: uuid("job_charge_id"),
+    depositApplicationId: uuid("deposit_application_id"),
+    customerCreditApplicationId: uuid("customer_credit_application_id"),
+    invoiceAdjustmentId: uuid("invoice_adjustment_id"),
+    description: varchar("description", { length: 300 }).notNull(),
+    quantity: numeric("quantity", { precision: 12, scale: 3 }),
+    unit: varchar("unit", { length: 40 }),
+    unitPriceCents: bigint("unit_price_cents", { mode: "number" }),
+    subtotalCents: bigint("subtotal_cents", { mode: "number" }).notNull(),
+    taxCents: bigint("tax_cents", { mode: "number" }).notNull().default(0),
+    totalCents: bigint("total_cents", { mode: "number" }).notNull(),
+    taxBehavior: varchar("tax_behavior", { length: 30 }).notNull().default("non_taxable"),
+    sourceSnapshot: jsonb("source_snapshot").$type<Record<string, unknown>>().notNull(),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("invoice_line_items_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("invoice_line_items_tenant_version_sequence_unique").on(
+      table.tenantId,
+      table.invoiceVersionId,
+      table.sequence,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceVersionId, table.invoiceId],
+      foreignColumns: [invoiceVersions.tenantId, invoiceVersions.id, invoiceVersions.invoiceId],
+      name: "invoice_line_items_tenant_version_invoice_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.acceptedQuoteLineItemId],
+      foreignColumns: [quoteLineItems.tenantId, quoteLineItems.id],
+      name: "invoice_line_items_tenant_quote_line_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.jobChargeId],
+      foreignColumns: [jobCharges.tenantId, jobCharges.id],
+      name: "invoice_line_items_tenant_job_charge_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.depositApplicationId],
+      foreignColumns: [depositApplications.tenantId, depositApplications.id],
+      name: "invoice_line_items_tenant_deposit_application_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.customerCreditApplicationId],
+      foreignColumns: [customerCreditApplications.tenantId, customerCreditApplications.id],
+      name: "invoice_line_items_tenant_credit_application_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceAdjustmentId],
+      foreignColumns: [invoiceAdjustments.tenantId, invoiceAdjustments.id],
+      name: "invoice_line_items_tenant_adjustment_fk",
+    }).onDelete("restrict"),
+    check("invoice_line_items_sequence_check", sql`${table.sequence} > 0`),
+    check(
+      "invoice_line_items_type_check",
+      sql`${table.lineType} in ('accepted_quote', 'job_charge', 'deposit_application', 'customer_credit', 'adjustment', 'tax', 'rounding')`,
+    ),
+    check("invoice_line_items_direction_check", sql`${table.direction} in ('debit', 'credit')`),
+    check(
+      "invoice_line_items_source_type_check",
+      sql`${table.sourceType} in ('accepted_quote_line', 'job_charge', 'deposit_application', 'customer_credit_application', 'invoice_adjustment', 'tax_rule', 'rounding_rule')`,
+    ),
+    check(
+      "invoice_line_items_source_check",
+      sql`(${table.lineType} = 'accepted_quote' and ${table.acceptedQuoteLineItemId} is not null and ${table.jobChargeId} is null and ${table.depositApplicationId} is null and ${table.customerCreditApplicationId} is null and ${table.invoiceAdjustmentId} is null) or (${table.lineType} = 'job_charge' and ${table.acceptedQuoteLineItemId} is null and ${table.jobChargeId} is not null and ${table.depositApplicationId} is null and ${table.customerCreditApplicationId} is null and ${table.invoiceAdjustmentId} is null) or (${table.lineType} = 'deposit_application' and ${table.acceptedQuoteLineItemId} is null and ${table.jobChargeId} is null and ${table.depositApplicationId} is not null and ${table.customerCreditApplicationId} is null and ${table.invoiceAdjustmentId} is null) or (${table.lineType} = 'customer_credit' and ${table.acceptedQuoteLineItemId} is null and ${table.jobChargeId} is null and ${table.depositApplicationId} is null and ${table.customerCreditApplicationId} is not null and ${table.invoiceAdjustmentId} is null) or (${table.lineType} = 'adjustment' and ${table.acceptedQuoteLineItemId} is null and ${table.jobChargeId} is null and ${table.depositApplicationId} is null and ${table.customerCreditApplicationId} is null and ${table.invoiceAdjustmentId} is not null) or (${table.lineType} in ('tax', 'rounding') and ${table.acceptedQuoteLineItemId} is null and ${table.jobChargeId} is null and ${table.depositApplicationId} is null and ${table.customerCreditApplicationId} is null and ${table.invoiceAdjustmentId} is null)`,
+    ),
+    check(
+      "invoice_line_items_quantity_check",
+      sql`${table.quantity} is null or ${table.quantity} > 0`,
+    ),
+    check(
+      "invoice_line_items_unit_check",
+      sql`(${table.quantity} is null and ${table.unit} is null and ${table.unitPriceCents} is null) or (${table.quantity} is not null and ${table.unit} is not null and ${table.unitPriceCents} is not null and ${table.unitPriceCents} >= 0)`,
+    ),
+    check(
+      "invoice_line_items_amounts_check",
+      sql`${table.subtotalCents} >= 0 and ${table.taxCents} >= 0 and ${table.totalCents} = ${table.subtotalCents} + ${table.taxCents}`,
+    ),
+    check(
+      "invoice_line_items_tax_check",
+      sql`${table.taxBehavior} in ('taxable', 'non_taxable', 'tax_included')`,
+    ),
+    uniqueIndex("invoice_line_items_one_source_per_version_idx")
+      .on(table.tenantId, table.invoiceVersionId, table.sourceType, table.sourceId)
+      .where(sql`${table.sourceId} is not null`),
+    index("invoice_line_items_tenant_version_sequence_idx").on(
+      table.tenantId,
+      table.invoiceVersionId,
+      table.sequence,
+    ),
   ],
 );
