@@ -149,6 +149,14 @@ Exit:
 
 ## Stage 6 — Dump Trailer Rental vertical slice
 
+Status: Sprint 1.8.0 Phases 1 through 4 are complete. Accepted-term rental planning, debris/access
+approval, drop-off/pickup/occupancy scheduling, readiness, pre-drop-off inspection, execution
+through On Rent, reservation-safe Extension approval, durable failed pickup attempts, and customer
+custody end on successful retrieval are available. Disposal rejection/replacement, weight and
+evidence reconciliation, disposal Expenses, post-rental inspection, trailer release, derived
+additional-day and weight-overage Charges, and operational completion are also available. See the
+[Dump Trailer Rental plan](plans/2026-08-09-sprint-1-8-0-dump-trailer-rental.md).
+
 Build:
 
 - Rental Detail

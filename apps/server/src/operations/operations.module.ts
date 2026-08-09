@@ -14,6 +14,8 @@ import {
   SchedulingController,
 } from "./operations.controller.js";
 import { ProjectsService } from "./projects.service.js";
+import { RentalController } from "./rental.controller.js";
+import { RentalService } from "./rental.service.js";
 
 @Module({
   controllers: [
@@ -22,6 +24,7 @@ import { ProjectsService } from "./projects.service.js";
     MaterialDeliveryController,
     SchedulingController,
     PublicContractsController,
+    RentalController,
   ],
   exports: [ProjectsService],
   imports: [DocumentsModule, IdempotencyModule],
@@ -31,6 +34,7 @@ import { ProjectsService } from "./projects.service.js";
     JobsService,
     MaterialDeliveryService,
     MaterialDeliveryExecutionService,
+    RentalService,
   ],
 })
 export class OperationsModule {}

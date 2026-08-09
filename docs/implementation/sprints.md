@@ -260,30 +260,40 @@ Complete Material Delivery from approved charges through payment and financial c
 
 ## Sprint 1.8.0 — Dump Trailer Rental
 
+Implementation status: Phases 1 through 4 complete as of 2026-08-09. The data foundation,
+accepted-term planning, safety review, schedule/occupancy planning, readiness, pre-drop-off
+inspection, drop-off through On Rent, reservation-safe Extensions, durable failed Pickup Attempts,
+successful retrieval with custody end, disposal rejection and replacement, fixed-point weight and
+evidence reconciliation, disposal Expenses, post-rental inspection, trailer release, derived
+additional-day and weight-overage Charges, and operational completion are implemented. See the
+[Sprint 1.8.0 implementation plan](plans/2026-08-09-sprint-1-8-0-dump-trailer-rental.md).
+
 ### Goal
 
-Complete the canonical rental journey, including extension, disposal, overage, inspection, and
-security-deposit resolution.
+Execute a Dump Trailer Rental through drop-off, customer custody, extension, pickup, disposal,
+inspection, final billing, security-deposit resolution, and financial closure.
 
 ### Scope
 
-- Dump Trailer Rental Detail
-- drop-off and pickup Schedule Blocks
-- continuing trailer occupancy reservation
-- on-rent custody and extension workflow
-- failed pickup and prohibited-material handling
-- Disposal Loads, weights, receipts, and Expenses
-- rental-wide allowance and overage calculation
-- inspection, cleaning, damage review, and asset release
-- security-deposit refund or other controlled resolution
+- Dump Trailer Rental Detail and accepted-term snapshot
+- debris, prohibited-material, access, and placement review
+- drop-off, continuous trailer occupancy, and pickup execution
+- reservation-safe Extensions and additional-day charges
+- durable failed Pickup Attempts
+- Disposal Loads, facility outcomes, weight, evidence, Expenses, and reconciliation
+- post-rental inspection, cleaning, damage review, and trailer release
+- rental-wide overage Job Charges
+- staff, driver, and final finance workflows
 
 ### Acceptance gates
 
-- `DTR-E2E-001` passes
-- reservation conflicts block extension approval
-- one rental-wide overage charge is created idempotently
-- rental cannot complete while loaded or awaiting inspection
-- settled Refunds remain immutable
+- the full `DTR-E2E-001` journey passes
+- an Extension conflict cannot be overridden
+- customer custody ends only on successful retrieval
+- rejected or redirected Disposal Loads preserve their original history
+- a rental cannot complete while the trailer remains loaded or uninspected
+- additional-day and rental-wide overage charges are created exactly once
+- the security deposit resolves through a traceable application or Refund
 
 ## Sprint 1.9.0 — Communications and Customer Experience
 

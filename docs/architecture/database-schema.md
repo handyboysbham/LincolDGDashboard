@@ -146,6 +146,17 @@ Version and delivery attempt, stores only a token hash, expires, can be revoked,
 evidence. The table is tenant-owned, forced through Row-Level Security, protected from hard
 deletion, and never stores a plaintext customer token.
 
+Sprint 1.8.0 migration `0010` owns the Dump Trailer Rental data foundation: one Rental Detail per
+rental Job, attributable Debris Reviews, reservation-aware Extensions, durable Pickup Attempts,
+Disposal Loads, and Rental Inspections. Shared Schedule Blocks and Asset Reservations remain the
+source of scheduling and occupancy truth; Documents, Expenses, Job Charges, and finance records
+remain the evidence, cost, billing-decision, and settlement owners.
+
+Migration `0011` refines the Rental operational-completion guard. Rejected and redirected Disposal
+Loads remain immutable terminal facts, but no longer block completion after a same-tenant, same-Job
+replacement chain contains a reconciled Load. An unresolved, cancelled-only, or cyclic replacement
+chain still blocks completion.
+
 ### Projects and operations
 
 - projects
@@ -158,7 +169,11 @@ deletion, and never stores a plaintext customer token.
 - material_substitutions
 - material_quantity_variances
 - dump_trailer_rental_details
+- rental_debris_reviews
+- rental_extensions
+- rental_pickup_attempts
 - disposal_loads
+- rental_inspections
 - schedule_blocks
 - asset_reservations
 - job_assignments
@@ -218,6 +233,14 @@ deletion, and never stores a plaintext customer token.
 - Unique provider transaction ID when present.
 - Unique active Job Charge dedupe key.
 - One Material Delivery Detail per Job, and it may only belong to a Material Delivery Job.
+- One Dump Trailer Rental Detail per Job, and it may only belong to a Dump Trailer Rental Job.
+- Rental Detail, Debris Review, Extension, Pickup Attempt, Disposal Load, and Inspection children
+  are constrained to the same tenant and Job.
+- Approved Extensions require a passing reservation-conflict evaluation and approval evidence.
+- Disposal Load net weight equals gross minus tare; reconciled Loads require final facility,
+  unloading, evidence, empty-trailer, and Expense facts when applicable.
+- Completed Rental Inspections, approved Extensions, failed Pickup Attempts, and reconciled Disposal
+  Loads preserve immutable outcome facts.
 - Material Load children, Route Stops, Expenses, Allocations, variances, substitutions, and Job
   Charges are constrained to the same tenant and Job.
 - Ready Material Load Validations cannot contain failed capacity, compatibility, or separation
@@ -249,7 +272,8 @@ Every implemented tenant table has forced Row-Level Security. Runtime policies c
 with `app.current_tenant_id`; duplicate lookups and all pricing, Estimate, Quote, acceptance,
 Project, Contract, Job, scheduling, asset, readiness, checklist, route, event, hold, Material
 Delivery, Expense, Expense Allocation, Job Charge, Invoice, Payment, Allocation, Deposit, Customer
-Credit, and Refund queries are subject to the same tenant boundary.
+Credit, Refund, Dump Trailer Rental, Extension, Pickup Attempt, Disposal Load, and Rental Inspection
+queries are subject to the same tenant boundary.
 
 ## Derived values
 

@@ -948,6 +948,294 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/jobs/{id}/dump-trailer-rental": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getJobDumpTrailerRental"];
+    put?: never;
+    post: operations["saveJobDumpTrailerRentalPlan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/actions/revise-plan": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reviseDumpTrailerRentalPlan"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/debris-reviews": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createRentalDebrisReview"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/rental-debris-reviews/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["decideRentalDebrisReview"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/actions/plan-schedule": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["planDumpTrailerRentalSchedule"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/actions/evaluate-readiness": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["evaluateDumpTrailerRentalReadiness"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/inspections": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createRentalInspection"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/rental-inspections/{id}/actions/complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["completeRentalInspection"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/extensions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createRentalExtension"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/rental-extensions/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionRentalExtension"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/pickup-attempts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createRentalPickupAttempt"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/rental-pickup-attempts/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionRentalPickupAttempt"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/disposal-loads": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createRentalDisposalLoad"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/disposal-loads/{id}/actions/record-evidence": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["recordRentalDisposalEvidence"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/disposal-loads/{id}/actions/reconcile": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reconcileRentalDisposalLoad"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/disposal-loads/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionRentalDisposalLoad"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/actions/reconcile": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reconcileDumpTrailerRental"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/dump-trailer-rentals/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionRentalDropoff"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/pricing/configurations": {
     parameters: {
       query?: never;
@@ -2922,6 +3210,338 @@ export interface components {
       requiredDepositCents: number;
       signatures: components["schemas"]["SignatureDto"][];
       terms: string[];
+    };
+    RentalDebrisReviewDto: {
+      /** Format: uuid */
+      id: string;
+      reviewNumber: number;
+      status: string;
+      primaryDebrisType: string;
+      prohibitedMaterials: string[];
+      customerAttested: boolean;
+      accessStatus: string;
+      legalTowingStatus: string;
+      outcomeNotes?: string | null;
+    };
+    RentalInspectionDto: {
+      /** Format: uuid */
+      id: string;
+      inspectionNumber: number;
+      inspectionType: string;
+      status: string;
+      conditionResult: string;
+      releaseDecision: string;
+      safeToRelease: boolean;
+      /** Format: uuid */
+      evidenceDocumentId?: string | null;
+    };
+    RentalExtensionDto: {
+      /** Format: uuid */
+      id: string;
+      extensionNumber: number;
+      status: string;
+      /** Format: date-time */
+      previousPickupAt: string;
+      /** Format: date-time */
+      requestedPickupAt: string;
+      additionalDays: number;
+      rateCents: number;
+      calculatedAmountCents: number;
+      conflictStatus: string;
+      customerAuthorizationStatus: string;
+      /** Format: date-time */
+      decidedAt?: string | null;
+      decisionReason?: string | null;
+    };
+    RentalPickupAttemptDto: {
+      /** Format: uuid */
+      id: string;
+      attemptNumber: number;
+      status: string;
+      accessStatus: string;
+      safeLoadStatus: string;
+      /** Format: uuid */
+      scheduleBlockId: string;
+      /** Format: uuid */
+      routeStopId?: string | null;
+      /** Format: uuid */
+      trailerAssetId: string;
+      /** Format: date-time */
+      customerNotifiedAt?: string | null;
+      /** Format: date-time */
+      attemptedAt?: string | null;
+      /** Format: date-time */
+      arrivedAt?: string | null;
+      /** Format: date-time */
+      customerCustodyEndedAt?: string | null;
+      /** Format: date-time */
+      completedAt?: string | null;
+      failureReason?: string | null;
+      outcomeNotes?: string | null;
+    };
+    RentalDisposalLoadDto: {
+      /** Format: uuid */
+      id: string;
+      sequence: number;
+      status: string;
+      debrisClassification: string;
+      acceptanceResult: string;
+      unloadingResult: string;
+      weightStatus: string;
+      grossWeight?: string | null;
+      tareWeight?: string | null;
+      netWeight?: string | null;
+      canonicalNetWeightPounds?: string | null;
+      ticketStatus: string;
+      receiptStatus: string;
+      emptyTrailerStatus: string;
+      remainingMaterialStatus: string;
+      disposalFeeCents?: number | null;
+      /** Format: uuid */
+      expenseId?: string | null;
+      /** Format: uuid */
+      redirectedFromDisposalLoadId?: string | null;
+      rejectionReason?: string | null;
+    };
+    RentalOperationalChargeDto: {
+      /** Format: uuid */
+      id: string;
+      chargeNumber: string;
+      chargeType: string;
+      sourceType: string;
+      /** Format: uuid */
+      sourceId?: string | null;
+      status: string;
+      quantity?: string | null;
+      rateCents?: number | null;
+      approvedAmountCents?: number | null;
+      customerDescription: string;
+    };
+    RentalScheduleDto: {
+      /** Format: uuid */
+      id: string;
+      blockType: string;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      status: string;
+      driverUserIds: string[];
+      assetIds: string[];
+    };
+    RentalOccupancyDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      trailerAssetId: string;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      status: string;
+    };
+    RentalReadinessDto: {
+      readinessType: string;
+      result: string;
+      blockers: string[];
+      warnings: string[];
+      /** Format: date-time */
+      evaluatedAt: string;
+    };
+    DumpTrailerRentalDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      jobId: string;
+      status: string;
+      rateType: string;
+      includedDays: number;
+      additionalDayRateCents: number;
+      includedWeightPounds: string;
+      overageRateCentsPerPound: number;
+      depositAmountCents: number;
+      depositClassification: string;
+      /** Format: date-time */
+      plannedDropoffAt: string;
+      /** Format: date-time */
+      plannedPickupAt: string;
+      /** Format: uuid */
+      trailerAssetId?: string | null;
+      debrisReviewStatus: string;
+      accessReviewStatus: string;
+      /** Format: date-time */
+      actualDropoffAt?: string | null;
+      /** Format: date-time */
+      onRentAt?: string | null;
+      /** Format: date-time */
+      customerCustodyEndedAt?: string | null;
+      /** Format: date-time */
+      actualPickupAt?: string | null;
+      debrisReviews: components["schemas"]["RentalDebrisReviewDto"][];
+      inspections: components["schemas"]["RentalInspectionDto"][];
+      extensions: components["schemas"]["RentalExtensionDto"][];
+      pickupAttempts: components["schemas"]["RentalPickupAttemptDto"][];
+      disposalLoads: components["schemas"]["RentalDisposalLoadDto"][];
+      operationalCharges: components["schemas"]["RentalOperationalChargeDto"][];
+      emptyTrailerStatus: string;
+      finalCondition: string;
+      totalActualWeightPounds: string;
+      overageWeightPounds: string;
+      invoiceReadiness: string;
+      /** Format: date-time */
+      occupancyReleasedAt?: string | null;
+      /** Format: date-time */
+      operationallyCompletedAt?: string | null;
+      schedule: components["schemas"]["RentalScheduleDto"][];
+      occupancy?: components["schemas"]["RentalOccupancyDto"] | null;
+      latestReadiness?: components["schemas"]["RentalReadinessDto"] | null;
+    };
+    SaveRentalPlanDto: {
+      /** Format: date-time */
+      plannedDropoffAt: string;
+      /** Format: date-time */
+      plannedPickupAt: string;
+      /** Format: uuid */
+      trailerAssetId: string;
+    };
+    CreateRentalDebrisReviewDto: {
+      primaryDebrisType: string;
+      secondaryDebrisTypes?: string[];
+      prohibitedMaterials?: string[];
+      restrictedMaterials?: string[];
+      mixedDebris: boolean;
+      heavyMaterial: boolean;
+      customerAttested: boolean;
+      customerAttestation?: string;
+      /** @enum {string} */
+      accessStatus: "pending" | "pass" | "fail";
+      /** @enum {string} */
+      legalTowingStatus: "pending" | "pass" | "fail";
+      placementInstructions?: string;
+      pickupAccessRequirement?: string;
+      propertyDamageRisk?: string;
+    };
+    RentalDecisionDto: {
+      reason: string;
+    };
+    PlanRentalScheduleDto: {
+      /** Format: date-time */
+      dropoffStartsAt: string;
+      /** Format: date-time */
+      dropoffEndsAt: string;
+      /** Format: date-time */
+      pickupStartsAt: string;
+      /** Format: date-time */
+      pickupEndsAt: string;
+      /** Format: uuid */
+      dropoffDriverUserId: string;
+      /** Format: uuid */
+      pickupDriverUserId: string;
+      /** Format: uuid */
+      dropoffTruckAssetId: string;
+      /** Format: uuid */
+      pickupTruckAssetId: string;
+    };
+    EvaluateRentalReadinessDto: {
+      /** @enum {string} */
+      readinessType: "planning" | "schedule" | "dispatch";
+    };
+    CreateRentalInspectionDto: {
+      /** @enum {string} */
+      inspectionType: "pre_dropoff" | "post_rental";
+      /** Format: uuid */
+      evidenceDocumentId?: string;
+    };
+    CompleteRentalInspectionDto: {
+      /** @enum {string} */
+      conditionResult:
+        | "acceptable"
+        | "acceptable_after_cleaning"
+        | "maintenance_review"
+        | "damage_review"
+        | "out_of_service";
+      /** @enum {string} */
+      cleaningResult: "not_required" | "normal" | "required" | "completed";
+      /** @enum {string} */
+      damageResult: "none" | "review_required" | "damage_confirmed" | "resolved";
+      /** @enum {string} */
+      releaseDecision: "release" | "quarantine" | "out_of_service";
+      safeToRelease: boolean;
+      notes: string;
+      /** Format: uuid */
+      evidenceDocumentId?: string;
+    };
+    CreateRentalExtensionDto: {
+      /** Format: date-time */
+      requestedPickupAt: string;
+      customerAuthorized: boolean;
+    };
+    RentalExtensionActionDto: {
+      reason: string;
+    };
+    CreateRentalPickupAttemptDto: {
+      /** Format: date-time */
+      customerNotifiedAt: string;
+      /** @enum {string} */
+      accessStatus: "pending" | "pass" | "fail";
+      /** @enum {string} */
+      safeLoadStatus: "pending" | "pass" | "fail";
+      notes?: string;
+    };
+    RentalPickupActionDto: {
+      /** Format: date-time */
+      occurredAt?: string;
+      /** @enum {string} */
+      accessStatus?: "pending" | "pass" | "fail";
+      /** @enum {string} */
+      safeLoadStatus?: "pending" | "pass" | "fail";
+      reason?: string;
+      notes?: string;
+    };
+    CreateDisposalLoadDto: {
+      /** Format: uuid */
+      plannedFacilityLocationId: string;
+      debrisClassification: string;
+      /** Format: date-time */
+      startsAt: string;
+      /** Format: date-time */
+      endsAt: string;
+      /** Format: uuid */
+      driverUserId: string;
+      /** Format: uuid */
+      truckAssetId: string;
+      /** Format: uuid */
+      redirectedFromDisposalLoadId?: string;
+    };
+    RecordDisposalEvidenceDto: {
+      /** Format: uuid */
+      ticketDocumentId?: string;
+      /** Format: uuid */
+      receiptDocumentId?: string;
+      /** Format: uuid */
+      emptyTrailerDocumentId: string;
+      disposalFeeCents: number;
+      evidenceWaiverReason?: string;
+      externalReference?: string;
+    };
+    RentalExecutionDto: {
+      /** Format: date-time */
+      occurredAt?: string;
+      notes?: string;
+    };
+    DisposalLoadExecutionDto: {
+      /** Format: date-time */
+      occurredAt?: string;
+      /** Format: uuid */
+      actualFacilityLocationId?: string;
+      grossWeight?: string;
+      tareWeight?: string;
+      /** @enum {string} */
+      sourceWeightUnit?: "pounds" | "tons";
+      /** @enum {string} */
+      remainingMaterialStatus?: "pending" | "none" | "remaining" | "resolved";
+      rejectionReason?: string;
+      notes?: string;
     };
     PricingRuleDto: {
       /** Format: uuid */
@@ -5281,6 +5901,532 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["PublicContractDto"];
+        };
+      };
+    };
+  };
+  getJobDumpTrailerRental: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  saveJobDumpTrailerRentalPlan: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SaveRentalPlanDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  reviseDumpTrailerRentalPlan: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SaveRentalPlanDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  createRentalDebrisReview: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateRentalDebrisReviewDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  decideRentalDebrisReview: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action: "approve" | "hold" | "reject";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RentalDecisionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  planDumpTrailerRentalSchedule: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PlanRentalScheduleDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  evaluateDumpTrailerRentalReadiness: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EvaluateRentalReadinessDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RentalReadinessDto"];
+        };
+      };
+    };
+  };
+  createRentalInspection: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateRentalInspectionDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RentalInspectionDto"];
+        };
+      };
+    };
+  };
+  completeRentalInspection: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CompleteRentalInspectionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RentalInspectionDto"];
+        };
+      };
+    };
+  };
+  createRentalExtension: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateRentalExtensionDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RentalExtensionDto"];
+        };
+      };
+    };
+  };
+  transitionRentalExtension: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action: "evaluate" | "authorize" | "approve" | "reject" | "cancel";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RentalExtensionActionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  createRentalPickupAttempt: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateRentalPickupAttemptDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  transitionRentalPickupAttempt: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action: "prepare" | "depart" | "arrive" | "fail" | "retrieve";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RentalPickupActionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  createRentalDisposalLoad: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDisposalLoadDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  recordRentalDisposalEvidence: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RecordDisposalEvidenceDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  reconcileRentalDisposalLoad: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RentalExecutionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  transitionRentalDisposalLoad: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action:
+          | "depart"
+          | "arrive"
+          | "accept"
+          | "reject"
+          | "redirect"
+          | "record-weight"
+          | "start-unloading"
+          | "complete-unloading"
+          | "cancel";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DisposalLoadExecutionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  reconcileDumpTrailerRental: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RentalExecutionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
+        };
+      };
+    };
+  };
+  transitionRentalDropoff: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+        action:
+          | "prepare-dropoff"
+          | "depart-dropoff"
+          | "arrive-dropoff"
+          | "complete-dropoff"
+          | "begin-rental";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RentalExecutionDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DumpTrailerRentalDto"];
         };
       };
     };

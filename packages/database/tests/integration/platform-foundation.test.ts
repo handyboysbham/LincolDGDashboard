@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   accountContacts,
   allocateBusinessNumber,
+  assetReservations,
   assets,
   auditEvents,
   claimOutboxEvents,
@@ -21,8 +22,10 @@ import {
   customerAccounts,
   depositApplications,
   depositBalances,
+  disposalLoads,
   documentPublicLinks,
   documents,
+  dumpTrailerRentalDetails,
   estimateVersions,
   estimates,
   expenseAllocations,
@@ -55,11 +58,18 @@ import {
   quoteVersions,
   quotes,
   refunds,
+  rentalDebrisReviews,
+  rentalExtensions,
+  rentalInspections,
+  rentalPickupAttempts,
   roles,
   routeStops,
   runMigrations,
   scheduledJobs,
+  scheduleBlocks,
   serviceLocations,
+  supplierLocations,
+  suppliers,
   seedLocalDevelopment,
   userRoles,
   users,
@@ -229,9 +239,11 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "delivery_zones",
         "deposit_applications",
         "deposit_balances",
+        "disposal_loads",
         "document_links",
         "document_public_links",
         "documents",
+        "dump_trailer_rental_details",
         "idempotency_keys",
         "estimate_cost_items",
         "estimate_versions",
@@ -281,6 +293,10 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "quotes",
         "readiness_evaluations",
         "refunds",
+        "rental_debris_reviews",
+        "rental_extensions",
+        "rental_inspections",
+        "rental_pickup_attempts",
         "roles",
         "route_stops",
         "scheduled_jobs",
@@ -311,6 +327,8 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       "customer_credits",
       "deposit_applications",
       "deposit_balances",
+      "disposal_loads",
+      "dump_trailer_rental_details",
       "expense_allocations",
       "expenses",
       "job_assignments",
@@ -335,6 +353,10 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       "payments",
       "readiness_evaluations",
       "refunds",
+      "rental_debris_reviews",
+      "rental_extensions",
+      "rental_inspections",
+      "rental_pickup_attempts",
       "route_stops",
       "schedule_blocks",
     ];
@@ -807,6 +829,338 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       ),
       "accepted Material Delivery records cannot be deleted",
     );
+  });
+
+  it("enforces Dump Trailer Rental service, extension, weight, history, and tenant boundaries", async () => {
+    const rentalDetailId = randomUUID();
+    const pickupBlockId = randomUUID();
+    const occupancyReservationId = randomUUID();
+    const extensionId = randomUUID();
+    const disposalLoadId = randomUUID();
+    const disposalSupplierId = randomUUID();
+    const disposalLocationId = randomUUID();
+    const disposalExpenseId = randomUUID();
+    const plannedDropoffAt = new Date("2026-08-14T14:00:00.000Z");
+    const plannedPickupAt = new Date("2026-08-17T14:00:00.000Z");
+    const extendedPickupAt = new Date("2026-08-18T14:00:00.000Z");
+    const retrievedAt = new Date("2026-08-18T16:00:00.000Z");
+    const releasedAt = new Date("2026-08-18T19:00:00.000Z");
+
+    await withTenantTransaction(runtime(), tenantA, async (transaction) => {
+      await transaction.insert(dumpTrailerRentalDetails).values({
+        acceptedQuoteVersionId: materialFixture.quoteVersionId,
+        acceptedTermsHash: "d".repeat(64),
+        acceptedTermsSnapshot: {
+          additionalDayRateCents: 5_000,
+          includedDays: 3,
+          includedWeightPounds: "2000.000",
+          overageRateCentsPerPound: 8,
+        },
+        actualDropoffAt: new Date("2026-08-14T15:00:00.000Z"),
+        additionalDayRateCents: 5_000,
+        depositAmountCents: 15_000,
+        depositClassification: "refundable_security",
+        id: rentalDetailId,
+        includedDays: 3,
+        includedWeightPounds: "2000.000",
+        jobId: materialFixture.rentalJobId,
+        onRentAt: new Date("2026-08-14T15:15:00.000Z"),
+        overageRateCentsPerPound: 8,
+        plannedDropoffAt,
+        plannedPickupAt,
+        rateType: "weekend",
+        status: "on_rent",
+        tenantId: tenantA,
+        trailerAssetId: materialFixture.assetId,
+        trailerSnapshot: { assetNumber: `TRL-${materialFixture.assetId}` },
+      });
+      await transaction.insert(rentalDebrisReviews).values({
+        accessStatus: "pass",
+        customerAttestation: "No prohibited material is present",
+        customerAttested: true,
+        customerAttestedAt: new Date(),
+        jobId: materialFixture.rentalJobId,
+        legalTowingStatus: "pass",
+        outcomeNotes: "Approved for normal construction debris",
+        primaryDebrisType: "construction_debris",
+        rentalDetailId,
+        reviewNumber: 1,
+        reviewedAt: new Date(),
+        reviewedBy: userA,
+        status: "approved",
+        tenantId: tenantA,
+      });
+      await transaction.insert(scheduleBlocks).values({
+        blockType: "pickup",
+        endsAt: new Date("2026-08-17T16:00:00.000Z"),
+        id: pickupBlockId,
+        jobId: materialFixture.rentalJobId,
+        startsAt: plannedPickupAt,
+        status: "confirmed",
+        tenantId: tenantA,
+      });
+      await transaction.insert(assetReservations).values({
+        assetId: materialFixture.assetId,
+        endsAt: plannedPickupAt,
+        id: occupancyReservationId,
+        jobId: materialFixture.rentalJobId,
+        reservationType: "occupancy",
+        startsAt: plannedDropoffAt,
+        status: "active",
+        tenantId: tenantA,
+      });
+      await transaction.insert(rentalExtensions).values({
+        additionalDays: 1,
+        calculatedAmountCents: 5_000,
+        dedupeKey: "weekend-extension-2026-08-18",
+        extensionNumber: 1,
+        id: extensionId,
+        jobId: materialFixture.rentalJobId,
+        occupancyReservationId,
+        pickupScheduleBlockId: pickupBlockId,
+        previousPickupAt: plannedPickupAt,
+        rateCents: 5_000,
+        rentalDetailId,
+        requestedBy: userA,
+        requestedPickupAt: extendedPickupAt,
+        tenantId: tenantA,
+      });
+    });
+
+    await expectDatabaseFailure(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction
+          .update(rentalExtensions)
+          .set({
+            availabilitySnapshot: { conflictAssetId: materialFixture.assetId },
+            conflictStatus: "fail",
+            customerAuthorizationStatus: "authorized",
+            decidedAt: new Date(),
+            decidedBy: userA,
+            decisionReason: "Conflict cannot be overridden",
+            status: "approved",
+          })
+          .where(eq(rentalExtensions.id, extensionId)),
+      ),
+      "rental_extensions_approval_check",
+    );
+
+    await withTenantTransaction(runtime(), tenantA, async (transaction) => {
+      await transaction
+        .update(rentalExtensions)
+        .set({
+          availabilitySnapshot: { checkedThrough: extendedPickupAt.toISOString(), conflicts: [] },
+          conflictStatus: "pass",
+          customerAuthorizationStatus: "authorized",
+          decidedAt: new Date(),
+          decidedBy: userA,
+          decisionReason: "Trailer remains available",
+          status: "approved",
+        })
+        .where(eq(rentalExtensions.id, extensionId));
+      await transaction.insert(rentalPickupAttempts).values([
+        {
+          attemptedAt: new Date("2026-08-18T14:00:00.000Z"),
+          attemptedBy: userA,
+          attemptNumber: 1,
+          completedAt: new Date("2026-08-18T14:15:00.000Z"),
+          failureReason: "Customer access was blocked",
+          id: randomUUID(),
+          jobId: materialFixture.rentalJobId,
+          rentalDetailId,
+          scheduleBlockId: pickupBlockId,
+          status: "failed",
+          tenantId: tenantA,
+          trailerAssetId: materialFixture.assetId,
+        },
+        {
+          accessStatus: "pass",
+          attemptedAt: new Date("2026-08-18T15:30:00.000Z"),
+          attemptedBy: userA,
+          attemptNumber: 2,
+          completedAt: retrievedAt,
+          customerCustodyEndedAt: retrievedAt,
+          id: randomUUID(),
+          jobId: materialFixture.rentalJobId,
+          rentalDetailId,
+          safeLoadStatus: "pass",
+          scheduleBlockId: pickupBlockId,
+          status: "retrieved",
+          tenantId: tenantA,
+          trailerAssetId: materialFixture.assetId,
+        },
+      ]);
+      await transaction.insert(suppliers).values({
+        id: disposalSupplierId,
+        name: "Disposal Facility Fixture",
+        normalizedName: `disposal facility ${disposalSupplierId}`,
+        tenantId: tenantA,
+      });
+      await transaction.insert(supplierLocations).values({
+        addressSummary: "1800 Disposal Road",
+        id: disposalLocationId,
+        label: "Scale house",
+        supplierId: disposalSupplierId,
+        tenantId: tenantA,
+      });
+      await transaction.insert(expenses).values({
+        amountCents: 1_000,
+        approvedAt: new Date(),
+        approvedBy: userA,
+        description: "Rental disposal fee",
+        expenseNumber: `EXP-${disposalExpenseId}`,
+        expenseType: "disposal",
+        id: disposalExpenseId,
+        incurredAt: new Date(),
+        jobId: materialFixture.rentalJobId,
+        receiptDocumentId: materialFixture.receiptDocumentId,
+        receiptStatus: "attached",
+        status: "approved",
+        supplierId: disposalSupplierId,
+        supplierLocationId: disposalLocationId,
+        tenantId: tenantA,
+      });
+    });
+
+    await expect(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(disposalLoads).values({
+          canonicalNetWeightPounds: "0.000",
+          debrisClassification: "construction_debris",
+          grossWeight: "100.000",
+          jobId: materialFixture.rentalJobId,
+          netWeight: "0.000",
+          rentalDetailId,
+          sequence: 2,
+          tareWeight: "200.000",
+          tenantId: tenantA,
+          weightStatus: "recorded",
+        }),
+      ),
+    ).rejects.toThrow();
+
+    await withTenantTransaction(runtime(), tenantA, async (transaction) => {
+      await transaction.insert(disposalLoads).values({
+        acceptanceResult: "accepted",
+        actualFacilityLocationId: disposalLocationId,
+        canonicalNetWeightPounds: "2680.000",
+        debrisClassification: "construction_debris",
+        disposalFeeCents: 1_000,
+        emptyTrailerDocumentId: materialFixture.receiptDocumentId,
+        emptyTrailerStatus: "confirmed_empty",
+        expenseId: disposalExpenseId,
+        grossWeight: "15620.000",
+        id: disposalLoadId,
+        jobId: materialFixture.rentalJobId,
+        netWeight: "2680.000",
+        receiptDocumentId: materialFixture.receiptDocumentId,
+        receiptStatus: "attached",
+        reconciledAt: new Date(),
+        reconciledBy: userA,
+        remainingMaterialStatus: "none",
+        rentalDetailId,
+        sequence: 1,
+        status: "reconciled",
+        tareWeight: "12940.000",
+        tenantId: tenantA,
+        ticketDocumentId: materialFixture.receiptDocumentId,
+        ticketStatus: "attached",
+        unloadingResult: "unloaded",
+        weightStatus: "recorded",
+      });
+      await transaction.insert(rentalInspections).values({
+        completedAt: releasedAt,
+        conditionResult: "acceptable",
+        evidenceDocumentId: materialFixture.receiptDocumentId,
+        evidenceSnapshot: { result: "no_damage" },
+        inspectedAt: releasedAt,
+        inspectedBy: userA,
+        inspectionNumber: 1,
+        inspectionType: "post_rental",
+        jobId: materialFixture.rentalJobId,
+        notes: "No damage and normal cleaning",
+        releaseDecision: "release",
+        rentalDetailId,
+        safeToRelease: true,
+        status: "completed",
+        tenantId: tenantA,
+        trailerAssetId: materialFixture.assetId,
+      });
+      await transaction
+        .update(assetReservations)
+        .set({ releasedAt, status: "released" })
+        .where(eq(assetReservations.id, occupancyReservationId));
+      await transaction
+        .update(dumpTrailerRentalDetails)
+        .set({
+          actualPickupAt: retrievedAt,
+          customerCustodyEndedAt: retrievedAt,
+          emptyTrailerStatus: "confirmed_empty",
+          finalCondition: "acceptable",
+          invoiceReadiness: "ready",
+          occupancyReleasedAt: releasedAt,
+          operationallyCompletedAt: releasedAt,
+          overageWeightPounds: "680.000",
+          status: "operationally_complete",
+          totalActualWeightPounds: "2680.000",
+        })
+        .where(eq(dumpTrailerRentalDetails.id, rentalDetailId));
+    });
+
+    const tenantARentals = await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction
+        .select()
+        .from(dumpTrailerRentalDetails)
+        .where(eq(dumpTrailerRentalDetails.id, rentalDetailId)),
+    );
+    const tenantBRentals = await withTenantTransaction(runtime(), tenantB, (transaction) =>
+      transaction
+        .select()
+        .from(dumpTrailerRentalDetails)
+        .where(eq(dumpTrailerRentalDetails.id, rentalDetailId)),
+    );
+    expect(tenantARentals).toMatchObject([
+      {
+        overageWeightPounds: "680.000",
+        status: "operationally_complete",
+        totalActualWeightPounds: "2680.000",
+      },
+    ]);
+    expect(tenantBRentals).toEqual([]);
+
+    await expectDatabaseFailure(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction
+          .update(rentalExtensions)
+          .set({ decisionReason: "Attempted rewrite" })
+          .where(eq(rentalExtensions.id, extensionId)),
+      ),
+      "decided Rental Extensions are immutable",
+    );
+    await expectDatabaseFailure(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.delete(disposalLoads).where(eq(disposalLoads.id, disposalLoadId)),
+      ),
+      "accepted Dump Trailer Rental records cannot be deleted",
+    );
+    await expect(
+      withTenantTransaction(runtime(), tenantB, (transaction) =>
+        transaction.insert(dumpTrailerRentalDetails).values({
+          acceptedQuoteVersionId: materialFixture.quoteVersionId,
+          acceptedTermsHash: "e".repeat(64),
+          acceptedTermsSnapshot: {},
+          additionalDayRateCents: 5_000,
+          includedDays: 3,
+          includedWeightPounds: "2000.000",
+          jobId: materialFixture.rentalJobId,
+          overageRateCentsPerPound: 8,
+          plannedDropoffAt,
+          plannedPickupAt,
+          rateType: "weekend",
+          tenantId: tenantB,
+        }),
+      ),
+    ).rejects.toThrow();
   });
 
   it("keeps safety evaluations append-only and makes failed safety non-overridable", async () => {

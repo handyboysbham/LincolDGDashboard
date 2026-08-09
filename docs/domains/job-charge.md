@@ -162,3 +162,14 @@ Requires:
 - tax behavior
 - no blocking dispute
 - no duplicate charge
+
+Sprint 1.8 Phase 4 automatically creates two accepted-term Rental charges at Ready to Invoice:
+
+- one additional-day Charge per approved Extension, using the Extension's historical day count and
+  rate
+- one rental-wide weight-overage Charge, using the reconciled total, included pounds, and historical
+  cents-per-pound rate
+
+Both use stable source-based dedupe keys, fixed-point quantity arithmetic, integer cents, a
+versioned calculation snapshot, customer responsibility, completed authorization and internal
+approval, and an Audit Event plus transactional outbox event.

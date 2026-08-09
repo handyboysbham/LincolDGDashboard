@@ -1893,6 +1893,7 @@ export const scheduleBlocks = pgTable(
   },
   (table) => [
     unique("schedule_blocks_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("schedule_blocks_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
     foreignKey({
       columns: [table.tenantId, table.jobId],
       foreignColumns: [jobs.tenantId, jobs.id],
@@ -1936,6 +1937,7 @@ export const assetReservations = pgTable(
   },
   (table) => [
     unique("asset_reservations_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("asset_reservations_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
     foreignKey({
       columns: [table.tenantId, table.assetId],
       foreignColumns: [assets.tenantId, assets.id],
@@ -3293,7 +3295,7 @@ export const jobCharges = pgTable(
     ),
     check(
       "job_charges_source_type_check",
-      sql`${table.sourceType} in ('material_delivery_detail', 'material_load', 'material_load_item', 'material_substitution', 'quantity_variance', 'route_stop', 'manual')`,
+      sql`${table.sourceType} in ('material_delivery_detail', 'material_load', 'material_load_item', 'material_substitution', 'quantity_variance', 'dump_trailer_rental_detail', 'rental_extension', 'rental_pickup_attempt', 'disposal_load', 'rental_inspection', 'route_stop', 'manual')`,
     ),
     check(
       "job_charges_source_check",
@@ -3341,6 +3343,711 @@ export const jobCharges = pgTable(
       .on(table.tenantId, table.jobId, table.dedupeKey)
       .where(sql`${table.status} not in ('reversed', 'cancelled')`),
     index("job_charges_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+  ],
+);
+
+export const dumpTrailerRentalDetails = pgTable(
+  "dump_trailer_rental_details",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    acceptedQuoteVersionId: uuid("accepted_quote_version_id").notNull(),
+    status: varchar("status", { length: 40 }).notNull().default("planning"),
+    rateType: varchar("rate_type", { length: 30 }).notNull(),
+    currency: varchar("currency", { length: 3 }).notNull().default("USD"),
+    acceptedTermsHash: varchar("accepted_terms_hash", { length: 64 }).notNull(),
+    acceptedTermsSnapshot: jsonb("accepted_terms_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull(),
+    includedDays: integer("included_days").notNull(),
+    additionalDayRateCents: bigint("additional_day_rate_cents", { mode: "number" }).notNull(),
+    includedWeightPounds: numeric("included_weight_pounds", { precision: 14, scale: 3 }).notNull(),
+    overageRateCentsPerPound: bigint("overage_rate_cents_per_pound", {
+      mode: "number",
+    }).notNull(),
+    depositAmountCents: bigint("deposit_amount_cents", { mode: "number" }).notNull().default(0),
+    depositClassification: varchar("deposit_classification", { length: 40 })
+      .notNull()
+      .default("none"),
+    plannedDropoffAt: timestamp("planned_dropoff_at", { withTimezone: true }).notNull(),
+    plannedPickupAt: timestamp("planned_pickup_at", { withTimezone: true }).notNull(),
+    trailerAssetId: uuid("trailer_asset_id"),
+    trailerSnapshot: jsonb("trailer_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    debrisReviewStatus: varchar("debris_review_status", { length: 30 })
+      .notNull()
+      .default("pending"),
+    accessReviewStatus: varchar("access_review_status", { length: 30 })
+      .notNull()
+      .default("pending"),
+    emptyTrailerStatus: varchar("empty_trailer_status", { length: 30 })
+      .notNull()
+      .default("unknown"),
+    finalCondition: varchar("final_condition", { length: 40 })
+      .notNull()
+      .default("pending_inspection"),
+    invoiceReadiness: varchar("invoice_readiness", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    actualDropoffAt: timestamp("actual_dropoff_at", { withTimezone: true }),
+    onRentAt: timestamp("on_rent_at", { withTimezone: true }),
+    customerCustodyEndedAt: timestamp("customer_custody_ended_at", { withTimezone: true }),
+    actualPickupAt: timestamp("actual_pickup_at", { withTimezone: true }),
+    occupancyReleasedAt: timestamp("occupancy_released_at", { withTimezone: true }),
+    totalActualWeightPounds: numeric("total_actual_weight_pounds", { precision: 14, scale: 3 })
+      .notNull()
+      .default("0"),
+    overageWeightPounds: numeric("overage_weight_pounds", { precision: 14, scale: 3 })
+      .notNull()
+      .default("0"),
+    operationallyCompletedAt: timestamp("operationally_completed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("rental_details_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("rental_details_tenant_job_unique").on(table.tenantId, table.jobId),
+    unique("rental_details_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
+    foreignKey({
+      columns: [table.tenantId, table.jobId],
+      foreignColumns: [jobs.tenantId, jobs.id],
+      name: "rental_details_tenant_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.acceptedQuoteVersionId],
+      foreignColumns: [quoteVersions.tenantId, quoteVersions.id],
+      name: "rental_details_tenant_quote_version_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.trailerAssetId],
+      foreignColumns: [assets.tenantId, assets.id],
+      name: "rental_details_tenant_trailer_fk",
+    }).onDelete("restrict"),
+    check(
+      "rental_details_status_check",
+      sql`${table.status} in ('planning', 'scheduled_dropoff', 'dropoff_preparing', 'en_route_dropoff', 'at_customer_dropoff', 'delivered', 'on_rent', 'pickup_scheduled', 'pickup_preparing', 'en_route_pickup', 'at_customer_pickup', 'picked_up', 'awaiting_disposal', 'at_facility', 'unloading', 'inspection_required', 'returned', 'operationally_complete', 'on_hold', 'cancelled')`,
+    ),
+    check(
+      "rental_details_rate_type_check",
+      sql`${table.rateType} in ('daily', 'weekend', 'weekly', 'custom')`,
+    ),
+    check("rental_details_currency_check", sql`length(${table.currency}) = 3`),
+    check("rental_details_terms_hash_check", sql`length(${table.acceptedTermsHash}) = 64`),
+    check("rental_details_included_days_check", sql`${table.includedDays} > 0`),
+    check("rental_details_additional_rate_check", sql`${table.additionalDayRateCents} >= 0`),
+    check("rental_details_included_weight_check", sql`${table.includedWeightPounds} >= 0`),
+    check("rental_details_overage_rate_check", sql`${table.overageRateCentsPerPound} >= 0`),
+    check("rental_details_deposit_check", sql`${table.depositAmountCents} >= 0`),
+    check(
+      "rental_details_deposit_classification_check",
+      sql`${table.depositClassification} in ('none', 'advance_payment', 'refundable_security')`,
+    ),
+    check(
+      "rental_details_planned_range_check",
+      sql`${table.plannedPickupAt} > ${table.plannedDropoffAt}`,
+    ),
+    check(
+      "rental_details_debris_status_check",
+      sql`${table.debrisReviewStatus} in ('pending', 'approved', 'hold', 'rejected')`,
+    ),
+    check(
+      "rental_details_access_status_check",
+      sql`${table.accessReviewStatus} in ('pending', 'pass', 'fail')`,
+    ),
+    check(
+      "rental_details_empty_status_check",
+      sql`${table.emptyTrailerStatus} in ('unknown', 'confirmed_empty', 'not_empty')`,
+    ),
+    check(
+      "rental_details_condition_check",
+      sql`${table.finalCondition} in ('pending_inspection', 'acceptable', 'acceptable_after_cleaning', 'maintenance_review', 'damage_review', 'out_of_service', 'undetermined')`,
+    ),
+    check(
+      "rental_details_invoice_readiness_check",
+      sql`${table.invoiceReadiness} in ('evaluation_required', 'ready', 'not_ready')`,
+    ),
+    check(
+      "rental_details_weight_check",
+      sql`${table.totalActualWeightPounds} >= 0 and ${table.overageWeightPounds} >= 0`,
+    ),
+    check(
+      "rental_details_custody_check",
+      sql`${table.customerCustodyEndedAt} is null or (${table.onRentAt} is not null and ${table.customerCustodyEndedAt} >= ${table.onRentAt})`,
+    ),
+    check(
+      "rental_details_release_check",
+      sql`${table.occupancyReleasedAt} is null or (${table.customerCustodyEndedAt} is not null and ${table.occupancyReleasedAt} >= ${table.customerCustodyEndedAt})`,
+    ),
+    index("rental_details_tenant_status_idx").on(table.tenantId, table.status),
+    index("rental_details_tenant_readiness_idx").on(
+      table.tenantId,
+      table.invoiceReadiness,
+      table.status,
+    ),
+  ],
+);
+
+export const rentalDebrisReviews = pgTable(
+  "rental_debris_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    rentalDetailId: uuid("rental_detail_id").notNull(),
+    reviewNumber: integer("review_number").notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("pending"),
+    primaryDebrisType: varchar("primary_debris_type", { length: 100 }).notNull(),
+    secondaryDebrisTypes: jsonb("secondary_debris_types").$type<string[]>().notNull().default([]),
+    prohibitedMaterials: jsonb("prohibited_materials").$type<string[]>().notNull().default([]),
+    restrictedMaterials: jsonb("restricted_materials").$type<string[]>().notNull().default([]),
+    mixedDebris: boolean("mixed_debris").notNull().default(false),
+    heavyMaterial: boolean("heavy_material").notNull().default(false),
+    customerAttested: boolean("customer_attested").notNull().default(false),
+    customerAttestedAt: timestamp("customer_attested_at", { withTimezone: true }),
+    customerAttestation: text("customer_attestation"),
+    accessStatus: varchar("access_status", { length: 30 }).notNull().default("pending"),
+    legalTowingStatus: varchar("legal_towing_status", { length: 30 }).notNull().default("pending"),
+    placementInstructions: text("placement_instructions"),
+    pickupAccessRequirement: text("pickup_access_requirement"),
+    propertyDamageRisk: text("property_damage_risk"),
+    outcomeNotes: text("outcome_notes"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: uuid("reviewed_by"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("rental_debris_reviews_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("rental_debris_reviews_sequence_unique").on(
+      table.tenantId,
+      table.rentalDetailId,
+      table.reviewNumber,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.rentalDetailId, table.jobId],
+      foreignColumns: [
+        dumpTrailerRentalDetails.tenantId,
+        dumpTrailerRentalDetails.id,
+        dumpTrailerRentalDetails.jobId,
+      ],
+      name: "rental_debris_reviews_tenant_detail_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reviewedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "rental_debris_reviews_tenant_reviewer_fk",
+    }).onDelete("restrict"),
+    check("rental_debris_reviews_number_check", sql`${table.reviewNumber} > 0`),
+    check(
+      "rental_debris_reviews_status_check",
+      sql`${table.status} in ('pending', 'approved', 'hold', 'rejected', 'superseded')`,
+    ),
+    check(
+      "rental_debris_reviews_access_check",
+      sql`${table.accessStatus} in ('pending', 'pass', 'fail') and ${table.legalTowingStatus} in ('pending', 'pass', 'fail')`,
+    ),
+    check(
+      "rental_debris_reviews_attestation_check",
+      sql`not ${table.customerAttested} or (${table.customerAttestedAt} is not null and ${table.customerAttestation} is not null)`,
+    ),
+    check(
+      "rental_debris_reviews_decision_check",
+      sql`${table.status} = 'pending' or (${table.reviewedAt} is not null and ${table.reviewedBy} is not null and ${table.outcomeNotes} is not null)`,
+    ),
+    check(
+      "rental_debris_reviews_approval_check",
+      sql`${table.status} <> 'approved' or (${table.customerAttested} and ${table.accessStatus} = 'pass' and ${table.legalTowingStatus} = 'pass' and jsonb_array_length(${table.prohibitedMaterials}) = 0)`,
+    ),
+    index("rental_debris_reviews_tenant_job_status_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.status,
+    ),
+  ],
+);
+
+export const rentalExtensions = pgTable(
+  "rental_extensions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    rentalDetailId: uuid("rental_detail_id").notNull(),
+    extensionNumber: integer("extension_number").notNull(),
+    dedupeKey: varchar("dedupe_key", { length: 200 }).notNull(),
+    status: varchar("status", { length: 40 }).notNull().default("requested"),
+    previousPickupAt: timestamp("previous_pickup_at", { withTimezone: true }).notNull(),
+    requestedPickupAt: timestamp("requested_pickup_at", { withTimezone: true }).notNull(),
+    additionalDays: integer("additional_days").notNull(),
+    rateCents: bigint("rate_cents", { mode: "number" }).notNull(),
+    calculatedAmountCents: bigint("calculated_amount_cents", { mode: "number" }).notNull(),
+    conflictStatus: varchar("conflict_status", { length: 30 })
+      .notNull()
+      .default("evaluation_required"),
+    availabilitySnapshot: jsonb("availability_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    customerAuthorizationStatus: varchar("customer_authorization_status", { length: 30 })
+      .notNull()
+      .default("required"),
+    pickupScheduleBlockId: uuid("pickup_schedule_block_id").notNull(),
+    occupancyReservationId: uuid("occupancy_reservation_id").notNull(),
+    requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+    requestedBy: uuid("requested_by").notNull(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decidedBy: uuid("decided_by"),
+    decisionReason: text("decision_reason"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("rental_extensions_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("rental_extensions_sequence_unique").on(
+      table.tenantId,
+      table.rentalDetailId,
+      table.extensionNumber,
+    ),
+    unique("rental_extensions_dedupe_unique").on(table.tenantId, table.jobId, table.dedupeKey),
+    foreignKey({
+      columns: [table.tenantId, table.rentalDetailId, table.jobId],
+      foreignColumns: [
+        dumpTrailerRentalDetails.tenantId,
+        dumpTrailerRentalDetails.id,
+        dumpTrailerRentalDetails.jobId,
+      ],
+      name: "rental_extensions_tenant_detail_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.pickupScheduleBlockId, table.jobId],
+      foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id, scheduleBlocks.jobId],
+      name: "rental_extensions_tenant_pickup_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.occupancyReservationId, table.jobId],
+      foreignColumns: [assetReservations.tenantId, assetReservations.id, assetReservations.jobId],
+      name: "rental_extensions_tenant_occupancy_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.requestedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "rental_extensions_tenant_requester_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.decidedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "rental_extensions_tenant_decider_fk",
+    }).onDelete("restrict"),
+    check("rental_extensions_number_check", sql`${table.extensionNumber} > 0`),
+    check(
+      "rental_extensions_status_check",
+      sql`${table.status} in ('requested', 'availability_review', 'awaiting_customer_authorization', 'awaiting_internal_approval', 'approved', 'rejected', 'cancelled')`,
+    ),
+    check(
+      "rental_extensions_range_check",
+      sql`${table.requestedPickupAt} > ${table.previousPickupAt}`,
+    ),
+    check("rental_extensions_days_check", sql`${table.additionalDays} > 0`),
+    check(
+      "rental_extensions_amount_check",
+      sql`${table.rateCents} >= 0 and ${table.calculatedAmountCents} = ${table.additionalDays} * ${table.rateCents}`,
+    ),
+    check(
+      "rental_extensions_conflict_check",
+      sql`${table.conflictStatus} in ('evaluation_required', 'pass', 'fail')`,
+    ),
+    check(
+      "rental_extensions_customer_auth_check",
+      sql`${table.customerAuthorizationStatus} in ('not_required', 'required', 'pending', 'authorized', 'declined')`,
+    ),
+    check(
+      "rental_extensions_decision_check",
+      sql`${table.status} not in ('approved', 'rejected') or (${table.decidedAt} is not null and ${table.decidedBy} is not null and ${table.decisionReason} is not null)`,
+    ),
+    check(
+      "rental_extensions_approval_check",
+      sql`${table.status} <> 'approved' or (${table.conflictStatus} = 'pass' and ${table.customerAuthorizationStatus} in ('authorized', 'not_required') and ${table.availabilitySnapshot} <> '{}'::jsonb)`,
+    ),
+    index("rental_extensions_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+  ],
+);
+
+export const rentalPickupAttempts = pgTable(
+  "rental_pickup_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    rentalDetailId: uuid("rental_detail_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    scheduleBlockId: uuid("schedule_block_id").notNull(),
+    routeStopId: uuid("route_stop_id"),
+    trailerAssetId: uuid("trailer_asset_id").notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("planned"),
+    accessStatus: varchar("access_status", { length: 30 }).notNull().default("pending"),
+    safeLoadStatus: varchar("safe_load_status", { length: 30 }).notNull().default("pending"),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }),
+    arrivedAt: timestamp("arrived_at", { withTimezone: true }),
+    customerNotifiedAt: timestamp("customer_notified_at", { withTimezone: true }),
+    customerCustodyEndedAt: timestamp("customer_custody_ended_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    failureReason: text("failure_reason"),
+    outcomeNotes: text("outcome_notes"),
+    attemptedBy: uuid("attempted_by").notNull(),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("rental_pickup_attempts_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("rental_pickup_attempts_sequence_unique").on(
+      table.tenantId,
+      table.rentalDetailId,
+      table.attemptNumber,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.rentalDetailId, table.jobId],
+      foreignColumns: [
+        dumpTrailerRentalDetails.tenantId,
+        dumpTrailerRentalDetails.id,
+        dumpTrailerRentalDetails.jobId,
+      ],
+      name: "rental_pickup_attempts_tenant_detail_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.scheduleBlockId, table.jobId],
+      foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id, scheduleBlocks.jobId],
+      name: "rental_pickup_attempts_tenant_block_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.routeStopId, table.jobId],
+      foreignColumns: [routeStops.tenantId, routeStops.id, routeStops.jobId],
+      name: "rental_pickup_attempts_tenant_stop_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.trailerAssetId],
+      foreignColumns: [assets.tenantId, assets.id],
+      name: "rental_pickup_attempts_tenant_trailer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.attemptedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "rental_pickup_attempts_tenant_driver_fk",
+    }).onDelete("restrict"),
+    check("rental_pickup_attempts_number_check", sql`${table.attemptNumber} > 0`),
+    check(
+      "rental_pickup_attempts_status_check",
+      sql`${table.status} in ('planned', 'en_route', 'arrived', 'retrieved', 'failed', 'cancelled')`,
+    ),
+    check(
+      "rental_pickup_attempts_access_check",
+      sql`${table.accessStatus} in ('pending', 'pass', 'fail') and ${table.safeLoadStatus} in ('pending', 'pass', 'fail')`,
+    ),
+    check(
+      "rental_pickup_attempts_retrieved_check",
+      sql`${table.status} <> 'retrieved' or (${table.accessStatus} = 'pass' and ${table.safeLoadStatus} = 'pass' and ${table.customerCustodyEndedAt} is not null and ${table.completedAt} is not null)`,
+    ),
+    check(
+      "rental_pickup_attempts_failure_check",
+      sql`${table.status} <> 'failed' or (${table.failureReason} is not null and ${table.attemptedAt} is not null and ${table.completedAt} is not null)`,
+    ),
+    index("rental_pickup_attempts_tenant_job_status_idx").on(
+      table.tenantId,
+      table.jobId,
+      table.status,
+    ),
+  ],
+);
+
+export const disposalLoads = pgTable(
+  "disposal_loads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    rentalDetailId: uuid("rental_detail_id").notNull(),
+    sequence: integer("sequence").notNull(),
+    redirectedFromDisposalLoadId: uuid("redirected_from_disposal_load_id"),
+    routeStopId: uuid("route_stop_id"),
+    plannedFacilityLocationId: uuid("planned_facility_location_id"),
+    actualFacilityLocationId: uuid("actual_facility_location_id"),
+    status: varchar("status", { length: 40 }).notNull().default("planned"),
+    debrisClassification: varchar("debris_classification", { length: 120 }).notNull(),
+    acceptanceResult: varchar("acceptance_result", { length: 30 }).notNull().default("pending"),
+    unloadingResult: varchar("unloading_result", { length: 30 }).notNull().default("pending"),
+    weightStatus: varchar("weight_status", { length: 30 }).notNull().default("required"),
+    sourceWeightUnit: varchar("source_weight_unit", { length: 20 }).notNull().default("pounds"),
+    grossWeight: numeric("gross_weight", { precision: 14, scale: 3 }),
+    tareWeight: numeric("tare_weight", { precision: 14, scale: 3 }),
+    netWeight: numeric("net_weight", { precision: 14, scale: 3 }),
+    canonicalNetWeightPounds: numeric("canonical_net_weight_pounds", {
+      precision: 14,
+      scale: 3,
+    }),
+    weightExceptionReason: text("weight_exception_reason"),
+    ticketStatus: varchar("ticket_status", { length: 30 }).notNull().default("missing"),
+    ticketDocumentId: uuid("ticket_document_id"),
+    receiptStatus: varchar("receipt_status", { length: 30 }).notNull().default("missing"),
+    receiptDocumentId: uuid("receipt_document_id"),
+    emptyTrailerStatus: varchar("empty_trailer_status", { length: 30 })
+      .notNull()
+      .default("pending"),
+    emptyTrailerDocumentId: uuid("empty_trailer_document_id"),
+    evidenceWaiverReason: text("evidence_waiver_reason"),
+    evidenceWaivedAt: timestamp("evidence_waived_at", { withTimezone: true }),
+    evidenceWaivedBy: uuid("evidence_waived_by"),
+    remainingMaterialStatus: varchar("remaining_material_status", { length: 30 })
+      .notNull()
+      .default("pending"),
+    disposalFeeCents: bigint("disposal_fee_cents", { mode: "number" }),
+    expenseId: uuid("expense_id"),
+    rejectionReason: text("rejection_reason"),
+    arrivedAt: timestamp("arrived_at", { withTimezone: true }),
+    unloadedAt: timestamp("unloaded_at", { withTimezone: true }),
+    departedAt: timestamp("departed_at", { withTimezone: true }),
+    reconciledAt: timestamp("reconciled_at", { withTimezone: true }),
+    reconciledBy: uuid("reconciled_by"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("disposal_loads_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("disposal_loads_tenant_id_job_unique").on(table.tenantId, table.id, table.jobId),
+    unique("disposal_loads_sequence_unique").on(
+      table.tenantId,
+      table.rentalDetailId,
+      table.sequence,
+    ),
+    unique("disposal_loads_expense_unique").on(table.tenantId, table.expenseId),
+    foreignKey({
+      columns: [table.tenantId, table.rentalDetailId, table.jobId],
+      foreignColumns: [
+        dumpTrailerRentalDetails.tenantId,
+        dumpTrailerRentalDetails.id,
+        dumpTrailerRentalDetails.jobId,
+      ],
+      name: "disposal_loads_tenant_detail_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.redirectedFromDisposalLoadId, table.jobId],
+      foreignColumns: [table.tenantId, table.id, table.jobId],
+      name: "disposal_loads_tenant_redirect_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.routeStopId, table.jobId],
+      foreignColumns: [routeStops.tenantId, routeStops.id, routeStops.jobId],
+      name: "disposal_loads_tenant_stop_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.plannedFacilityLocationId],
+      foreignColumns: [supplierLocations.tenantId, supplierLocations.id],
+      name: "disposal_loads_tenant_planned_facility_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.actualFacilityLocationId],
+      foreignColumns: [supplierLocations.tenantId, supplierLocations.id],
+      name: "disposal_loads_tenant_actual_facility_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.ticketDocumentId],
+      foreignColumns: [documents.tenantId, documents.id],
+      name: "disposal_loads_tenant_ticket_document_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.receiptDocumentId],
+      foreignColumns: [documents.tenantId, documents.id],
+      name: "disposal_loads_tenant_receipt_document_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.emptyTrailerDocumentId],
+      foreignColumns: [documents.tenantId, documents.id],
+      name: "disposal_loads_tenant_empty_document_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.evidenceWaivedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "disposal_loads_tenant_evidence_waiver_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.expenseId, table.jobId],
+      foreignColumns: [expenses.tenantId, expenses.id, expenses.jobId],
+      name: "disposal_loads_tenant_expense_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.reconciledBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "disposal_loads_tenant_reconciler_fk",
+    }).onDelete("restrict"),
+    check("disposal_loads_sequence_check", sql`${table.sequence} > 0`),
+    check(
+      "disposal_loads_status_check",
+      sql`${table.status} in ('planned', 'facility_review', 'ready', 'en_route', 'at_facility', 'acceptance_pending', 'accepted', 'weighed_in', 'unloading', 'partially_unloaded', 'unloaded', 'weighed_out', 'documentation_pending', 'reconciling', 'reconciled', 'rejected', 'redirected', 'cancelled')`,
+    ),
+    check(
+      "disposal_loads_acceptance_check",
+      sql`${table.acceptanceResult} in ('pending', 'accepted', 'rejected')`,
+    ),
+    check(
+      "disposal_loads_unloading_check",
+      sql`${table.unloadingResult} in ('pending', 'partial', 'unloaded', 'not_unloaded')`,
+    ),
+    check(
+      "disposal_loads_weight_status_check",
+      sql`${table.weightStatus} in ('required', 'recorded', 'not_applicable', 'waived') and ${table.sourceWeightUnit} in ('pounds', 'tons')`,
+    ),
+    check(
+      "disposal_loads_weight_values_check",
+      sql`(${table.grossWeight} is null or ${table.grossWeight} >= 0) and (${table.tareWeight} is null or ${table.tareWeight} >= 0) and (${table.netWeight} is null or ${table.netWeight} >= 0) and (${table.canonicalNetWeightPounds} is null or ${table.canonicalNetWeightPounds} >= 0)`,
+    ),
+    check(
+      "disposal_loads_recorded_weight_check",
+      sql`${table.weightStatus} <> 'recorded' or (${table.grossWeight} is not null and ${table.tareWeight} is not null and ${table.netWeight} = ${table.grossWeight} - ${table.tareWeight} and ${table.grossWeight} >= ${table.tareWeight} and ${table.canonicalNetWeightPounds} is not null)`,
+    ),
+    check(
+      "disposal_loads_weight_exception_check",
+      sql`${table.weightStatus} not in ('not_applicable', 'waived') or ${table.weightExceptionReason} is not null`,
+    ),
+    check(
+      "disposal_loads_ticket_status_check",
+      sql`${table.ticketStatus} in ('missing', 'attached', 'waived', 'not_required') and (${table.ticketStatus} <> 'attached' or ${table.ticketDocumentId} is not null)`,
+    ),
+    check(
+      "disposal_loads_receipt_status_check",
+      sql`${table.receiptStatus} in ('missing', 'attached', 'waived', 'not_required') and (${table.receiptStatus} <> 'attached' or ${table.receiptDocumentId} is not null)`,
+    ),
+    check(
+      "disposal_loads_evidence_waiver_check",
+      sql`${table.ticketStatus} <> 'waived' and ${table.receiptStatus} <> 'waived' or (${table.evidenceWaiverReason} is not null and ${table.evidenceWaivedAt} is not null and ${table.evidenceWaivedBy} is not null)`,
+    ),
+    check(
+      "disposal_loads_empty_status_check",
+      sql`${table.emptyTrailerStatus} in ('pending', 'confirmed_empty', 'not_empty') and (${table.emptyTrailerStatus} <> 'confirmed_empty' or ${table.emptyTrailerDocumentId} is not null)`,
+    ),
+    check(
+      "disposal_loads_remaining_status_check",
+      sql`${table.remainingMaterialStatus} in ('pending', 'none', 'remaining', 'resolved')`,
+    ),
+    check(
+      "disposal_loads_fee_check",
+      sql`${table.disposalFeeCents} is null or ${table.disposalFeeCents} >= 0`,
+    ),
+    check(
+      "disposal_loads_rejection_check",
+      sql`${table.acceptanceResult} <> 'rejected' or ${table.rejectionReason} is not null`,
+    ),
+    check(
+      "disposal_loads_reconciled_check",
+      sql`${table.status} <> 'reconciled' or (${table.actualFacilityLocationId} is not null and ${table.acceptanceResult} = 'accepted' and ${table.unloadingResult} = 'unloaded' and ${table.weightStatus} in ('recorded', 'not_applicable', 'waived') and ${table.ticketStatus} in ('attached', 'waived', 'not_required') and ${table.receiptStatus} in ('attached', 'waived', 'not_required') and ${table.emptyTrailerStatus} = 'confirmed_empty' and ${table.remainingMaterialStatus} in ('none', 'resolved') and (${table.disposalFeeCents} is null or ${table.disposalFeeCents} = 0 or ${table.expenseId} is not null) and ${table.reconciledAt} is not null and ${table.reconciledBy} is not null)`,
+    ),
+    index("disposal_loads_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+    index("disposal_loads_tenant_facility_status_idx").on(
+      table.tenantId,
+      table.actualFacilityLocationId,
+      table.status,
+    ),
+  ],
+);
+
+export const rentalInspections = pgTable(
+  "rental_inspections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    jobId: uuid("job_id").notNull(),
+    rentalDetailId: uuid("rental_detail_id").notNull(),
+    inspectionNumber: integer("inspection_number").notNull(),
+    inspectionType: varchar("inspection_type", { length: 30 }).notNull(),
+    trailerAssetId: uuid("trailer_asset_id").notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("pending"),
+    conditionResult: varchar("condition_result", { length: 40 }).notNull().default("undetermined"),
+    cleaningResult: varchar("cleaning_result", { length: 30 }).notNull().default("not_required"),
+    damageResult: varchar("damage_result", { length: 30 }).notNull().default("none"),
+    releaseDecision: varchar("release_decision", { length: 30 }).notNull().default("pending"),
+    safeToRelease: boolean("safe_to_release").notNull().default(false),
+    evidenceDocumentId: uuid("evidence_document_id"),
+    evidenceSnapshot: jsonb("evidence_snapshot")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    notes: text("notes"),
+    inspectedAt: timestamp("inspected_at", { withTimezone: true }),
+    inspectedBy: uuid("inspected_by"),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("rental_inspections_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("rental_inspections_sequence_unique").on(
+      table.tenantId,
+      table.rentalDetailId,
+      table.inspectionNumber,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.rentalDetailId, table.jobId],
+      foreignColumns: [
+        dumpTrailerRentalDetails.tenantId,
+        dumpTrailerRentalDetails.id,
+        dumpTrailerRentalDetails.jobId,
+      ],
+      name: "rental_inspections_tenant_detail_job_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.trailerAssetId],
+      foreignColumns: [assets.tenantId, assets.id],
+      name: "rental_inspections_tenant_trailer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.evidenceDocumentId],
+      foreignColumns: [documents.tenantId, documents.id],
+      name: "rental_inspections_tenant_evidence_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.inspectedBy],
+      foreignColumns: [users.tenantId, users.id],
+      name: "rental_inspections_tenant_inspector_fk",
+    }).onDelete("restrict"),
+    check("rental_inspections_number_check", sql`${table.inspectionNumber} > 0`),
+    check(
+      "rental_inspections_type_check",
+      sql`${table.inspectionType} in ('pre_dropoff', 'post_rental', 'cleaning_follow_up', 'damage_follow_up', 'maintenance_follow_up')`,
+    ),
+    check(
+      "rental_inspections_status_check",
+      sql`${table.status} in ('pending', 'in_progress', 'completed', 'waived')`,
+    ),
+    check(
+      "rental_inspections_condition_check",
+      sql`${table.conditionResult} in ('acceptable', 'acceptable_after_cleaning', 'maintenance_review', 'damage_review', 'out_of_service', 'undetermined')`,
+    ),
+    check(
+      "rental_inspections_cleaning_check",
+      sql`${table.cleaningResult} in ('not_required', 'normal', 'required', 'completed')`,
+    ),
+    check(
+      "rental_inspections_damage_check",
+      sql`${table.damageResult} in ('none', 'review_required', 'damage_confirmed', 'resolved')`,
+    ),
+    check(
+      "rental_inspections_release_check",
+      sql`${table.releaseDecision} in ('pending', 'release', 'quarantine', 'out_of_service') and (${table.releaseDecision} <> 'release' or ${table.safeToRelease})`,
+    ),
+    check(
+      "rental_inspections_completion_check",
+      sql`${table.status} not in ('completed', 'waived') or (${table.inspectedAt} is not null and ${table.inspectedBy} is not null and ${table.completedAt} is not null and ${table.notes} is not null)`,
+    ),
+    index("rental_inspections_tenant_job_status_idx").on(table.tenantId, table.jobId, table.status),
+    uniqueIndex("rental_inspections_one_open_type_idx")
+      .on(table.tenantId, table.rentalDetailId, table.inspectionType)
+      .where(sql`${table.status} in ('pending', 'in_progress')`),
   ],
 );
 

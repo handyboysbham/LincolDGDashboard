@@ -71,6 +71,20 @@
       "when": 1786293235646,
       "tag": "0009_invoice_customer_links",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786295794374,
+      "tag": "0010_dump_trailer_rental_data_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786381200000,
+      "tag": "0011_rental_disposal_resolution",
+      "breakpoints": true
     }
   ]
 }

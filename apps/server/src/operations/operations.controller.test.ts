@@ -9,6 +9,7 @@ import {
   PublicContractsController,
   SchedulingController,
 } from "./operations.controller.js";
+import { RentalController } from "./rental.controller.js";
 
 describe("operations controller authorization", () => {
   it.each([
@@ -40,6 +41,25 @@ describe("operations controller authorization", () => {
     [MaterialDeliveryController, "createJobCharge", ["finance:manage"]],
     [MaterialDeliveryController, "transitionJobCharge", ["finance:manage"]],
     [MaterialDeliveryController, "evaluateInvoiceReadiness", ["finance:manage"]],
+    [RentalController, "get", ["projects:read"]],
+    [RentalController, "savePlan", ["operations:manage"]],
+    [RentalController, "revisePlan", ["operations:manage"]],
+    [RentalController, "createDebrisReview", ["operations:manage"]],
+    [RentalController, "decideDebrisReview", ["operations:manage"]],
+    [RentalController, "planSchedule", ["scheduling:manage"]],
+    [RentalController, "evaluateReadiness", ["operations:manage"]],
+    [RentalController, "createInspection", ["operations:manage"]],
+    [RentalController, "completeInspection", ["operations:manage"]],
+    [RentalController, "createExtension", ["operations:manage"]],
+    [RentalController, "transitionExtension", ["scheduling:manage"]],
+    [RentalController, "createPickupAttempt", ["operations:manage"]],
+    [RentalController, "transitionPickupAttempt", ["operations:manage"]],
+    [RentalController, "createDisposalLoad", ["scheduling:manage"]],
+    [RentalController, "transitionDisposalLoad", ["operations:manage"]],
+    [RentalController, "recordDisposalEvidence", ["finance:manage"]],
+    [RentalController, "reconcileDisposalLoad", ["finance:manage"]],
+    [RentalController, "reconcileRental", ["finance:manage"]],
+    [RentalController, "transitionDropoff", ["operations:manage"]],
     [SchedulingController, "createAsset", ["scheduling:manage"]],
     [SchedulingController, "createBlock", ["scheduling:manage"]],
   ] as const)("requires explicit permissions for %s.%s", (controller, method, expected) => {

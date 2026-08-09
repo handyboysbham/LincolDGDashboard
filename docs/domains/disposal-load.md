@@ -108,3 +108,13 @@ A Disposal Load is reconciled when:
 - remaining material is resolved
 - rejection and variance are resolved
 - overage contribution is calculated
+
+Sprint 1.8 Phase 4 implements these facts as tenant-scoped, idempotent application commands. Each
+Load owns a disposal Schedule Block, driver, truck reservation, trailer assignment, and Route Stop.
+Ticket, receipt, and empty-trailer Documents are linked to the Load; a positive disposal fee creates
+an attributable reconciled Expense. Gross-minus-tare and tons-to-pounds conversion use fixed-point
+thousandths, and only reconciled Loads contribute to the rental-wide weight summary.
+
+Rejected and redirected Loads are terminal and are never rewritten. A replacement references the
+terminal Load, and operational completion accepts that history only after a replacement chain
+reaches Reconciled.

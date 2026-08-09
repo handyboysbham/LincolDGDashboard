@@ -7,6 +7,7 @@ import {
   checklistInstances,
   checklistItems,
   customerAccounts,
+  dumpTrailerRentalDetails,
   jobAssignments,
   jobEvents,
   jobs,
@@ -17,6 +18,7 @@ import {
   outboxEvents,
   projects,
   readinessEvaluations,
+  rentalInspections,
   routeStops,
   scheduleBlocks,
   users,
@@ -280,6 +282,18 @@ export class JobsService {
               updatedBy: actor.userId,
             })
             .where(and(eq(jobs.tenantId, actor.tenantId), eq(jobs.id, jobId)));
+          if (job.serviceType === "dump_trailer_rental") {
+            await transaction
+              .update(dumpTrailerRentalDetails)
+              .set({ status: "scheduled_dropoff", updatedBy: actor.userId })
+              .where(
+                and(
+                  eq(dumpTrailerRentalDetails.tenantId, actor.tenantId),
+                  eq(dumpTrailerRentalDetails.jobId, jobId),
+                  eq(dumpTrailerRentalDetails.status, "planning"),
+                ),
+              );
+          }
           await this.emitJobEvent(
             transaction,
             actor,
@@ -941,6 +955,18 @@ export class JobsService {
         blockers,
       );
     }
+    if (
+      job.serviceType === "dump_trailer_rental" &&
+      ["schedule", "dispatch"].includes(readinessType)
+    ) {
+      await this.addRentalReadinessBlockers(
+        transaction,
+        actor.tenantId,
+        job.id,
+        readinessType,
+        blockers,
+      );
+    }
     if (readinessType === "completion") {
       const requiredChecklists = await transaction
         .select()
@@ -967,6 +993,20 @@ export class JobsService {
           );
         if (delivery?.status !== "operationally_complete") {
           blockers.push("Material Delivery loads and quantities are not fully reconciled");
+        }
+      }
+      if (job.serviceType === "dump_trailer_rental") {
+        const [rental] = await transaction
+          .select()
+          .from(dumpTrailerRentalDetails)
+          .where(
+            and(
+              eq(dumpTrailerRentalDetails.tenantId, actor.tenantId),
+              eq(dumpTrailerRentalDetails.jobId, job.id),
+            ),
+          );
+        if (rental?.status !== "operationally_complete") {
+          blockers.push("Dump Trailer Rental return and financial evidence are not reconciled");
         }
       }
     }
@@ -1111,6 +1151,110 @@ export class JobsService {
       routeStops: stops.map(routeStopDto),
       scheduleBlocks: blockDtos,
     };
+  }
+
+  private async addRentalReadinessBlockers(
+    transaction: TenantTransaction,
+    tenantId: string,
+    jobId: string,
+    readinessType: string,
+    blockers: string[],
+  ): Promise<void> {
+    const [detail] = await transaction
+      .select()
+      .from(dumpTrailerRentalDetails)
+      .where(
+        and(
+          eq(dumpTrailerRentalDetails.tenantId, tenantId),
+          eq(dumpTrailerRentalDetails.jobId, jobId),
+        ),
+      );
+    if (!detail) {
+      blockers.push("Dump Trailer Rental plan is missing");
+      return;
+    }
+    if (!detail.trailerAssetId) blockers.push("Rental trailer is not selected");
+    if (detail.debrisReviewStatus !== "approved") blockers.push("Debris review is not approved");
+    if (detail.accessReviewStatus !== "pass") {
+      blockers.push("Access and legal towing review is not approved");
+    }
+    const blocks = await transaction
+      .select()
+      .from(scheduleBlocks)
+      .where(
+        and(
+          eq(scheduleBlocks.tenantId, tenantId),
+          eq(scheduleBlocks.jobId, jobId),
+          inArray(scheduleBlocks.status, ["tentative", "confirmed"]),
+        ),
+      );
+    for (const blockType of ["dropoff", "pickup"]) {
+      const block = blocks.find((candidate) => candidate.blockType === blockType);
+      if (!block) continue;
+      const assignments = await transaction
+        .select()
+        .from(assetAssignments)
+        .where(
+          and(
+            eq(assetAssignments.tenantId, tenantId),
+            eq(assetAssignments.scheduleBlockId, block.id),
+            eq(assetAssignments.status, "assigned"),
+          ),
+        );
+      if (!assignments.some((assignment) => assignment.role === "truck")) {
+        blockers.push(`${blockType} block has no assigned truck`);
+      }
+      if (
+        !assignments.some(
+          (assignment) =>
+            assignment.role === "trailer" && assignment.assetId === detail.trailerAssetId,
+        )
+      ) {
+        blockers.push(`${blockType} block does not assign the Rental trailer`);
+      }
+    }
+    const [occupancy] = detail.trailerAssetId
+      ? await transaction
+          .select()
+          .from(assetReservations)
+          .where(
+            and(
+              eq(assetReservations.tenantId, tenantId),
+              eq(assetReservations.jobId, jobId),
+              eq(assetReservations.assetId, detail.trailerAssetId),
+              eq(assetReservations.reservationType, "occupancy"),
+              eq(assetReservations.status, "active"),
+            ),
+          )
+          .limit(1)
+      : [];
+    if (
+      !occupancy ||
+      occupancy.startsAt > detail.plannedDropoffAt ||
+      occupancy.endsAt < detail.plannedPickupAt
+    ) {
+      blockers.push("Continuous trailer occupancy does not cover the Rental term");
+    }
+    if (readinessType === "dispatch") {
+      const [inspection] = await transaction
+        .select()
+        .from(rentalInspections)
+        .where(
+          and(
+            eq(rentalInspections.tenantId, tenantId),
+            eq(rentalInspections.rentalDetailId, detail.id),
+            eq(rentalInspections.inspectionType, "pre_dropoff"),
+            eq(rentalInspections.status, "completed"),
+            eq(rentalInspections.releaseDecision, "release"),
+            eq(rentalInspections.safeToRelease, true),
+          ),
+        )
+        .orderBy(desc(rentalInspections.inspectionNumber))
+        .limit(1);
+      if (!inspection) {
+        blockers.push("Pre-drop-off inspection does not authorize trailer release");
+      }
+    }
   }
 
   private async addMaterialDeliverySafetyBlockers(

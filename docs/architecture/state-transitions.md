@@ -152,7 +152,8 @@ Reconciliation additionally requires supplier tickets and resolved quantity vari
 ## Rental operational state
 
 ```text
-Scheduled for Drop-Off
+Planning
+→ Scheduled for Drop-Off
 → Drop-Off Preparing
 → En Route for Drop-Off
 → At Customer for Drop-Off
@@ -171,7 +172,59 @@ Scheduled for Drop-Off
 → Complete
 ```
 
-The rental cannot complete while the trailer remains loaded.
+Phase 2 derives the Rental Detail from the Project's accepted Quote Version. Debris approval
+requires customer attestation, passing placement access, passing legal towing review, and no
+prohibited materials. Schedule readiness requires separate drop-off and pickup blocks, a driver and
+truck for each, the selected trailer on both blocks, and one active occupancy reservation covering
+the full rental term. Dispatch readiness additionally requires confirmed blocks and a completed
+pre-drop-off inspection whose release decision is `release` and whose safe-to-release result is
+true.
+
+Drop-off execution is ordered and idempotent. Preparing requires a Dispatch Ready Job; departure,
+arrival, placement, and customer-custody actions require an Active Job. Completing placement records
+the actual drop-off time and completes the drop-off Route Stop and Schedule Block. Beginning the
+rental records `on_rent_at`, keeps occupancy active, and changes the selected trailer Asset to In
+Use. The rental cannot complete while the trailer remains loaded or its continuous occupancy remains
+active.
+
+Phase 3 adds an attributable Extension workflow:
+
+```text
+Requested
+→ Availability Review
+→ Awaiting Customer Authorization
+→ Awaiting Internal Approval
+→ Approved
+```
+
+Rejected and Cancelled are terminal alternatives. Availability checks the proposed extension of the
+trailer occupancy and the shifted pickup-vehicle reservation. Approval rechecks availability while
+locking the Job, Rental Detail, Extension, pickup Schedule Block, and affected Asset Reservations.
+It then moves the pickup block and its reservations, extends occupancy, and updates the planned
+pickup atomically. A reservation conflict cannot be overridden or leave a partially moved schedule.
+
+Pickup execution is also ordered and idempotent. Creating an attempt requires an Active Job, a
+confirmed pickup block, exactly one driver, an assigned truck, the Rental trailer, and attributable
+customer notification, access, and safe-load facts. Preparation, departure, and arrival move the
+Rental through the shared pickup states. Failure preserves an immutable Pickup Attempt and returns
+the Rental to On Rent without ending customer custody. Retrieval requires passing access and
+safe-load results; only then are `customer_custody_ended_at` and `actual_pickup_at` recorded and the
+pickup Route Stop and Schedule Block completed. Trailer occupancy and In Use status continue through
+disposal and final inspection.
+
+Phase 4 creates one confirmed disposal Schedule Block, driver assignment, truck reservation, trailer
+assignment, Route Stop, and Disposal Load for each independently executed trip. Facility acceptance,
+weight, unloading, evidence, Expense, and reconciliation are explicit commands. A rejected or
+redirected Load is terminal history; a new Load references it and the source is resolved only when a
+replacement chain reaches Reconciled.
+
+Rental weight is derived from reconciled Disposal Loads using fixed-point thousandths of a pound.
+After all Loads are resolved and the trailer is documented empty, the Rental requires a post-rental
+inspection. Completing that inspection releases continuous occupancy and moves the trailer to
+Available only for a safe release; quarantine and out-of-service outcomes release occupancy but keep
+the Asset Out of Service. Final reconciliation derives one additional-day Charge per approved
+Extension and one rental-wide weight-overage Charge, then sets invoice readiness and operational
+completion atomically.
 
 ## Job Charge
 

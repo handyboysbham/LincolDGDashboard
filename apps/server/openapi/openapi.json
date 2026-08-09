@@ -2553,6 +2553,959 @@
         "tags": ["Public Contracts"]
       }
     },
+    "/api/v1/jobs/{id}/dump-trailer-rental": {
+      "get": {
+        "operationId": "getJobDumpTrailerRental",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      },
+      "post": {
+        "operationId": "saveJobDumpTrailerRentalPlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRentalPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/actions/revise-plan": {
+      "post": {
+        "operationId": "reviseDumpTrailerRentalPlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRentalPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/debris-reviews": {
+      "post": {
+        "operationId": "createRentalDebrisReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRentalDebrisReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/rental-debris-reviews/{id}/actions/{action}": {
+      "post": {
+        "operationId": "decideRentalDebrisReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["approve", "hold", "reject"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalDecisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/actions/plan-schedule": {
+      "post": {
+        "operationId": "planDumpTrailerRentalSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRentalScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/actions/evaluate-readiness": {
+      "post": {
+        "operationId": "evaluateDumpTrailerRentalReadiness",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRentalReadinessDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalReadinessDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/inspections": {
+      "post": {
+        "operationId": "createRentalInspection",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRentalInspectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalInspectionDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/rental-inspections/{id}/actions/complete": {
+      "post": {
+        "operationId": "completeRentalInspection",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteRentalInspectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalInspectionDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/extensions": {
+      "post": {
+        "operationId": "createRentalExtension",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRentalExtensionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalExtensionDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/rental-extensions/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionRentalExtension",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["evaluate", "authorize", "approve", "reject", "cancel"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalExtensionActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/pickup-attempts": {
+      "post": {
+        "operationId": "createRentalPickupAttempt",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRentalPickupAttemptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/rental-pickup-attempts/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionRentalPickupAttempt",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["prepare", "depart", "arrive", "fail", "retrieve"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalPickupActionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/disposal-loads": {
+      "post": {
+        "operationId": "createRentalDisposalLoad",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisposalLoadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/disposal-loads/{id}/actions/record-evidence": {
+      "post": {
+        "operationId": "recordRentalDisposalEvidence",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordDisposalEvidenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/disposal-loads/{id}/actions/reconcile": {
+      "post": {
+        "operationId": "reconcileRentalDisposalLoad",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalExecutionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/disposal-loads/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionRentalDisposalLoad",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "depart",
+                "arrive",
+                "accept",
+                "reject",
+                "redirect",
+                "record-weight",
+                "start-unloading",
+                "complete-unloading",
+                "cancel"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisposalLoadExecutionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/actions/reconcile": {
+      "post": {
+        "operationId": "reconcileDumpTrailerRental",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalExecutionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
+    "/api/v1/dump-trailer-rentals/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionRentalDropoff",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "prepare-dropoff",
+                "depart-dropoff",
+                "arrive-dropoff",
+                "complete-dropoff",
+                "begin-rental"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RentalExecutionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DumpTrailerRentalDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Dump Trailer Rental"]
+      }
+    },
     "/api/v1/pricing/configurations": {
       "get": {
         "operationId": "listPricingConfigurations",
@@ -8122,6 +9075,1049 @@
           "signatures",
           "terms"
         ]
+      },
+      "RentalDebrisReviewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reviewNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "primaryDebrisType": {
+            "type": "string"
+          },
+          "prohibitedMaterials": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "customerAttested": {
+            "type": "boolean"
+          },
+          "accessStatus": {
+            "type": "string"
+          },
+          "legalTowingStatus": {
+            "type": "string"
+          },
+          "outcomeNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "reviewNumber",
+          "status",
+          "primaryDebrisType",
+          "prohibitedMaterials",
+          "customerAttested",
+          "accessStatus",
+          "legalTowingStatus"
+        ]
+      },
+      "RentalInspectionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "inspectionNumber": {
+            "type": "number"
+          },
+          "inspectionType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "conditionResult": {
+            "type": "string"
+          },
+          "releaseDecision": {
+            "type": "string"
+          },
+          "safeToRelease": {
+            "type": "boolean"
+          },
+          "evidenceDocumentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "inspectionNumber",
+          "inspectionType",
+          "status",
+          "conditionResult",
+          "releaseDecision",
+          "safeToRelease"
+        ]
+      },
+      "RentalExtensionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "extensionNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "previousPickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestedPickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "additionalDays": {
+            "type": "number"
+          },
+          "rateCents": {
+            "type": "number"
+          },
+          "calculatedAmountCents": {
+            "type": "number"
+          },
+          "conflictStatus": {
+            "type": "string"
+          },
+          "customerAuthorizationStatus": {
+            "type": "string"
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "decisionReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "extensionNumber",
+          "status",
+          "previousPickupAt",
+          "requestedPickupAt",
+          "additionalDays",
+          "rateCents",
+          "calculatedAmountCents",
+          "conflictStatus",
+          "customerAuthorizationStatus"
+        ]
+      },
+      "RentalPickupAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attemptNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "accessStatus": {
+            "type": "string"
+          },
+          "safeLoadStatus": {
+            "type": "string"
+          },
+          "scheduleBlockId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "routeStopId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "trailerAssetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerNotifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "attemptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "arrivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerCustodyEndedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "failureReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "outcomeNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "attemptNumber",
+          "status",
+          "accessStatus",
+          "safeLoadStatus",
+          "scheduleBlockId",
+          "trailerAssetId"
+        ]
+      },
+      "RentalDisposalLoadDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "debrisClassification": {
+            "type": "string"
+          },
+          "acceptanceResult": {
+            "type": "string"
+          },
+          "unloadingResult": {
+            "type": "string"
+          },
+          "weightStatus": {
+            "type": "string"
+          },
+          "grossWeight": {
+            "type": "string",
+            "nullable": true
+          },
+          "tareWeight": {
+            "type": "string",
+            "nullable": true
+          },
+          "netWeight": {
+            "type": "string",
+            "nullable": true
+          },
+          "canonicalNetWeightPounds": {
+            "type": "string",
+            "nullable": true
+          },
+          "ticketStatus": {
+            "type": "string"
+          },
+          "receiptStatus": {
+            "type": "string"
+          },
+          "emptyTrailerStatus": {
+            "type": "string"
+          },
+          "remainingMaterialStatus": {
+            "type": "string"
+          },
+          "disposalFeeCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "expenseId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "redirectedFromDisposalLoadId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "rejectionReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "status",
+          "debrisClassification",
+          "acceptanceResult",
+          "unloadingResult",
+          "weightStatus",
+          "ticketStatus",
+          "receiptStatus",
+          "emptyTrailerStatus",
+          "remainingMaterialStatus"
+        ]
+      },
+      "RentalOperationalChargeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chargeNumber": {
+            "type": "string"
+          },
+          "chargeType": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "rateCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "approvedAmountCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "customerDescription": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "chargeNumber",
+          "chargeType",
+          "sourceType",
+          "status",
+          "customerDescription"
+        ]
+      },
+      "RentalScheduleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "blockType": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "driverUserIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["id", "blockType", "startsAt", "endsAt", "status", "driverUserIds", "assetIds"]
+      },
+      "RentalOccupancyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trailerAssetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "trailerAssetId", "startsAt", "endsAt", "status"]
+      },
+      "RentalReadinessDto": {
+        "type": "object",
+        "properties": {
+          "readinessType": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["readinessType", "result", "blockers", "warnings", "evaluatedAt"]
+      },
+      "DumpTrailerRentalDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "rateType": {
+            "type": "string"
+          },
+          "includedDays": {
+            "type": "number"
+          },
+          "additionalDayRateCents": {
+            "type": "number"
+          },
+          "includedWeightPounds": {
+            "type": "string"
+          },
+          "overageRateCentsPerPound": {
+            "type": "number"
+          },
+          "depositAmountCents": {
+            "type": "number"
+          },
+          "depositClassification": {
+            "type": "string"
+          },
+          "plannedDropoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "plannedPickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "trailerAssetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "debrisReviewStatus": {
+            "type": "string"
+          },
+          "accessReviewStatus": {
+            "type": "string"
+          },
+          "actualDropoffAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "onRentAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "customerCustodyEndedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "actualPickupAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "debrisReviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalDebrisReviewDto"
+            }
+          },
+          "inspections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalInspectionDto"
+            }
+          },
+          "extensions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalExtensionDto"
+            }
+          },
+          "pickupAttempts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalPickupAttemptDto"
+            }
+          },
+          "disposalLoads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalDisposalLoadDto"
+            }
+          },
+          "operationalCharges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalOperationalChargeDto"
+            }
+          },
+          "emptyTrailerStatus": {
+            "type": "string"
+          },
+          "finalCondition": {
+            "type": "string"
+          },
+          "totalActualWeightPounds": {
+            "type": "string"
+          },
+          "overageWeightPounds": {
+            "type": "string"
+          },
+          "invoiceReadiness": {
+            "type": "string"
+          },
+          "occupancyReleasedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "operationallyCompletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "schedule": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalScheduleDto"
+            }
+          },
+          "occupancy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RentalOccupancyDto"
+              }
+            ]
+          },
+          "latestReadiness": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RentalReadinessDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "jobId",
+          "status",
+          "rateType",
+          "includedDays",
+          "additionalDayRateCents",
+          "includedWeightPounds",
+          "overageRateCentsPerPound",
+          "depositAmountCents",
+          "depositClassification",
+          "plannedDropoffAt",
+          "plannedPickupAt",
+          "debrisReviewStatus",
+          "accessReviewStatus",
+          "debrisReviews",
+          "inspections",
+          "extensions",
+          "pickupAttempts",
+          "disposalLoads",
+          "operationalCharges",
+          "emptyTrailerStatus",
+          "finalCondition",
+          "totalActualWeightPounds",
+          "overageWeightPounds",
+          "invoiceReadiness",
+          "schedule"
+        ]
+      },
+      "SaveRentalPlanDto": {
+        "type": "object",
+        "properties": {
+          "plannedDropoffAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "plannedPickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "trailerAssetId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["plannedDropoffAt", "plannedPickupAt", "trailerAssetId"]
+      },
+      "CreateRentalDebrisReviewDto": {
+        "type": "object",
+        "properties": {
+          "primaryDebrisType": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "secondaryDebrisTypes": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "prohibitedMaterials": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "restrictedMaterials": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mixedDebris": {
+            "type": "boolean"
+          },
+          "heavyMaterial": {
+            "type": "boolean"
+          },
+          "customerAttested": {
+            "type": "boolean"
+          },
+          "customerAttestation": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "accessStatus": {
+            "type": "string",
+            "enum": ["pending", "pass", "fail"]
+          },
+          "legalTowingStatus": {
+            "type": "string",
+            "enum": ["pending", "pass", "fail"]
+          },
+          "placementInstructions": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "pickupAccessRequirement": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "propertyDamageRisk": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "primaryDebrisType",
+          "mixedDebris",
+          "heavyMaterial",
+          "customerAttested",
+          "accessStatus",
+          "legalTowingStatus"
+        ]
+      },
+      "RentalDecisionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["reason"]
+      },
+      "PlanRentalScheduleDto": {
+        "type": "object",
+        "properties": {
+          "dropoffStartsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dropoffEndsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickupStartsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pickupEndsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dropoffDriverUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pickupDriverUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dropoffTruckAssetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pickupTruckAssetId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "dropoffStartsAt",
+          "dropoffEndsAt",
+          "pickupStartsAt",
+          "pickupEndsAt",
+          "dropoffDriverUserId",
+          "pickupDriverUserId",
+          "dropoffTruckAssetId",
+          "pickupTruckAssetId"
+        ]
+      },
+      "EvaluateRentalReadinessDto": {
+        "type": "object",
+        "properties": {
+          "readinessType": {
+            "type": "string",
+            "enum": ["planning", "schedule", "dispatch"]
+          }
+        },
+        "required": ["readinessType"]
+      },
+      "CreateRentalInspectionDto": {
+        "type": "object",
+        "properties": {
+          "inspectionType": {
+            "type": "string",
+            "enum": ["pre_dropoff", "post_rental"]
+          },
+          "evidenceDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["inspectionType"]
+      },
+      "CompleteRentalInspectionDto": {
+        "type": "object",
+        "properties": {
+          "conditionResult": {
+            "type": "string",
+            "enum": [
+              "acceptable",
+              "acceptable_after_cleaning",
+              "maintenance_review",
+              "damage_review",
+              "out_of_service"
+            ]
+          },
+          "cleaningResult": {
+            "type": "string",
+            "enum": ["not_required", "normal", "required", "completed"]
+          },
+          "damageResult": {
+            "type": "string",
+            "enum": ["none", "review_required", "damage_confirmed", "resolved"]
+          },
+          "releaseDecision": {
+            "type": "string",
+            "enum": ["release", "quarantine", "out_of_service"]
+          },
+          "safeToRelease": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 4000
+          },
+          "evidenceDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "conditionResult",
+          "cleaningResult",
+          "damageResult",
+          "releaseDecision",
+          "safeToRelease",
+          "notes"
+        ]
+      },
+      "CreateRentalExtensionDto": {
+        "type": "object",
+        "properties": {
+          "requestedPickupAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customerAuthorized": {
+            "type": "boolean"
+          }
+        },
+        "required": ["requestedPickupAt", "customerAuthorized"]
+      },
+      "RentalExtensionActionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["reason"]
+      },
+      "CreateRentalPickupAttemptDto": {
+        "type": "object",
+        "properties": {
+          "customerNotifiedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accessStatus": {
+            "type": "string",
+            "enum": ["pending", "pass", "fail"]
+          },
+          "safeLoadStatus": {
+            "type": "string",
+            "enum": ["pending", "pass", "fail"]
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["customerNotifiedAt", "accessStatus", "safeLoadStatus"]
+      },
+      "RentalPickupActionDto": {
+        "type": "object",
+        "properties": {
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accessStatus": {
+            "type": "string",
+            "enum": ["pending", "pass", "fail"]
+          },
+          "safeLoadStatus": {
+            "type": "string",
+            "enum": ["pending", "pass", "fail"]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      },
+      "CreateDisposalLoadDto": {
+        "type": "object",
+        "properties": {
+          "plannedFacilityLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "debrisClassification": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "driverUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "truckAssetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "redirectedFromDisposalLoadId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "plannedFacilityLocationId",
+          "debrisClassification",
+          "startsAt",
+          "endsAt",
+          "driverUserId",
+          "truckAssetId"
+        ]
+      },
+      "RecordDisposalEvidenceDto": {
+        "type": "object",
+        "properties": {
+          "ticketDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receiptDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "emptyTrailerDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "disposalFeeCents": {
+            "type": "number",
+            "minimum": 0
+          },
+          "evidenceWaiverReason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "externalReference": {
+            "type": "string",
+            "maxLength": 160
+          }
+        },
+        "required": ["emptyTrailerDocumentId", "disposalFeeCents"]
+      },
+      "RentalExecutionDto": {
+        "type": "object",
+        "properties": {
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      },
+      "DisposalLoadExecutionDto": {
+        "type": "object",
+        "properties": {
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actualFacilityLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "grossWeight": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,10})(?:\\.\\d{1,3})?$"
+          },
+          "tareWeight": {
+            "type": "string",
+            "pattern": "^(?:0|[1-9]\\d{0,10})(?:\\.\\d{1,3})?$"
+          },
+          "sourceWeightUnit": {
+            "type": "string",
+            "enum": ["pounds", "tons"]
+          },
+          "remainingMaterialStatus": {
+            "type": "string",
+            "enum": ["pending", "none", "remaining", "resolved"]
+          },
+          "rejectionReason": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
       },
       "PricingRuleDto": {
         "type": "object",
