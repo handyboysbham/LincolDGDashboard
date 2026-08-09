@@ -119,8 +119,15 @@ Exit:
 
 ## Stage 5 — Finance foundation
 
-Status: the Sprint 1.7.0 Phase 1 database foundation is complete in migration `0007`. Invoice
-commands, API contracts, and web workflows continue in the remaining Sprint 1.7 phases.
+Status: complete. Sprint 1.7.0 Phases 1–5 and migrations `0007` through `0009` own the financial
+data foundation; the Invoice layer covers authoritative drafts, immutable revision, posting,
+delivery, controlled corrections, void, and replacement; and the value layer covers verified and
+settled Payments, append-only Allocations, exact-once Advance Payment Deposits, Customer Credits,
+applications, and linked reversals. The Refund layer covers approval evidence, processing,
+settlement, failure, cancellation, and exact compensating reversal. Whole-Payment reversal unwinds
+dependent value and derived financial completion closes or reopens Jobs and Projects from
+authoritative ledgers. Staff Finance queues, Project entry workflows, secure customer Invoice links,
+and the full Material Delivery acceptance journey complete the stage.
 
 Build:
 

@@ -50,6 +50,10 @@ describe("BOOT-E2E-001 web startup", () => {
     ["/jobs", "Loading Jobs"],
     ["/jobs/00000000-0000-4000-8000-000000000999", "Loading Job"],
     ["/schedule", "Loading schedule"],
+    ["/billing", "Loading billing"],
+    ["/billing/invoices/00000000-0000-4000-8000-000000000999", "Loading Invoice"],
+    ["/billing/payments/00000000-0000-4000-8000-000000000999", "Loading Payment"],
+    ["/billing/refunds/00000000-0000-4000-8000-000000000999", "Loading Refund"],
     ["/driver", "Loading assignments"],
     ["/driver/jobs", "Loading assignments"],
     ["/driver/route", "Loading assignments"],
@@ -58,6 +62,7 @@ describe("BOOT-E2E-001 web startup", () => {
     ["/customer/documents/not-a-token", "Checking your link"],
     ["/customer/quotes/not-a-token", "Checking your offer"],
     ["/customer/contracts/not-a-token", "Checking your agreement"],
+    ["/customer/invoices/not-a-token", "Checking your Invoice"],
   ])("serves %s", async (path, expected) => {
     const response = await fetch(`${origin}${path}`);
     expect(response.status).toBe(200);

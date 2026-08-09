@@ -57,6 +57,20 @@
       "when": 1785899312777,
       "tag": "0007_finance_data_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786252765842,
+      "tag": "0008_refund_reversal_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786293235646,
+      "tag": "0009_invoice_customer_links",
+      "breakpoints": true
     }
   ]
 }

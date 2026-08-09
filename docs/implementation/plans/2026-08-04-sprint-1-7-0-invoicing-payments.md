@@ -122,6 +122,15 @@ concurrent Customer Credit application safety.
 - post Versions atomically, mark included Job Charges invoiced, and record delivery evidence
 - implement post-posting Adjustments, Credit Memos, void, and replacement
 
+Status: complete on 2026-08-08. The finance module now creates source-driven Deposit, Final,
+Additional Charge, and Credit Memo drafts; versions them without rewriting history; requires an
+explicit Draft → Ready to Post → Posted transition; revalidates accepted Quote and approved Job
+Charge snapshots under row locks; derives every total in integer cents; marks included Job Charges
+and the Final-Invoice Job atomically; and records attributable delivery evidence. Posted obligations
+now support pending, approved, posted, and linked reversal Adjustments plus exact void and atomic
+replacement commands. Applied value blocks void or replacement until a later phase can transfer it
+safely. REST, OpenAPI, and generated client contracts are current.
+
 ### Phase 3 — Payments, deposits, and credits
 
 - record, verify, and settle company-received Payments
@@ -129,12 +138,32 @@ concurrent Customer Credit application safety.
 - create and apply Advance Payment Deposit Balances exactly once
 - create Customer Credit for unapplied value, overpayment, Credit Memo, and approved corrections
 
+Status: complete on 2026-08-08. The finance module now records Customer or Project Payments against
+explicit company receiving-account references; verifies and settles them through locked, idempotent
+transitions; applies settled value through append-only Payment Allocations; and creates exact linked
+reversals. Active Deposit Invoice Allocations create one Advance Payment Deposit Balance, whose
+derived availability can be applied or reversed against a Final Invoice. Unapplied Payment,
+overpayment, posted Credit Memo, and over-crediting Adjustment sources create Customer Credit
+without duplicating source value. Payment, Deposit, Credit, and Invoice statuses reconcile from the
+append-only ledgers after every movement. REST, OpenAPI, generated client contracts, permission
+coverage, and the canonical PostgreSQL journey are current.
+
 ### Phase 4 — Refunds, reversals, and financial completion
 
 - implement approval and settlement workflow for Refunds
 - reverse Payments and every dependent Allocation without deleting history
 - reopen affected Invoice, Job, and Project completion state
 - derive Job and Project financial completion from posted obligations and unresolved customer value
+
+Status: complete on 2026-08-09. Refunds now move through attributable creation, review, approval,
+processing, settlement, failure, cancellation, and exact compensating reversal. Alternate-method
+approval requires identity-verification evidence. Whole-Payment reversal atomically reverses every
+active direct Allocation plus dependent Deposit and Customer Credit Application, resolves
+invalidated derived sources, reopens Invoices, and emits Audit and outbox history. Job and Project
+financial completion is now derived from authoritative posted obligations, active Job state,
+Project-scoped unapplied value, unresolved Deposits and Credits, and active Refund workflows; direct
+lifecycle commands cannot set it. Migration `0008_refund_reversal_integrity.sql`, REST, OpenAPI,
+generated client, database guards, and the canonical PostgreSQL journey are current.
 
 ### Phase 5 — Web and full acceptance
 
@@ -144,6 +173,16 @@ concurrent Customer Credit application safety.
 - complete the full `MD-E2E-001` journey through $185 deposit, $235 final payment, and closure
 - cover partial payment, overpayment, duplicate applications, and reversal reopening
 
+Status: complete on 2026-08-09. The Project workspace now owns Finance entry for Invoice drafts,
+company-received Payments, and derived completion evaluation. The Billing workspace supplies
+Invoice, Payment, and Refund queues plus focused workflows for Version preparation/posting, customer
+delivery, Adjustments, Payment allocation, Advance Payment Deposit creation/application, Customer
+Credit creation/application, whole-Payment reversal, and the controlled Refund lifecycle. Migration
+`0009_invoice_customer_links.sql` adds Invoice-Version-scoped, expiring, revocable, hash-stored
+customer capabilities. The public Invoice route exposes only customer-facing posted lines, posted
+corrections, applied value, balance, and delivery state. Production route acceptance and the
+complete PostgreSQL-backed `MD-E2E-001` journey are current.
+
 ## Sprint 1.7 completion checklist
 
 - [x] reviewed finance migration applies to empty and existing PostgreSQL databases
@@ -151,11 +190,11 @@ concurrent Customer Credit application safety.
 - [x] posted Invoice Versions and their Line Items are immutable
 - [x] applied value movements and settled Refunds are append-only and immutable
 - [x] source availability and Invoice eligibility remain correct under concurrency
-- [ ] Invoice posting is idempotent and marks included Job Charges exactly once
-- [ ] deposit and Customer Credit applications cannot be duplicated
-- [ ] Payment reversal reopens every affected obligation and completion state
-- [ ] authoritative balances reconcile from source transactions
-- [ ] finance web and customer Invoice routes pass production acceptance
-- [ ] the full `MD-E2E-001` journey passes
-- [ ] OpenAPI and generated client artifacts are current
-- [ ] `pnpm check`, `pnpm db:migrate`, and `pnpm test:integration` pass
+- [x] Invoice posting is idempotent and marks included Job Charges exactly once
+- [x] deposit and Customer Credit applications cannot be duplicated
+- [x] Payment reversal reopens every affected obligation and completion state
+- [x] authoritative balances reconcile from source transactions
+- [x] finance web and customer Invoice routes pass production acceptance
+- [x] the full `MD-E2E-001` journey passes
+- [x] OpenAPI and generated client artifacts are current
+- [x] `pnpm check`, `pnpm db:migrate`, and `pnpm test:integration` pass

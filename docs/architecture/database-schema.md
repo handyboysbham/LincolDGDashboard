@@ -136,6 +136,16 @@ append-only Payment Allocations, Deposit Balances and Applications, Customer Cre
 Applications, and Refunds. Database guards serialize every source-value and Invoice-balance check,
 reject over-application under concurrency, and preserve settled financial history.
 
+Migration `0008` strengthens Refund execution. Alternate-method Refunds may enter review before an
+approver is recorded but require approval before processing. A settled Refund remains immutable;
+restored funds use one exact, uniquely linked compensating Refund. Payment, Deposit, and Customer
+Credit balance guards net that compensating row before accepting later applications.
+
+Migration `0009` adds `invoice_public_links`. Each capability is scoped to one posted Invoice
+Version and delivery attempt, stores only a token hash, expires, can be revoked, and records view
+evidence. The table is tenant-owned, forced through Row-Level Security, protected from hard
+deletion, and never stores a plaintext customer token.
+
 ### Projects and operations
 
 - projects
@@ -170,6 +180,7 @@ reject over-application under concurrency, and preserve settled financial histor
 - invoice_line_items
 - invoice_adjustments
 - invoice_deliveries
+- invoice_public_links
 - payments
 - payment_allocations
 - deposit_balances
@@ -200,6 +211,8 @@ reject over-application under concurrency, and preserve settled financial histor
 - Applied Allocations, Deposit Applications, and Customer Credit Applications cannot be edited or
   deleted; corrections use linked reversal entries.
 - Settled Refunds are immutable.
+- A Refund reversal exactly matches one settled Refund and restores source availability through a
+  separate uniquely linked record.
 - Payment, Deposit, and Customer Credit applications serialize source availability and Invoice
   eligibility checks before accepting value.
 - Unique provider transaction ID when present.
@@ -223,6 +236,8 @@ reject over-application under concurrency, and preserve settled financial histor
 - Quote-link tokens are Quote-Version scoped, expiring, revocable, and stored only as hashes.
 - Contract-link tokens are Contract scoped, expiring, revocable, stored only as hashes, and retain
   the canonical send-request hash for conflict-safe replay.
+- Invoice-link tokens are posted-Version scoped, expiring, revocable, stored only as hashes, and
+  retain an attributable delivery record and conflict-safe request hash.
 - Contract commercial content is immutable after business signature; all Contract Signatures and Job
   Events are append-only. Material Load Validations are immutable, Material Delivery operational
   records are not hard-deleted, and Expense, Expense Allocation, and Job Charge corrections preserve

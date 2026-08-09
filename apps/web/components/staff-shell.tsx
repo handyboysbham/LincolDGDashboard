@@ -139,6 +139,10 @@ export function StaffShell({
           <FileCheck2 aria-hidden="true" size={20} />
           <span>Quotes</span>
         </Link>
+        <Link className={active.startsWith("/billing") ? "is-active" : undefined} href="/billing">
+          <Receipt aria-hidden="true" size={20} />
+          <span>Billing</span>
+        </Link>
         <Link
           className={active.startsWith("/customers") ? "is-active" : undefined}
           href="/customers"

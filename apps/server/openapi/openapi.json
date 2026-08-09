@@ -3264,12 +3264,1882 @@
         "summary": "",
         "tags": ["Public quotes"]
       }
+    },
+    "/api/v1/projects/{id}/actions/evaluate-financial-completion": {
+      "post": {
+        "operationId": "evaluateProjectFinancialCompletion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialCompletionDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/jobs/{id}/actions/evaluate-financial-completion": {
+      "post": {
+        "operationId": "evaluateJobFinancialCompletion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialCompletionDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices": {
+      "get": {
+        "operationId": "listInvoices",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}": {
+      "get": {
+        "operationId": "getInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/projects/{id}/invoices": {
+      "post": {
+        "operationId": "createProjectInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}/actions/revise": {
+      "post": {
+        "operationId": "reviseInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoice-versions/{id}/actions/prepare": {
+      "post": {
+        "operationId": "prepareInvoiceVersion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoice-versions/{id}/actions/post": {
+      "post": {
+        "operationId": "postInvoiceVersion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}/deliveries": {
+      "post": {
+        "operationId": "recordInvoiceDelivery",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordInvoiceDeliveryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}/public-links": {
+      "post": {
+        "operationId": "createInvoicePublicLink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoicePublicLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoicePublicLinkDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}/public-links/{linkId}/actions/revoke": {
+      "post": {
+        "operationId": "revokeInvoicePublicLink",
+        "parameters": [
+          {
+            "name": "linkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}/adjustments": {
+      "post": {
+        "operationId": "createInvoiceAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvoiceAdjustmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoice-adjustments/{id}/actions/approve": {
+      "post": {
+        "operationId": "approveInvoiceAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoice-adjustments/{id}/actions/post": {
+      "post": {
+        "operationId": "postInvoiceAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoice-adjustments/{id}/actions/reverse": {
+      "post": {
+        "operationId": "reverseInvoiceAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceCorrectionReasonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}/actions/void": {
+      "post": {
+        "operationId": "voidInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceCorrectionReasonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/invoices/{id}/actions/replace": {
+      "post": {
+        "operationId": "replaceInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceInvoiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payments": {
+      "get": {
+        "operationId": "listPayments",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payments/{id}": {
+      "get": {
+        "operationId": "getPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/projects/{id}/payments": {
+      "post": {
+        "operationId": "createProjectPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/customers/{id}/payments": {
+      "post": {
+        "operationId": "createCustomerPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payments/{id}/actions/verify": {
+      "post": {
+        "operationId": "verifyPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payments/{id}/actions/settle": {
+      "post": {
+        "operationId": "settlePayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payments/{id}/actions/reverse": {
+      "post": {
+        "operationId": "reversePayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payments/{id}/allocations": {
+      "post": {
+        "operationId": "allocatePayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyValueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payment-allocations/{id}/actions/reverse": {
+      "post": {
+        "operationId": "reversePaymentAllocation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/payment-allocations/{id}/actions/create-deposit-balance": {
+      "post": {
+        "operationId": "createDepositBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDepositBalanceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositBalanceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/projects/{id}/deposit-balances": {
+      "get": {
+        "operationId": "listProjectDepositBalances",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositBalanceListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/deposit-balances/{id}/applications": {
+      "post": {
+        "operationId": "applyDepositBalance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyValueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositBalanceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/deposit-applications/{id}/actions/reverse": {
+      "post": {
+        "operationId": "reverseDepositApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositBalanceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/customers/{id}/customer-credits": {
+      "get": {
+        "operationId": "listCustomerCredits",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCreditListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      },
+      "post": {
+        "operationId": "createCustomerCredit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerCreditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCreditDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/customer-credits/{id}/applications": {
+      "post": {
+        "operationId": "applyCustomerCredit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyValueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCreditDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/customer-credit-applications/{id}/actions/reverse": {
+      "post": {
+        "operationId": "reverseCustomerCreditApplication",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerCreditDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/public/invoices/{token}": {
+      "get": {
+        "operationId": "getPublicInvoice",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicInvoiceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Public Invoices"]
+      }
+    },
+    "/api/v1/refunds": {
+      "get": {
+        "operationId": "listRefunds",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/refunds/{id}": {
+      "get": {
+        "operationId": "getRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/customers/{id}/refunds": {
+      "post": {
+        "operationId": "createRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRefundDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/refunds/{id}/actions/approve": {
+      "post": {
+        "operationId": "approveRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRefundDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/refunds/{id}/actions/process": {
+      "post": {
+        "operationId": "processRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRefundDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/refunds/{id}/actions/settle": {
+      "post": {
+        "operationId": "settleRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/refunds/{id}/actions/fail": {
+      "post": {
+        "operationId": "failRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/refunds/{id}/actions/cancel": {
+      "post": {
+        "operationId": "cancelRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
+    },
+    "/api/v1/refunds/{id}/actions/reverse": {
+      "post": {
+        "operationId": "reverseRefund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancialReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Finance"]
+      }
     }
   },
   "info": {
     "title": "Lincoln Dirt and Gravel API",
     "description": "Lincoln Dirt and Gravel operating system API",
-    "version": "1.5.0",
+    "version": "1.7.0",
     "contact": {}
   },
   "tags": [],
@@ -7327,6 +9197,1539 @@
           }
         },
         "required": ["reason"]
+      },
+      "JobFinancialCompletionDto": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "financiallyComplete": {
+            "type": "boolean"
+          },
+          "postedObligationCount": {
+            "type": "number"
+          },
+          "outstandingCents": {
+            "type": "number"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "jobId",
+          "jobNumber",
+          "status",
+          "financiallyComplete",
+          "postedObligationCount",
+          "outstandingCents",
+          "blockers"
+        ]
+      },
+      "FinancialCompletionDto": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "projectStatus": {
+            "type": "string"
+          },
+          "financiallyComplete": {
+            "type": "boolean"
+          },
+          "outstandingInvoiceCents": {
+            "type": "number"
+          },
+          "unresolvedPaymentCents": {
+            "type": "number"
+          },
+          "unresolvedDepositCents": {
+            "type": "number"
+          },
+          "unresolvedCustomerCreditCents": {
+            "type": "number"
+          },
+          "activeRefundCount": {
+            "type": "number"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobFinancialCompletionDto"
+            }
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "projectId",
+          "projectNumber",
+          "projectStatus",
+          "financiallyComplete",
+          "outstandingInvoiceCents",
+          "unresolvedPaymentCents",
+          "unresolvedDepositCents",
+          "unresolvedCustomerCreditCents",
+          "activeRefundCount",
+          "blockers",
+          "jobs",
+          "evaluatedAt"
+        ]
+      },
+      "InvoiceSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invoiceNumber": {
+            "type": "string"
+          },
+          "invoiceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "jobNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "totalCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "outstandingBalanceCents": {
+            "type": "number"
+          },
+          "replacesInvoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "replacedByInvoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "issueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "invoiceNumber",
+          "invoiceType",
+          "status",
+          "currency",
+          "projectId",
+          "projectNumber",
+          "customerName",
+          "outstandingBalanceCents",
+          "updatedAt"
+        ]
+      },
+      "InvoiceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceSummaryDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "InvoiceAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "adjustmentNumber": {
+            "type": "string"
+          },
+          "adjustmentType": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "newDueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "postedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reversesInvoiceAdjustmentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "adjustmentNumber",
+          "adjustmentType",
+          "direction",
+          "amountCents",
+          "status",
+          "reason",
+          "effectiveAt"
+        ]
+      },
+      "InvoiceLineItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "lineType": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "unitPriceCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "subtotalCents": {
+            "type": "number"
+          },
+          "taxCents": {
+            "type": "number"
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "taxBehavior": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "lineType",
+          "direction",
+          "sourceType",
+          "description",
+          "subtotalCents",
+          "taxCents",
+          "totalCents",
+          "taxBehavior"
+        ]
+      },
+      "InvoiceVersionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "contentHash": {
+            "type": "string"
+          },
+          "subtotalCents": {
+            "type": "number"
+          },
+          "discountCents": {
+            "type": "number"
+          },
+          "taxCents": {
+            "type": "number"
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "depositApplicationCents": {
+            "type": "number"
+          },
+          "customerCreditApplicationCents": {
+            "type": "number"
+          },
+          "amountDueCents": {
+            "type": "number"
+          },
+          "billingIdentity": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "terms": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "preparedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "postedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceLineItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "versionNumber",
+          "status",
+          "contentHash",
+          "subtotalCents",
+          "discountCents",
+          "taxCents",
+          "totalCents",
+          "depositApplicationCents",
+          "customerCreditApplicationCents",
+          "amountDueCents",
+          "billingIdentity",
+          "terms",
+          "preparedAt",
+          "lines"
+        ]
+      },
+      "InvoiceDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invoiceVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "attemptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "viewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "failureReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "invoiceVersionId", "channel", "status", "destination", "attemptedAt"]
+      },
+      "InvoicePublicLinkSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invoiceVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "viewCount": {
+            "type": "number"
+          },
+          "lastViewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": ["id", "invoiceVersionId", "recipient", "expiresAt", "viewCount"]
+      },
+      "InvoiceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invoiceNumber": {
+            "type": "string"
+          },
+          "invoiceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "jobNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "totalCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "outstandingBalanceCents": {
+            "type": "number"
+          },
+          "replacesInvoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "replacedByInvoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "issueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "adjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceAdjustmentDto"
+            }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceVersionDto"
+            }
+          },
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceDeliveryDto"
+            }
+          },
+          "publicLinks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoicePublicLinkSummaryDto"
+            }
+          },
+          "voidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "voidReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "invoiceNumber",
+          "invoiceType",
+          "status",
+          "currency",
+          "projectId",
+          "projectNumber",
+          "customerName",
+          "outstandingBalanceCents",
+          "updatedAt",
+          "adjustments",
+          "versions",
+          "deliveries",
+          "publicLinks"
+        ]
+      },
+      "CreateInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "invoiceType": {
+            "type": "string",
+            "enum": ["deposit", "final", "additional_charge", "credit_memo"]
+          },
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dueInDays": {
+            "type": "number",
+            "default": 14,
+            "maximum": 365,
+            "minimum": 0
+          }
+        },
+        "required": ["invoiceType"]
+      },
+      "RecordInvoiceDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "enum": ["email", "text", "link", "manual"]
+          },
+          "destination": {
+            "type": "string",
+            "maxLength": 320
+          },
+          "status": {
+            "type": "string",
+            "enum": ["sent", "delivered", "failed"]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "providerReference": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "failureReason": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": ["channel", "destination", "status"]
+      },
+      "CreateInvoicePublicLinkDto": {
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string",
+            "maxLength": 320
+          },
+          "expiresInDays": {
+            "type": "number",
+            "default": 14,
+            "maximum": 30,
+            "minimum": 1
+          }
+        },
+        "required": ["recipient"]
+      },
+      "InvoicePublicLinkDto": {
+        "type": "object",
+        "properties": {
+          "invoice": {
+            "$ref": "#/components/schemas/InvoiceDto"
+          },
+          "linkId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerPath": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["invoice", "linkId", "customerPath", "token", "expiresAt"]
+      },
+      "CreateInvoiceAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "adjustmentType": {
+            "type": "string",
+            "enum": [
+              "additional_charge",
+              "credit",
+              "tax_adjustment",
+              "write_off",
+              "due_date_extension"
+            ]
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["debit", "credit"]
+          },
+          "amountCents": {
+            "type": "number",
+            "minimum": 0
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sourceType": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "newDueDate": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": ["adjustmentType", "amountCents", "reason"]
+      },
+      "InvoiceCorrectionReasonDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": ["reason"]
+      },
+      "ReplaceInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "dueInDays": {
+            "type": "number",
+            "maximum": 365,
+            "minimum": 0
+          }
+        },
+        "required": ["reason"]
+      },
+      "ValueApplicationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entryKind": {
+            "type": "string",
+            "enum": ["application", "reversal"]
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "reversesApplicationId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "appliedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["id", "invoiceId", "entryKind", "amountCents", "appliedAt"]
+      },
+      "PaymentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "paymentNumber": {
+            "type": "string"
+          },
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "projectNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "allocatedCents": {
+            "type": "number"
+          },
+          "customerCreditCents": {
+            "type": "number"
+          },
+          "refundedCents": {
+            "type": "number"
+          },
+          "availableCents": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "paymentMethod": {
+            "type": "string"
+          },
+          "receivingAccountReference": {
+            "type": "string"
+          },
+          "providerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "providerTransactionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "payer": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "receiptStatus": {
+            "type": "string"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "verifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "settledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reversedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "reversalReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueApplicationDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "paymentNumber",
+          "customerAccountId",
+          "customerName",
+          "amountCents",
+          "allocatedCents",
+          "customerCreditCents",
+          "refundedCents",
+          "availableCents",
+          "currency",
+          "paymentMethod",
+          "receivingAccountReference",
+          "status",
+          "payer",
+          "receiptStatus",
+          "receivedAt",
+          "allocations"
+        ]
+      },
+      "PaymentListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CreatePaymentDto": {
+        "type": "object",
+        "properties": {
+          "amountCents": {
+            "type": "number",
+            "minimum": 1
+          },
+          "currency": {
+            "type": "string",
+            "default": "USD",
+            "pattern": "^[A-Z]{3}$"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "zelle",
+              "venmo",
+              "cash_app",
+              "paypal",
+              "card",
+              "bank_transfer",
+              "check"
+            ]
+          },
+          "receivingAccountReference": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "payerName": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "payerEmail": {
+            "type": "string",
+            "maxLength": 320
+          },
+          "providerName": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "providerTransactionId": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "evidenceDocumentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receiptStatus": {
+            "type": "string",
+            "enum": ["missing", "attached", "issued", "waived", "not_required"]
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["amountCents", "paymentMethod", "receivingAccountReference", "payerName"]
+      },
+      "FinancialReversalDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": ["reason"]
+      },
+      "ApplyValueDto": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": ["invoiceId", "amountCents"]
+      },
+      "CreateDepositBalanceDto": {
+        "type": "object",
+        "properties": {
+          "depositType": {
+            "type": "string",
+            "default": "advance_payment",
+            "enum": ["advance_payment", "split_advance"]
+          }
+        }
+      },
+      "DepositBalanceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourcePaymentAllocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "depositType": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "originalAmountCents": {
+            "type": "number"
+          },
+          "appliedCents": {
+            "type": "number"
+          },
+          "refundedCents": {
+            "type": "number"
+          },
+          "availableCents": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "applications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueApplicationDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "projectId",
+          "customerAccountId",
+          "sourcePaymentAllocationId",
+          "depositType",
+          "currency",
+          "originalAmountCents",
+          "appliedCents",
+          "refundedCents",
+          "availableCents",
+          "status",
+          "applications"
+        ]
+      },
+      "DepositBalanceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepositBalanceDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CustomerCreditDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creditNumber": {
+            "type": "string"
+          },
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "originalAmountCents": {
+            "type": "number"
+          },
+          "appliedCents": {
+            "type": "number"
+          },
+          "refundedCents": {
+            "type": "number"
+          },
+          "availableCents": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "applications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueApplicationDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "creditNumber",
+          "customerAccountId",
+          "sourceType",
+          "sourceId",
+          "currency",
+          "originalAmountCents",
+          "appliedCents",
+          "refundedCents",
+          "availableCents",
+          "status",
+          "description",
+          "applications"
+        ]
+      },
+      "CustomerCreditListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerCreditDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CreateCustomerCreditDto": {
+        "type": "object",
+        "properties": {
+          "sourceType": {
+            "type": "string",
+            "enum": ["unapplied_payment", "overpayment", "credit_memo"]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": ["sourceType", "sourceId"]
+      },
+      "PublicInvoiceAdjustmentDto": {
+        "type": "object",
+        "properties": {
+          "adjustmentNumber": {
+            "type": "string"
+          },
+          "adjustmentType": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "adjustmentNumber",
+          "adjustmentType",
+          "direction",
+          "amountCents",
+          "status",
+          "effectiveAt"
+        ]
+      },
+      "PublicInvoiceDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "attemptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "viewedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": ["channel", "status", "attemptedAt"]
+      },
+      "PublicInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "invoiceNumber": {
+            "type": "string"
+          },
+          "invoiceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "projectNumber": {
+            "type": "string"
+          },
+          "jobNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "issueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "versionNumber": {
+            "type": "number"
+          },
+          "subtotalCents": {
+            "type": "number"
+          },
+          "taxCents": {
+            "type": "number"
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "appliedCents": {
+            "type": "number"
+          },
+          "outstandingBalanceCents": {
+            "type": "number"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceLineItemDto"
+            }
+          },
+          "adjustments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicInvoiceAdjustmentDto"
+            }
+          },
+          "deliveries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicInvoiceDeliveryDto"
+            }
+          }
+        },
+        "required": [
+          "invoiceNumber",
+          "invoiceType",
+          "status",
+          "currency",
+          "customerName",
+          "projectNumber",
+          "versionNumber",
+          "subtotalCents",
+          "taxCents",
+          "totalCents",
+          "appliedCents",
+          "outstandingBalanceCents",
+          "lines",
+          "adjustments",
+          "deliveries"
+        ]
+      },
+      "RefundDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "refundNumber": {
+            "type": "string"
+          },
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": ["payment", "deposit", "customer_credit"]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "refundMethod": {
+            "type": "string"
+          },
+          "originalMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "payee": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "alternateMethodReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "settledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "providerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "providerRefundId": {
+            "type": "string",
+            "nullable": true
+          },
+          "reversesRefundId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "refundNumber",
+          "customerAccountId",
+          "sourceType",
+          "sourceId",
+          "amountCents",
+          "currency",
+          "refundMethod",
+          "payee",
+          "status",
+          "reason"
+        ]
+      },
+      "RefundListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RefundDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CreateRefundDto": {
+        "type": "object",
+        "properties": {
+          "sourceType": {
+            "type": "string",
+            "enum": ["payment", "deposit", "customer_credit"]
+          },
+          "sourceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amountCents": {
+            "type": "number",
+            "minimum": 1
+          },
+          "refundMethod": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "zelle",
+              "venmo",
+              "cash_app",
+              "paypal",
+              "card",
+              "bank_transfer",
+              "check"
+            ]
+          },
+          "payeeName": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "payeeEmail": {
+            "type": "string",
+            "maxLength": 320
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "alternateMethodReason": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": ["sourceType", "sourceId", "amountCents", "refundMethod", "payeeName", "reason"]
+      },
+      "ApproveRefundDto": {
+        "type": "object",
+        "properties": {
+          "identityVerificationReference": {
+            "type": "string",
+            "maxLength": 300
+          }
+        }
+      },
+      "ProcessRefundDto": {
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "providerRefundId": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
       }
     }
   }

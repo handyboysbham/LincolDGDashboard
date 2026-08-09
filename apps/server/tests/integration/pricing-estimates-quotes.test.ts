@@ -3,10 +3,20 @@ import {
   contracts,
   createDatabase,
   createDatabasePool,
+  customerCreditApplications,
+  customerCredits,
+  depositApplications,
+  depositBalances,
   documentLinks,
   documents,
   expenseAllocations,
   expenses,
+  invoiceAdjustments,
+  invoiceDeliveries,
+  invoiceLineItems,
+  invoicePublicLinks,
+  invoices,
+  invoiceVersions,
   jobCharges,
   jobs,
   materialDeliveryDetails,
@@ -16,10 +26,13 @@ import {
   materialQuantityVariances,
   materials,
   organizations,
+  paymentAllocations,
+  payments,
   projects,
   quoteAcceptances,
   quoteLineItems,
   quoteVersions,
+  refunds,
   runMigrations,
   users,
   withTenantTransaction,
@@ -65,6 +78,99 @@ interface QuoteResponse {
 interface SentQuote {
   quote: QuoteResponse;
   token: string;
+}
+
+interface InvoiceResponse {
+  adjustments: {
+    adjustmentType: string;
+    amountCents: number;
+    direction: string;
+    id: string;
+    reversesInvoiceAdjustmentId: string | null;
+    status: string;
+  }[];
+  deliveries: { channel: string; status: string }[];
+  dueDate: string | null;
+  id: string;
+  invoiceType: string;
+  issueDate: string | null;
+  outstandingBalanceCents: number;
+  replacedByInvoiceId: string | null;
+  replacesInvoiceId: string | null;
+  status: string;
+  totalCents: number | null;
+  versions: {
+    amountDueCents: number;
+    id: string;
+    lines: { description: string; jobChargeId?: string; subtotalCents: number }[];
+    status: string;
+    totalCents: number;
+    versionNumber: number;
+  }[];
+}
+
+interface PaymentResponse {
+  allocatedCents: number;
+  allocations: {
+    amountCents: number;
+    entryKind: string;
+    id: string;
+    reversesApplicationId: string | null;
+  }[];
+  amountCents: number;
+  availableCents: number;
+  customerAccountId: string;
+  customerCreditCents: number;
+  id: string;
+  status: string;
+}
+
+interface DepositBalanceResponse {
+  applications: {
+    amountCents: number;
+    entryKind: string;
+    id: string;
+    reversesApplicationId: string | null;
+  }[];
+  appliedCents: number;
+  availableCents: number;
+  id: string;
+  originalAmountCents: number;
+  status: string;
+}
+
+interface CustomerCreditResponse {
+  applications: {
+    amountCents: number;
+    entryKind: string;
+    id: string;
+    reversesApplicationId: string | null;
+  }[];
+  appliedCents: number;
+  availableCents: number;
+  id: string;
+  originalAmountCents: number;
+  sourceType: string;
+  status: string;
+}
+
+interface RefundResponse {
+  amountCents: number;
+  id: string;
+  reversesRefundId: string | null;
+  status: string;
+}
+
+interface FinancialCompletionResponse {
+  activeRefundCount: number;
+  blockers: string[];
+  financiallyComplete: boolean;
+  jobs: { financiallyComplete: boolean; jobId: string; status: string }[];
+  outstandingInvoiceCents: number;
+  projectStatus: string;
+  unresolvedCustomerCreditCents: number;
+  unresolvedDepositCents: number;
+  unresolvedPaymentCents: number;
 }
 
 describe(
@@ -374,6 +480,230 @@ describe(
       expect(customerSigned.statusCode).toBe(200);
       expect(customerSigned.json()).toMatchObject({ status: "executed" });
 
+      const depositInvoiceCreated = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/invoices`,
+        "deposit-invoice-create",
+        { dueInDays: 0, invoiceType: "deposit" },
+      );
+      expect(depositInvoiceCreated.statusCode).toBe(201);
+      const depositInvoice = depositInvoiceCreated.json<InvoiceResponse>();
+      expect(depositInvoice).toMatchObject({
+        invoiceType: "deposit",
+        outstandingBalanceCents: 0,
+        status: "draft",
+        totalCents: 18_500,
+        versions: [{ amountDueCents: 18_500, status: "draft", totalCents: 18_500 }],
+      });
+      expect(
+        depositInvoice.versions[0]?.lines.reduce((total, line) => total + line.subtotalCents, 0),
+      ).toBe(18_500);
+      const depositVersionId = required(depositInvoice.versions[0], "Deposit Invoice Version").id;
+      const depositPostTooEarly = await command(
+        "POST",
+        `/api/v1/invoice-versions/${depositVersionId}/actions/post`,
+        "deposit-invoice-post-too-early",
+      );
+      expect(depositPostTooEarly.statusCode).toBe(409);
+      expect(depositPostTooEarly.json()).toMatchObject({
+        error: { code: "INVOICE_VERSION_NOT_READY" },
+      });
+      const depositPrepared = await command(
+        "POST",
+        `/api/v1/invoice-versions/${depositVersionId}/actions/prepare`,
+        "deposit-invoice-prepare",
+      );
+      expect(depositPrepared.json()).toMatchObject({
+        status: "ready_to_post",
+        versions: [{ status: "ready_to_post" }],
+      });
+      const depositPosted = await command(
+        "POST",
+        `/api/v1/invoice-versions/${depositVersionId}/actions/post`,
+        "deposit-invoice-post",
+      );
+      const depositPostedBody = depositPosted.json<InvoiceResponse>();
+      expect(depositPostedBody.dueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(depositPostedBody.issueDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(depositPostedBody).toMatchObject({
+        outstandingBalanceCents: 18_500,
+        status: "posted",
+        versions: [{ status: "posted" }],
+      });
+      const depositPostReplay = await command(
+        "POST",
+        `/api/v1/invoice-versions/${depositVersionId}/actions/post`,
+        "deposit-invoice-post",
+      );
+      expect(depositPostReplay.json()).toEqual(depositPosted.json());
+      const depositDelivered = await command(
+        "POST",
+        `/api/v1/invoices/${depositInvoice.id}/deliveries`,
+        "deposit-invoice-delivery",
+        { channel: "manual", destination: "Casey Customer", status: "delivered" },
+      );
+      expect(depositDelivered.statusCode).toBe(201);
+      expect(depositDelivered.json()).toMatchObject({
+        deliveries: [{ channel: "manual", status: "delivered" }],
+        status: "sent",
+      });
+      const voidedDeposit = await command(
+        "POST",
+        `/api/v1/invoices/${depositInvoice.id}/actions/void`,
+        "deposit-invoice-void",
+        { reason: "Replace an incorrectly issued deposit request" },
+      );
+      expect(voidedDeposit.statusCode).toBe(200);
+      expect(voidedDeposit.json()).toMatchObject({
+        adjustments: [
+          { adjustmentType: "void", amountCents: 18_500, direction: "credit", status: "posted" },
+        ],
+        outstandingBalanceCents: 0,
+        status: "voided",
+      });
+      const voidedDepositReplay = await command(
+        "POST",
+        `/api/v1/invoices/${depositInvoice.id}/actions/void`,
+        "deposit-invoice-void",
+        { reason: "Replace an incorrectly issued deposit request" },
+      );
+      expect(voidedDepositReplay.json()).toEqual(voidedDeposit.json());
+      const voidedAdjustmentBlocked = await command(
+        "POST",
+        `/api/v1/invoices/${depositInvoice.id}/adjustments`,
+        "deposit-invoice-adjust-after-void",
+        { adjustmentType: "credit", amountCents: 100, reason: "Should be rejected" },
+      );
+      expect(voidedAdjustmentBlocked.statusCode).toBe(409);
+      expect(voidedAdjustmentBlocked.json()).toMatchObject({
+        error: { code: "INVOICE_CORRECTION_NOT_ALLOWED" },
+      });
+      const activeDepositCreated = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/invoices`,
+        "deposit-invoice-recreate",
+        { dueInDays: 0, invoiceType: "deposit" },
+      );
+      expect(activeDepositCreated.statusCode).toBe(201);
+      const activeDeposit = activeDepositCreated.json<InvoiceResponse>();
+      const activeDepositVersionId = required(
+        activeDeposit.versions[0],
+        "Recreated Deposit Invoice Version",
+      ).id;
+      await command(
+        "POST",
+        `/api/v1/invoice-versions/${activeDepositVersionId}/actions/prepare`,
+        "deposit-invoice-recreate-prepare",
+      );
+      const activeDepositPosted = await command(
+        "POST",
+        `/api/v1/invoice-versions/${activeDepositVersionId}/actions/post`,
+        "deposit-invoice-recreate-post",
+      );
+      expect(activeDepositPosted.json()).toMatchObject({
+        outstandingBalanceCents: 18_500,
+        status: "posted",
+      });
+
+      const depositPaymentCreated = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/payments`,
+        "deposit-payment-create",
+        {
+          amountCents: 18_500,
+          payerName: "Casey Customer",
+          paymentMethod: "zelle",
+          providerName: "Zelle",
+          providerTransactionId: "canonical-deposit-payment-001",
+          receivingAccountReference: "Lincoln DG operating account",
+        },
+      );
+      expect(depositPaymentCreated.statusCode).toBe(201);
+      const depositPayment = depositPaymentCreated.json<PaymentResponse>();
+      expect(depositPayment).toMatchObject({
+        amountCents: 18_500,
+        availableCents: 18_500,
+        status: "verification_required",
+      });
+      const unsettledAllocation = await command(
+        "POST",
+        `/api/v1/payments/${depositPayment.id}/allocations`,
+        "deposit-payment-allocate-too-early",
+        { amountCents: 18_500, invoiceId: activeDeposit.id },
+      );
+      expect(unsettledAllocation.statusCode).toBe(409);
+      expect(unsettledAllocation.json()).toMatchObject({ error: { code: "PAYMENT_NOT_SETTLED" } });
+      const depositPaymentVerified = await command(
+        "POST",
+        `/api/v1/payments/${depositPayment.id}/actions/verify`,
+        "deposit-payment-verify",
+      );
+      expect(depositPaymentVerified.json()).toMatchObject({ status: "verified" });
+      const depositPaymentSettled = await command(
+        "POST",
+        `/api/v1/payments/${depositPayment.id}/actions/settle`,
+        "deposit-payment-settle",
+      );
+      expect(depositPaymentSettled.json()).toMatchObject({ status: "settled" });
+      const depositAllocationCreated = await command(
+        "POST",
+        `/api/v1/payments/${depositPayment.id}/allocations`,
+        "deposit-payment-allocate",
+        { amountCents: 18_500, invoiceId: activeDeposit.id },
+      );
+      expect(depositAllocationCreated.statusCode).toBe(201);
+      const allocatedDepositPayment = depositAllocationCreated.json<PaymentResponse>();
+      expect(allocatedDepositPayment).toMatchObject({
+        allocatedCents: 18_500,
+        availableCents: 0,
+        status: "fully_allocated",
+      });
+      const depositAllocation = required(
+        allocatedDepositPayment.allocations.find((entry) => entry.entryKind === "application"),
+        "Deposit Payment Allocation",
+      );
+      const depositAllocationReplay = await command(
+        "POST",
+        `/api/v1/payments/${depositPayment.id}/allocations`,
+        "deposit-payment-allocate",
+        { amountCents: 18_500, invoiceId: activeDeposit.id },
+      );
+      expect(depositAllocationReplay.json()).toEqual(depositAllocationCreated.json());
+      const depositBalanceCreated = await command(
+        "POST",
+        `/api/v1/payment-allocations/${depositAllocation.id}/actions/create-deposit-balance`,
+        "deposit-balance-create",
+        { depositType: "advance_payment" },
+      );
+      expect(depositBalanceCreated.statusCode).toBe(201);
+      const advanceDepositBalance = depositBalanceCreated.json<DepositBalanceResponse>();
+      expect(advanceDepositBalance).toMatchObject({
+        appliedCents: 0,
+        availableCents: 18_500,
+        originalAmountCents: 18_500,
+        status: "available",
+      });
+      const duplicateDepositBalance = await command(
+        "POST",
+        `/api/v1/payment-allocations/${depositAllocation.id}/actions/create-deposit-balance`,
+        "deposit-balance-create-duplicate",
+        { depositType: "advance_payment" },
+      );
+      expect(duplicateDepositBalance.statusCode).toBe(409);
+      expect(duplicateDepositBalance.json()).toMatchObject({
+        error: { code: "DEPOSIT_BALANCE_ALREADY_CREATED" },
+      });
+      const depositAllocationReversalBlocked = await command(
+        "POST",
+        `/api/v1/payment-allocations/${depositAllocation.id}/actions/reverse`,
+        "deposit-allocation-reverse-blocked",
+        { reason: "Cannot reverse while customer deposit value exists" },
+      );
+      expect(depositAllocationReversalBlocked.statusCode).toBe(409);
+      expect(depositAllocationReversalBlocked.json()).toMatchObject({
+        error: { code: "PAYMENT_ALLOCATION_DEPOSIT_EXISTS" },
+      });
+
       const jobId = required(projectDetail.jobs[0], "Initial Job").id;
       const blockedJobPlanning = await command(
         "POST",
@@ -403,6 +733,16 @@ describe(
           )
         ).json(),
       ).toMatchObject({ status: "planning" });
+      expect(
+        (
+          await command(
+            "POST",
+            `/api/v1/projects/${acceptedBody.project.id}/actions/activate`,
+            "project-activate",
+            {},
+          )
+        ).json(),
+      ).toMatchObject({ status: "active" });
       expect(
         (
           await command(
@@ -1168,13 +1508,699 @@ describe(
         "job-await-invoice",
         {},
       );
-      await command("POST", `/api/v1/jobs/${jobId}/actions/mark-invoiced`, "job-mark-invoiced", {});
-      await command(
+      const projectOperationallyCompleted = await command(
         "POST",
-        `/api/v1/jobs/${jobId}/actions/complete-financially`,
-        "job-complete-financial",
+        `/api/v1/projects/${acceptedBody.project.id}/actions/complete-operationally`,
+        "project-complete-operational",
         {},
       );
+      expect(projectOperationallyCompleted.json()).toMatchObject({
+        status: "operationally_complete",
+      });
+      const finalInvoiceCreated = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/invoices`,
+        "final-invoice-create",
+        { dueInDays: 14, invoiceType: "final", jobId },
+      );
+      expect(finalInvoiceCreated.statusCode).toBe(201);
+      const finalInvoice = finalInvoiceCreated.json<InvoiceResponse>();
+      expect(finalInvoice).toMatchObject({
+        invoiceType: "final",
+        status: "draft",
+        totalCents: 42_280,
+        versions: [{ amountDueCents: 42_280, status: "draft", totalCents: 42_280 }],
+      });
+      expect(finalInvoice.versions[0]?.lines).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            description: "Additional masonry sand purchased",
+            subtotalCents: 280,
+          }),
+        ]),
+      );
+      const finalInvoiceReplay = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/invoices`,
+        "final-invoice-create",
+        { dueInDays: 14, invoiceType: "final", jobId },
+      );
+      expect(finalInvoiceReplay.json()).toEqual(finalInvoiceCreated.json());
+      const originalFinalVersionId = required(finalInvoice.versions[0], "Final Invoice Version").id;
+      const revisedFinal = await command(
+        "POST",
+        `/api/v1/invoices/${finalInvoice.id}/actions/revise`,
+        "final-invoice-revise",
+      );
+      expect(revisedFinal.statusCode).toBe(201);
+      expect(revisedFinal.json()).toMatchObject({
+        versions: [
+          { id: originalFinalVersionId, status: "superseded", versionNumber: 1 },
+          { status: "draft", totalCents: 42_280, versionNumber: 2 },
+        ],
+      });
+      const finalVersionId = required(
+        revisedFinal.json<InvoiceResponse>().versions[1],
+        "Revised Final Invoice Version",
+      ).id;
+      const finalPrepared = await command(
+        "POST",
+        `/api/v1/invoice-versions/${finalVersionId}/actions/prepare`,
+        "final-invoice-prepare",
+      );
+      expect(finalPrepared.json()).toMatchObject({ status: "ready_to_post" });
+      const finalPosted = await command(
+        "POST",
+        `/api/v1/invoice-versions/${finalVersionId}/actions/post`,
+        "final-invoice-post",
+      );
+      expect(finalPosted.statusCode).toBe(200);
+      expect(finalPosted.json()).toMatchObject({
+        outstandingBalanceCents: 42_280,
+        status: "posted",
+        versions: [{ status: "superseded" }, { status: "posted", totalCents: 42_280 }],
+      });
+      const invoicedJob = await fastify.inject({ method: "GET", url: `/api/v1/jobs/${jobId}` });
+      expect(invoicedJob.json()).toMatchObject({ status: "invoiced" });
+      const creditCreated = await command(
+        "POST",
+        `/api/v1/invoices/${finalInvoice.id}/adjustments`,
+        "final-invoice-credit-create",
+        {
+          adjustmentType: "credit",
+          amountCents: 280,
+          reason: "Customer should not be charged for the extra sand",
+        },
+      );
+      expect(creditCreated.statusCode).toBe(201);
+      const creditAdjustment = required(
+        creditCreated
+          .json<InvoiceResponse>()
+          .adjustments.find((adjustment) => adjustment.adjustmentType === "credit"),
+        "Final Invoice credit Adjustment",
+      );
+      expect(creditAdjustment.status).toBe("pending_approval");
+      const creditPostTooEarly = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${creditAdjustment.id}/actions/post`,
+        "final-invoice-credit-post-too-early",
+      );
+      expect(creditPostTooEarly.statusCode).toBe(409);
+      expect(creditPostTooEarly.json()).toMatchObject({
+        error: { code: "INVOICE_ADJUSTMENT_NOT_APPROVED" },
+      });
+      const creditApproved = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${creditAdjustment.id}/actions/approve`,
+        "final-invoice-credit-approve",
+      );
+      expect(creditApproved.json()).toMatchObject({
+        adjustments: [{ adjustmentType: "credit", status: "approved" }],
+      });
+      const creditPosted = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${creditAdjustment.id}/actions/post`,
+        "final-invoice-credit-post",
+      );
+      expect(creditPosted.json()).toMatchObject({
+        outstandingBalanceCents: 42_000,
+        status: "adjusted",
+      });
+      const reversalCreated = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${creditAdjustment.id}/actions/reverse`,
+        "final-invoice-credit-reverse",
+        { reason: "Credit was approved against the wrong delivery evidence" },
+      );
+      expect(reversalCreated.statusCode).toBe(201);
+      const reversal = required(
+        reversalCreated
+          .json<InvoiceResponse>()
+          .adjustments.find(
+            (adjustment) => adjustment.reversesInvoiceAdjustmentId === creditAdjustment.id,
+          ),
+        "Final Invoice Adjustment reversal",
+      );
+      expect(reversal).toMatchObject({
+        adjustmentType: "charge_reversal",
+        amountCents: 280,
+        direction: "debit",
+        status: "pending_approval",
+      });
+      const reversalReplay = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${creditAdjustment.id}/actions/reverse`,
+        "final-invoice-credit-reverse",
+        { reason: "Credit was approved against the wrong delivery evidence" },
+      );
+      expect(reversalReplay.json()).toEqual(reversalCreated.json());
+      await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${reversal.id}/actions/approve`,
+        "final-invoice-credit-reversal-approve",
+      );
+      const reversalPosted = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${reversal.id}/actions/post`,
+        "final-invoice-credit-reversal-post",
+      );
+      expect(reversalPosted.json()).toMatchObject({
+        outstandingBalanceCents: 42_280,
+        status: "adjusted",
+      });
+      const replacementCreated = await command(
+        "POST",
+        `/api/v1/invoices/${finalInvoice.id}/actions/replace`,
+        "final-invoice-replace",
+        { dueInDays: 21, reason: "Issue a corrected customer-facing invoice number" },
+      );
+      expect(replacementCreated.statusCode).toBe(201);
+      const replacementInvoice = replacementCreated.json<InvoiceResponse>();
+      expect(replacementInvoice).toMatchObject({
+        invoiceType: "final",
+        outstandingBalanceCents: 42_280,
+        replacesInvoiceId: finalInvoice.id,
+        status: "posted",
+        totalCents: 42_280,
+        versions: [{ status: "posted", totalCents: 42_280, versionNumber: 1 }],
+      });
+      expect(replacementInvoice.id).not.toBe(finalInvoice.id);
+      const replacementReplay = await command(
+        "POST",
+        `/api/v1/invoices/${finalInvoice.id}/actions/replace`,
+        "final-invoice-replace",
+        { dueInDays: 21, reason: "Issue a corrected customer-facing invoice number" },
+      );
+      expect(replacementReplay.json()).toEqual(replacementCreated.json());
+      const replacedOriginal = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/invoices/${finalInvoice.id}`,
+      });
+      const replacedOriginalBody = replacedOriginal.json<InvoiceResponse>();
+      expect(replacedOriginalBody).toMatchObject({
+        outstandingBalanceCents: 0,
+        replacedByInvoiceId: replacementInvoice.id,
+        status: "replaced",
+      });
+      expect(replacedOriginalBody.adjustments).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ adjustmentType: "replacement", status: "posted" }),
+        ]),
+      );
+      const finalDelivery = await command(
+        "POST",
+        `/api/v1/invoices/${replacementInvoice.id}/deliveries`,
+        "final-invoice-delivery",
+        { channel: "email", destination: "canonical@example.test", status: "sent" },
+      );
+      expect(finalDelivery.json()).toMatchObject({ status: "sent" });
+
+      const finalInvoiceLink = await command(
+        "POST",
+        `/api/v1/invoices/${replacementInvoice.id}/public-links`,
+        "final-invoice-public-link",
+        { expiresInDays: 14, recipient: "canonical@example.test" },
+      );
+      expect(finalInvoiceLink.statusCode).toBe(201);
+      const finalInvoiceLinkBody = finalInvoiceLink.json<{
+        customerPath: string;
+        linkId: string;
+        token: string;
+      }>();
+      expect(finalInvoiceLinkBody.customerPath).toBe(
+        `/customer/invoices/${finalInvoiceLinkBody.token}`,
+      );
+      const publicFinalInvoice = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/public/invoices/${finalInvoiceLinkBody.token}`,
+      });
+      expect(publicFinalInvoice.statusCode).toBe(200);
+      const publicFinalInvoiceBody = publicFinalInvoice.json<{
+        projectNumber: string | null;
+      }>();
+      expect(publicFinalInvoiceBody).toMatchObject({
+        appliedCents: 0,
+        customerName: "Canonical Customer",
+        invoiceType: "final",
+        outstandingBalanceCents: 42_280,
+        status: "viewed",
+        totalCents: 42_280,
+      });
+      expect(typeof publicFinalInvoiceBody.projectNumber).toBe("string");
+      expect(JSON.stringify(publicFinalInvoiceBody)).not.toContain("Customer should not");
+
+      const revokedFinalInvoiceLink = await command(
+        "POST",
+        `/api/v1/invoices/${replacementInvoice.id}/public-links/${finalInvoiceLinkBody.linkId}/actions/revoke`,
+        "final-invoice-public-link-revoke",
+      );
+      expect(revokedFinalInvoiceLink.statusCode).toBe(200);
+      const revokedPublicFinalInvoice = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/public/invoices/${finalInvoiceLinkBody.token}`,
+      });
+      expect(revokedPublicFinalInvoice.statusCode).toBe(410);
+      expect(revokedPublicFinalInvoice.json()).toMatchObject({
+        error: { code: "INVOICE_LINK_REVOKED" },
+      });
+
+      const replacementCreditCreated = await command(
+        "POST",
+        `/api/v1/invoices/${replacementInvoice.id}/adjustments`,
+        "replacement-credit-create",
+        {
+          adjustmentType: "credit",
+          amountCents: 280,
+          reason: "Honor the approved material variance credit",
+        },
+      );
+      const replacementCredit = required(
+        replacementCreditCreated
+          .json<InvoiceResponse>()
+          .adjustments.find(
+            (adjustment) =>
+              adjustment.adjustmentType === "credit" && adjustment.amountCents === 280,
+          ),
+        "Replacement Invoice credit",
+      );
+      await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${replacementCredit.id}/actions/approve`,
+        "replacement-credit-approve",
+      );
+      const replacementCreditPosted = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${replacementCredit.id}/actions/post`,
+        "replacement-credit-post",
+      );
+      expect(replacementCreditPosted.json()).toMatchObject({
+        outstandingBalanceCents: 42_000,
+        status: "adjusted",
+      });
+
+      const depositApplicationCreated = await command(
+        "POST",
+        `/api/v1/deposit-balances/${advanceDepositBalance.id}/applications`,
+        "advance-deposit-apply",
+        { amountCents: 18_500, invoiceId: replacementInvoice.id },
+      );
+      expect(depositApplicationCreated.statusCode).toBe(201);
+      const appliedDeposit = depositApplicationCreated.json<DepositBalanceResponse>();
+      expect(appliedDeposit).toMatchObject({
+        appliedCents: 18_500,
+        availableCents: 0,
+        status: "fully_applied",
+      });
+      const depositApplication = required(
+        appliedDeposit.applications.find((entry) => entry.entryKind === "application"),
+        "Advance Deposit Application",
+      );
+      const duplicateDepositApplication = await command(
+        "POST",
+        `/api/v1/deposit-balances/${advanceDepositBalance.id}/applications`,
+        "advance-deposit-apply-duplicate",
+        { amountCents: 18_500, invoiceId: replacementInvoice.id },
+      );
+      expect(duplicateDepositApplication.statusCode).toBe(409);
+      expect(duplicateDepositApplication.json()).toMatchObject({
+        error: { code: "DEPOSIT_NOT_AVAILABLE" },
+      });
+      const depositApplicationReversed = await command(
+        "POST",
+        `/api/v1/deposit-applications/${depositApplication.id}/actions/reverse`,
+        "advance-deposit-reverse",
+        { reason: "Exercise attributable deposit correction before final application" },
+      );
+      expect(depositApplicationReversed.json()).toMatchObject({
+        appliedCents: 0,
+        availableCents: 18_500,
+        status: "available",
+      });
+      const depositReversalReplay = await command(
+        "POST",
+        `/api/v1/deposit-applications/${depositApplication.id}/actions/reverse`,
+        "advance-deposit-reverse",
+        { reason: "Exercise attributable deposit correction before final application" },
+      );
+      expect(depositReversalReplay.json()).toEqual(depositApplicationReversed.json());
+      const depositReapplied = await command(
+        "POST",
+        `/api/v1/deposit-balances/${advanceDepositBalance.id}/applications`,
+        "advance-deposit-reapply",
+        { amountCents: 18_500, invoiceId: replacementInvoice.id },
+      );
+      expect(depositReapplied.json()).toMatchObject({
+        appliedCents: 18_500,
+        availableCents: 0,
+        status: "fully_applied",
+      });
+      const afterDepositInvoice = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/invoices/${replacementInvoice.id}`,
+      });
+      expect(afterDepositInvoice.json()).toMatchObject({
+        outstandingBalanceCents: 23_500,
+        status: "partially_paid",
+      });
+
+      const finalPaymentCreated = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/payments`,
+        "final-payment-create",
+        {
+          amountCents: 23_500,
+          payerEmail: "canonical@example.test",
+          payerName: "Casey Customer",
+          paymentMethod: "zelle",
+          providerName: "Zelle",
+          providerTransactionId: "canonical-final-payment-001",
+          receivingAccountReference: "Lincoln DG operating account",
+        },
+      );
+      const finalPayment = finalPaymentCreated.json<PaymentResponse>();
+      await command(
+        "POST",
+        `/api/v1/payments/${finalPayment.id}/actions/verify`,
+        "final-payment-verify",
+      );
+      await command(
+        "POST",
+        `/api/v1/payments/${finalPayment.id}/actions/settle`,
+        "final-payment-settle",
+      );
+      const finalAllocationCreated = await command(
+        "POST",
+        `/api/v1/payments/${finalPayment.id}/allocations`,
+        "final-payment-allocate",
+        { amountCents: 23_000, invoiceId: replacementInvoice.id },
+      );
+      const partiallyAllocatedFinalPayment = finalAllocationCreated.json<PaymentResponse>();
+      expect(partiallyAllocatedFinalPayment).toMatchObject({
+        allocatedCents: 23_000,
+        availableCents: 500,
+        status: "partially_allocated",
+      });
+      const finalPaymentAllocation = required(
+        partiallyAllocatedFinalPayment.allocations.find(
+          (entry) => entry.entryKind === "application",
+        ),
+        "Final Payment Allocation",
+      );
+      const overpaymentCreditCreated = await command(
+        "POST",
+        `/api/v1/customers/${finalPayment.customerAccountId}/customer-credits`,
+        "overpayment-credit-create",
+        {
+          description: "Hold the final payment remainder for the open Invoice",
+          sourceId: finalPayment.id,
+          sourceType: "overpayment",
+        },
+      );
+      expect(overpaymentCreditCreated.statusCode).toBe(201);
+      const overpaymentCredit = overpaymentCreditCreated.json<CustomerCreditResponse>();
+      expect(overpaymentCredit).toMatchObject({
+        appliedCents: 0,
+        availableCents: 500,
+        originalAmountCents: 500,
+        sourceType: "overpayment",
+        status: "available",
+      });
+      const overpaymentCreditReplay = await command(
+        "POST",
+        `/api/v1/customers/${finalPayment.customerAccountId}/customer-credits`,
+        "overpayment-credit-create",
+        {
+          description: "Hold the final payment remainder for the open Invoice",
+          sourceId: finalPayment.id,
+          sourceType: "overpayment",
+        },
+      );
+      expect(overpaymentCreditReplay.json()).toEqual(overpaymentCreditCreated.json());
+      const duplicateOverpaymentCredit = await command(
+        "POST",
+        `/api/v1/customers/${finalPayment.customerAccountId}/customer-credits`,
+        "overpayment-credit-create-duplicate",
+        {
+          description: "Attempt to issue the same source value twice",
+          sourceId: finalPayment.id,
+          sourceType: "overpayment",
+        },
+      );
+      expect(duplicateOverpaymentCredit.statusCode).toBe(409);
+      expect(duplicateOverpaymentCredit.json()).toMatchObject({
+        error: { code: "CUSTOMER_CREDIT_SOURCE_ALREADY_USED" },
+      });
+      const finalPaymentRead = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/payments/${finalPayment.id}`,
+      });
+      expect(finalPaymentRead.json()).toMatchObject({
+        availableCents: 0,
+        customerCreditCents: 500,
+        status: "fully_allocated",
+      });
+      const overAppliedCredit = await command(
+        "POST",
+        `/api/v1/customer-credits/${overpaymentCredit.id}/applications`,
+        "overpayment-credit-overapply",
+        { amountCents: 501, invoiceId: replacementInvoice.id },
+      );
+      expect(overAppliedCredit.statusCode).toBe(409);
+      expect(overAppliedCredit.json()).toMatchObject({
+        error: { code: "CUSTOMER_CREDIT_APPLICATION_EXCEEDS_AVAILABLE" },
+      });
+      const creditApplicationCreated = await command(
+        "POST",
+        `/api/v1/customer-credits/${overpaymentCredit.id}/applications`,
+        "overpayment-credit-apply",
+        { amountCents: 500, invoiceId: replacementInvoice.id },
+      );
+      const appliedCredit = creditApplicationCreated.json<CustomerCreditResponse>();
+      expect(appliedCredit).toMatchObject({
+        appliedCents: 500,
+        availableCents: 0,
+        status: "fully_applied",
+      });
+      const creditApplication = required(
+        appliedCredit.applications.find((entry) => entry.entryKind === "application"),
+        "Customer Credit Application",
+      );
+      const paidByCustomerValue = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/invoices/${replacementInvoice.id}`,
+      });
+      expect(paidByCustomerValue.json()).toMatchObject({
+        outstandingBalanceCents: 0,
+        status: "paid",
+      });
+
+      const finalAllocationReversed = await command(
+        "POST",
+        `/api/v1/payment-allocations/${finalPaymentAllocation.id}/actions/reverse`,
+        "final-payment-allocation-reverse",
+        { reason: "Correct the selected Payment Allocation" },
+      );
+      expect(finalAllocationReversed.json()).toMatchObject({
+        allocatedCents: 0,
+        availableCents: 23_000,
+        customerCreditCents: 500,
+        status: "partially_allocated",
+      });
+      const finalAllocationReversalReplay = await command(
+        "POST",
+        `/api/v1/payment-allocations/${finalPaymentAllocation.id}/actions/reverse`,
+        "final-payment-allocation-reverse",
+        { reason: "Correct the selected Payment Allocation" },
+      );
+      expect(finalAllocationReversalReplay.json()).toEqual(finalAllocationReversed.json());
+      const finalPaymentReallocated = await command(
+        "POST",
+        `/api/v1/payments/${finalPayment.id}/allocations`,
+        "final-payment-reallocate",
+        { amountCents: 23_000, invoiceId: replacementInvoice.id },
+      );
+      expect(finalPaymentReallocated.json()).toMatchObject({
+        allocatedCents: 23_000,
+        availableCents: 0,
+        status: "fully_allocated",
+      });
+
+      const creditApplicationReversed = await command(
+        "POST",
+        `/api/v1/customer-credit-applications/${creditApplication.id}/actions/reverse`,
+        "overpayment-credit-reverse",
+        { reason: "Correct the selected Customer Credit Application" },
+      );
+      expect(creditApplicationReversed.json()).toMatchObject({
+        appliedCents: 0,
+        availableCents: 500,
+        status: "available",
+      });
+      const creditApplicationReversalReplay = await command(
+        "POST",
+        `/api/v1/customer-credit-applications/${creditApplication.id}/actions/reverse`,
+        "overpayment-credit-reverse",
+        { reason: "Correct the selected Customer Credit Application" },
+      );
+      expect(creditApplicationReversalReplay.json()).toEqual(creditApplicationReversed.json());
+      const creditReapplied = await command(
+        "POST",
+        `/api/v1/customer-credits/${overpaymentCredit.id}/applications`,
+        "overpayment-credit-reapply",
+        { amountCents: 500, invoiceId: replacementInvoice.id },
+      );
+      expect(creditReapplied.json()).toMatchObject({
+        appliedCents: 500,
+        availableCents: 0,
+        status: "fully_applied",
+      });
+
+      const overCreditCreated = await command(
+        "POST",
+        `/api/v1/invoices/${replacementInvoice.id}/adjustments`,
+        "paid-invoice-overcredit-create",
+        {
+          adjustmentType: "credit",
+          amountCents: 100,
+          reason: "Create customer value from a post-payment correction",
+        },
+      );
+      const overCreditAdjustment = required(
+        overCreditCreated
+          .json<InvoiceResponse>()
+          .adjustments.find((adjustment) => adjustment.amountCents === 100),
+        "Paid Invoice over-credit Adjustment",
+      );
+      await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${overCreditAdjustment.id}/actions/approve`,
+        "paid-invoice-overcredit-approve",
+      );
+      const overCreditPosted = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${overCreditAdjustment.id}/actions/post`,
+        "paid-invoice-overcredit-post",
+      );
+      expect(overCreditPosted.json()).toMatchObject({
+        outstandingBalanceCents: 0,
+        status: "credited",
+      });
+      const customerCreditsAfterAdjustment = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/customers/${finalPayment.customerAccountId}/customer-credits`,
+      });
+      const adjustmentCredit = required(
+        customerCreditsAfterAdjustment
+          .json<{ items: CustomerCreditResponse[] }>()
+          .items.find((credit) => credit.sourceType === "adjustment"),
+        "Adjustment Customer Credit",
+      );
+      expect(adjustmentCredit).toMatchObject({
+        availableCents: 100,
+        originalAmountCents: 100,
+        status: "available",
+      });
+      const overCreditReversalCreated = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${overCreditAdjustment.id}/actions/reverse`,
+        "paid-invoice-overcredit-reverse",
+        { reason: "Withdraw the post-payment correction before the credit is used" },
+      );
+      const overCreditReversal = required(
+        overCreditReversalCreated
+          .json<InvoiceResponse>()
+          .adjustments.find(
+            (adjustment) => adjustment.reversesInvoiceAdjustmentId === overCreditAdjustment.id,
+          ),
+        "Over-credit Adjustment reversal",
+      );
+      await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${overCreditReversal.id}/actions/approve`,
+        "paid-invoice-overcredit-reversal-approve",
+      );
+      const overCreditReversalPosted = await command(
+        "POST",
+        `/api/v1/invoice-adjustments/${overCreditReversal.id}/actions/post`,
+        "paid-invoice-overcredit-reversal-post",
+      );
+      expect(overCreditReversalPosted.json()).toMatchObject({
+        outstandingBalanceCents: 0,
+        status: "paid",
+      });
+      const customerCreditsAfterReversal = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/customers/${finalPayment.customerAccountId}/customer-credits`,
+      });
+      expect(
+        customerCreditsAfterReversal
+          .json<{ items: CustomerCreditResponse[] }>()
+          .items.find((credit) => credit.id === adjustmentCredit.id),
+      ).toMatchObject({ availableCents: 0, status: "reversed" });
+
+      const invoiceList = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/invoices?projectId=${acceptedBody.project.id}`,
+      });
+      expect(invoiceList.statusCode).toBe(200);
+      expect(invoiceList.json<{ items: InvoiceResponse[] }>().items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ invoiceType: "deposit", totalCents: 18_500 }),
+          expect.objectContaining({ invoiceType: "final", totalCents: 42_280 }),
+        ]),
+      );
+      const directJobFinancialCompletion = await command(
+        "POST",
+        `/api/v1/jobs/${jobId}/actions/complete-financially`,
+        "job-complete-financial-directly",
+        {},
+      );
+      expect(directJobFinancialCompletion.statusCode).toBe(409);
+      expect(directJobFinancialCompletion.json()).toMatchObject({
+        error: { code: "JOB_FINANCIAL_COMPLETION_IS_DERIVED" },
+      });
+      const directProjectFinancialCompletion = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/actions/complete-financially`,
+        "project-complete-financial-directly",
+        {},
+      );
+      expect(directProjectFinancialCompletion.statusCode).toBe(409);
+      expect(directProjectFinancialCompletion.json()).toMatchObject({
+        error: { code: "PROJECT_FINANCIAL_COMPLETION_IS_DERIVED" },
+      });
+      const financialCompletion = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/actions/evaluate-financial-completion`,
+        "project-financial-completion-evaluate",
+        {},
+      );
+      expect(financialCompletion.statusCode).toBe(200);
+      expect(financialCompletion.json<FinancialCompletionResponse>()).toMatchObject({
+        activeRefundCount: 0,
+        blockers: [],
+        financiallyComplete: true,
+        jobs: [
+          expect.objectContaining({
+            financiallyComplete: true,
+            jobId,
+            status: "financially_complete",
+          }),
+        ],
+        outstandingInvoiceCents: 0,
+        projectStatus: "financially_complete",
+        unresolvedCustomerCreditCents: 0,
+        unresolvedDepositCents: 0,
+        unresolvedPaymentCents: 0,
+      });
+      const completionReplay = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/actions/evaluate-financial-completion`,
+        "project-financial-completion-evaluate",
+        {},
+      );
+      expect(completionReplay.json()).toEqual(financialCompletion.json());
+
       const closed = await command("POST", `/api/v1/jobs/${jobId}/actions/close`, "job-close", {});
       expect(closed.statusCode).toBe(200);
       expect(closed.json()).toMatchObject({ status: "closed" });
@@ -1185,11 +2211,259 @@ describe(
         { label: "Late stop", locationSnapshot: {}, sequence: 6, stopType: "other" },
       );
       expect(lockedStop.statusCode).toBe(409);
-      const reopened = await command("POST", `/api/v1/jobs/${jobId}/actions/reopen`, "job-reopen", {
-        reason: "Correct schedule evidence",
+
+      const refundPaymentCreated = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/payments`,
+        "refund-payment-create",
+        {
+          amountCents: 100,
+          payerEmail: "canonical@example.test",
+          payerName: "Casey Customer",
+          paymentMethod: "zelle",
+          providerName: "Zelle",
+          providerTransactionId: "canonical-refund-payment-001",
+          receivingAccountReference: "Lincoln DG operating account",
+        },
+      );
+      const refundPayment = refundPaymentCreated.json<PaymentResponse>();
+      await command(
+        "POST",
+        `/api/v1/payments/${refundPayment.id}/actions/verify`,
+        "refund-payment-verify",
+      );
+      await command(
+        "POST",
+        `/api/v1/payments/${refundPayment.id}/actions/settle`,
+        "refund-payment-settle",
+      );
+      const alternateRefundCreated = await command(
+        "POST",
+        `/api/v1/customers/${refundPayment.customerAccountId}/refunds`,
+        "alternate-refund-create",
+        {
+          alternateMethodReason: "Customer requested a company check after closing Zelle",
+          amountCents: 100,
+          payeeEmail: "canonical@example.test",
+          payeeName: "Casey Customer",
+          reason: "Return the duplicate receipt",
+          refundMethod: "check",
+          sourceId: refundPayment.id,
+          sourceType: "payment",
+        },
+      );
+      expect(alternateRefundCreated.statusCode).toBe(201);
+      const alternateRefund = alternateRefundCreated.json<RefundResponse>();
+      expect(alternateRefund).toMatchObject({ amountCents: 100, status: "review_required" });
+      const unverifiedAlternateApproval = await command(
+        "POST",
+        `/api/v1/refunds/${alternateRefund.id}/actions/approve`,
+        "alternate-refund-approve-unverified",
+        {},
+      );
+      expect(unverifiedAlternateApproval.statusCode).toBe(400);
+      expect(unverifiedAlternateApproval.json()).toMatchObject({
+        error: { code: "REFUND_IDENTITY_VERIFICATION_REQUIRED" },
       });
-      expect(reopened.statusCode).toBe(200);
-      expect(reopened.json()).toMatchObject({ status: "planning" });
+      const alternateRefundApproved = await command(
+        "POST",
+        `/api/v1/refunds/${alternateRefund.id}/actions/approve`,
+        "alternate-refund-approve",
+        { identityVerificationReference: "verified-customer-contact-001" },
+      );
+      expect(alternateRefundApproved.json()).toMatchObject({ status: "approved" });
+      const alternateRefundProcessed = await command(
+        "POST",
+        `/api/v1/refunds/${alternateRefund.id}/actions/process`,
+        "alternate-refund-process",
+        { providerName: "Company Check", providerRefundId: "CHECK-REF-001" },
+      );
+      expect(alternateRefundProcessed.json()).toMatchObject({ status: "processed" });
+      const alternateRefundSettled = await command(
+        "POST",
+        `/api/v1/refunds/${alternateRefund.id}/actions/settle`,
+        "alternate-refund-settle",
+        {},
+      );
+      expect(alternateRefundSettled.json()).toMatchObject({ status: "settled" });
+      const alternateRefundSettlementReplay = await command(
+        "POST",
+        `/api/v1/refunds/${alternateRefund.id}/actions/settle`,
+        "alternate-refund-settle",
+        {},
+      );
+      expect(alternateRefundSettlementReplay.json()).toEqual(alternateRefundSettled.json());
+      const refundedPaymentRead = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/payments/${refundPayment.id}`,
+      });
+      expect(refundedPaymentRead.json()).toMatchObject({
+        availableCents: 0,
+        refundedCents: 100,
+        status: "refunded",
+      });
+
+      const refundReversed = await command(
+        "POST",
+        `/api/v1/refunds/${alternateRefund.id}/actions/reverse`,
+        "alternate-refund-reverse",
+        { reason: "Provider returned the company check before delivery" },
+      );
+      expect(refundReversed.statusCode).toBe(201);
+      expect(refundReversed.json<RefundResponse>()).toMatchObject({
+        amountCents: 100,
+        reversesRefundId: alternateRefund.id,
+        status: "reversed",
+      });
+      const refundReversalReplay = await command(
+        "POST",
+        `/api/v1/refunds/${alternateRefund.id}/actions/reverse`,
+        "alternate-refund-reverse",
+        { reason: "Provider returned the company check before delivery" },
+      );
+      expect(refundReversalReplay.json()).toEqual(refundReversed.json());
+      const restoredRefundPayment = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/payments/${refundPayment.id}`,
+      });
+      expect(restoredRefundPayment.json()).toMatchObject({
+        availableCents: 100,
+        refundedCents: 0,
+        status: "settled",
+      });
+      const replacementRefundCreated = await command(
+        "POST",
+        `/api/v1/customers/${refundPayment.customerAccountId}/refunds`,
+        "replacement-refund-create",
+        {
+          amountCents: 100,
+          payeeEmail: "canonical@example.test",
+          payeeName: "Casey Customer",
+          reason: "Reissue the returned refund to the original method",
+          refundMethod: "zelle",
+          sourceId: refundPayment.id,
+          sourceType: "payment",
+        },
+      );
+      const replacementRefund = replacementRefundCreated.json<RefundResponse>();
+      expect(replacementRefund).toMatchObject({ status: "pending_approval" });
+      await command(
+        "POST",
+        `/api/v1/refunds/${replacementRefund.id}/actions/approve`,
+        "replacement-refund-approve",
+        {},
+      );
+      await command(
+        "POST",
+        `/api/v1/refunds/${replacementRefund.id}/actions/process`,
+        "replacement-refund-process",
+        { providerName: "Zelle", providerRefundId: "ZELLE-REF-001" },
+      );
+      await command(
+        "POST",
+        `/api/v1/refunds/${replacementRefund.id}/actions/settle`,
+        "replacement-refund-settle",
+        {},
+      );
+      const completedAfterRefund = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/actions/evaluate-financial-completion`,
+        "project-financial-completion-after-refund",
+        {},
+      );
+      expect(completedAfterRefund.json<FinancialCompletionResponse>()).toMatchObject({
+        blockers: [],
+        financiallyComplete: true,
+        projectStatus: "financially_complete",
+      });
+
+      const wholeFinalPaymentReversed = await command(
+        "POST",
+        `/api/v1/payments/${finalPayment.id}/actions/reverse`,
+        "final-payment-whole-reverse",
+        { reason: "Bank reported the final customer receipt reversed" },
+      );
+      expect(wholeFinalPaymentReversed.json()).toMatchObject({
+        allocatedCents: 0,
+        availableCents: 0,
+        customerCreditCents: 0,
+        status: "reversed",
+      });
+      const wholeFinalPaymentReversalReplay = await command(
+        "POST",
+        `/api/v1/payments/${finalPayment.id}/actions/reverse`,
+        "final-payment-whole-reverse",
+        { reason: "Bank reported the final customer receipt reversed" },
+      );
+      expect(wholeFinalPaymentReversalReplay.json()).toEqual(wholeFinalPaymentReversed.json());
+      const duplicateWholeFinalPaymentReversal = await command(
+        "POST",
+        `/api/v1/payments/${finalPayment.id}/actions/reverse`,
+        "final-payment-whole-reverse-duplicate",
+        { reason: "Attempt a second whole Payment reversal" },
+      );
+      expect(duplicateWholeFinalPaymentReversal.statusCode).toBe(409);
+      expect(duplicateWholeFinalPaymentReversal.json()).toMatchObject({
+        error: { code: "PAYMENT_NOT_REVERSIBLE" },
+      });
+      const jobReopenedByPayment = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/jobs/${jobId}`,
+      });
+      expect(jobReopenedByPayment.json()).toMatchObject({ status: "planning" });
+      const projectReopenedByPayment = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/projects/${acceptedBody.project.id}`,
+      });
+      expect(projectReopenedByPayment.json()).toMatchObject({ status: "operationally_complete" });
+      const invoiceReopenedByPayment = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/invoices/${replacementInvoice.id}`,
+      });
+      expect(invoiceReopenedByPayment.json()).toMatchObject({
+        outstandingBalanceCents: 23_500,
+        status: "partially_paid",
+      });
+
+      const wholeDepositPaymentReversed = await command(
+        "POST",
+        `/api/v1/payments/${depositPayment.id}/actions/reverse`,
+        "deposit-payment-whole-reverse",
+        { reason: "Bank reported the advance customer receipt reversed" },
+      );
+      expect(wholeDepositPaymentReversed.json()).toMatchObject({
+        allocatedCents: 0,
+        availableCents: 0,
+        status: "reversed",
+      });
+      const resolvedDepositRead = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/projects/${acceptedBody.project.id}/deposit-balances`,
+      });
+      expect(
+        resolvedDepositRead
+          .json<{ items: DepositBalanceResponse[] }>()
+          .items.find((balance) => balance.id === advanceDepositBalance.id),
+      ).toMatchObject({ appliedCents: 0, availableCents: 0, status: "resolved" });
+      const fullyReopenedInvoice = await fastify.inject({
+        method: "GET",
+        url: `/api/v1/invoices/${replacementInvoice.id}`,
+      });
+      expect(fullyReopenedInvoice.json()).toMatchObject({
+        outstandingBalanceCents: 42_000,
+        status: "adjusted",
+      });
+      const reopenedFinancialCompletion = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/actions/evaluate-financial-completion`,
+        "project-financial-completion-reopened",
+        {},
+      );
+      expect(reopenedFinancialCompletion.json<FinancialCompletionResponse>()).toMatchObject({
+        financiallyComplete: false,
+        outstandingInvoiceCents: 42_000,
+        projectStatus: "operationally_complete",
+      });
 
       const persisted = await withTenantTransaction(runtime(), tenantId, async (transaction) => ({
         acceptances: await transaction
@@ -1239,6 +2513,21 @@ describe(
           .select({ value: count() })
           .from(expenseAllocations)
           .where(eq(expenseAllocations.jobId, jobId)),
+        customerCreditApplications: await transaction
+          .select({ value: count() })
+          .from(customerCreditApplications),
+        customerCredits: await transaction.select({ value: count() }).from(customerCredits),
+        depositApplications: await transaction.select({ value: count() }).from(depositApplications),
+        depositBalances: await transaction.select({ value: count() }).from(depositBalances),
+        invoiceDeliveries: await transaction.select({ value: count() }).from(invoiceDeliveries),
+        invoiceAdjustments: await transaction.select({ value: count() }).from(invoiceAdjustments),
+        invoiceLineItems: await transaction.select({ value: count() }).from(invoiceLineItems),
+        invoicePublicLinks: await transaction.select({ value: count() }).from(invoicePublicLinks),
+        invoices: await transaction.select({ value: count() }).from(invoices),
+        invoiceVersions: await transaction.select({ value: count() }).from(invoiceVersions),
+        paymentAllocations: await transaction.select({ value: count() }).from(paymentAllocations),
+        payments: await transaction.select({ value: count() }).from(payments),
+        refunds: await transaction.select({ value: count() }).from(refunds),
         jobCharges: await transaction
           .select({ value: count() })
           .from(jobCharges)
@@ -1258,6 +2547,19 @@ describe(
       expect(persisted.materialQuantityVariances[0]?.value).toBe(1);
       expect(persisted.expenses[0]?.value).toBe(2);
       expect(persisted.expenseAllocations[0]?.value).toBe(2);
+      expect(persisted.customerCreditApplications[0]?.value).toBe(4);
+      expect(persisted.customerCredits[0]?.value).toBe(2);
+      expect(persisted.depositApplications[0]?.value).toBe(4);
+      expect(persisted.depositBalances[0]?.value).toBe(1);
+      expect(persisted.invoiceDeliveries[0]?.value).toBe(3);
+      expect(persisted.invoiceLineItems[0]?.value).toBeGreaterThanOrEqual(3);
+      expect(persisted.invoicePublicLinks[0]?.value).toBe(1);
+      expect(persisted.invoiceAdjustments[0]?.value).toBe(7);
+      expect(persisted.invoices[0]?.value).toBe(4);
+      expect(persisted.invoiceVersions[0]?.value).toBe(5);
+      expect(persisted.paymentAllocations[0]?.value).toBe(6);
+      expect(persisted.payments[0]?.value).toBe(3);
+      expect(persisted.refunds[0]?.value).toBe(3);
       expect(persisted.jobCharges[0]?.value).toBe(1);
       expect(persisted.documentLinks[0]?.value).toBe(6);
       expect(persisted.line).toBeDefined();
@@ -1271,6 +2573,24 @@ describe(
         (transaction) => transaction.select().from(materialDeliveryDetails),
       );
       expect(foreignMaterialDelivery).toEqual([]);
+      const foreignFinancialRecords = await withTenantTransaction(
+        runtime(),
+        foreignTenantId,
+        async (transaction) => ({
+          customerCredits: await transaction.select().from(customerCredits),
+          depositBalances: await transaction.select().from(depositBalances),
+          invoicePublicLinks: await transaction.select().from(invoicePublicLinks),
+          payments: await transaction.select().from(payments),
+          refunds: await transaction.select().from(refunds),
+        }),
+      );
+      expect(foreignFinancialRecords).toEqual({
+        customerCredits: [],
+        depositBalances: [],
+        invoicePublicLinks: [],
+        payments: [],
+        refunds: [],
+      });
       await expect(
         withTenantTransaction(runtime(), tenantId, (transaction) =>
           transaction

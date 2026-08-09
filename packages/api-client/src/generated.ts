@@ -1252,6 +1252,694 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/projects/{id}/actions/evaluate-financial-completion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["evaluateProjectFinancialCompletion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{id}/actions/evaluate-financial-completion": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["evaluateJobFinancialCompletion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listInvoices"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getInvoice"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{id}/invoices": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createProjectInvoice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}/actions/revise": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reviseInvoice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoice-versions/{id}/actions/prepare": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["prepareInvoiceVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoice-versions/{id}/actions/post": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["postInvoiceVersion"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}/deliveries": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["recordInvoiceDelivery"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}/public-links": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createInvoicePublicLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}/public-links/{linkId}/actions/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["revokeInvoicePublicLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}/adjustments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createInvoiceAdjustment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoice-adjustments/{id}/actions/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["approveInvoiceAdjustment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoice-adjustments/{id}/actions/post": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["postInvoiceAdjustment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoice-adjustments/{id}/actions/reverse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reverseInvoiceAdjustment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}/actions/void": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["voidInvoice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/invoices/{id}/actions/replace": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["replaceInvoice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listPayments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payments/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPayment"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{id}/payments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createProjectPayment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customers/{id}/payments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createCustomerPayment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payments/{id}/actions/verify": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["verifyPayment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payments/{id}/actions/settle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["settlePayment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payments/{id}/actions/reverse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reversePayment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payments/{id}/allocations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["allocatePayment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payment-allocations/{id}/actions/reverse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reversePaymentAllocation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/payment-allocations/{id}/actions/create-deposit-balance": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createDepositBalance"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{id}/deposit-balances": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listProjectDepositBalances"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/deposit-balances/{id}/applications": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["applyDepositBalance"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/deposit-applications/{id}/actions/reverse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reverseDepositApplication"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customers/{id}/customer-credits": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listCustomerCredits"];
+    put?: never;
+    post: operations["createCustomerCredit"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customer-credits/{id}/applications": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["applyCustomerCredit"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customer-credit-applications/{id}/actions/reverse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reverseCustomerCreditApplication"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/invoices/{token}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPublicInvoice"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listRefunds"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getRefund"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customers/{id}/refunds": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createRefund"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds/{id}/actions/approve": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["approveRefund"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds/{id}/actions/process": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["processRefund"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds/{id}/actions/settle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["settleRefund"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds/{id}/actions/fail": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["failRefund"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds/{id}/actions/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["cancelRefund"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/refunds/{id}/actions/reverse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["reverseRefund"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2561,6 +3249,490 @@ export interface components {
     };
     DeclineQuoteDto: {
       reason: string;
+    };
+    JobFinancialCompletionDto: {
+      /** Format: uuid */
+      jobId: string;
+      jobNumber: string;
+      status: string;
+      financiallyComplete: boolean;
+      postedObligationCount: number;
+      outstandingCents: number;
+      blockers: string[];
+    };
+    FinancialCompletionDto: {
+      /** Format: uuid */
+      projectId: string;
+      projectNumber: string;
+      projectStatus: string;
+      financiallyComplete: boolean;
+      outstandingInvoiceCents: number;
+      unresolvedPaymentCents: number;
+      unresolvedDepositCents: number;
+      unresolvedCustomerCreditCents: number;
+      activeRefundCount: number;
+      blockers: string[];
+      jobs: components["schemas"]["JobFinancialCompletionDto"][];
+      /** Format: date-time */
+      evaluatedAt: string;
+    };
+    InvoiceSummaryDto: {
+      /** Format: uuid */
+      id: string;
+      invoiceNumber: string;
+      invoiceType: string;
+      status: string;
+      currency: string;
+      /** Format: uuid */
+      projectId: string;
+      /** Format: uuid */
+      jobId?: string | null;
+      projectNumber: string;
+      jobNumber?: string | null;
+      customerName: string;
+      totalCents?: number | null;
+      outstandingBalanceCents: number;
+      /** Format: uuid */
+      replacesInvoiceId?: string | null;
+      /** Format: uuid */
+      replacedByInvoiceId?: string | null;
+      /** Format: date */
+      issueDate?: string | null;
+      /** Format: date */
+      dueDate?: string | null;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    InvoiceListResponseDto: {
+      items: components["schemas"]["InvoiceSummaryDto"][];
+    };
+    InvoiceAdjustmentDto: {
+      /** Format: uuid */
+      id: string;
+      adjustmentNumber: string;
+      adjustmentType: string;
+      direction: string;
+      amountCents: number;
+      status: string;
+      reason: string;
+      sourceType?: string | null;
+      /** Format: uuid */
+      sourceId?: string | null;
+      /** Format: date-time */
+      effectiveAt: string;
+      /** Format: date */
+      newDueDate?: string | null;
+      /** Format: date-time */
+      approvedAt?: string | null;
+      /** Format: date-time */
+      postedAt?: string | null;
+      /** Format: uuid */
+      reversesInvoiceAdjustmentId?: string | null;
+    };
+    InvoiceLineItemDto: {
+      /** Format: uuid */
+      id: string;
+      sequence: number;
+      lineType: string;
+      direction: string;
+      sourceType: string;
+      /** Format: uuid */
+      sourceId?: string | null;
+      description: string;
+      quantity?: string | null;
+      unit?: string | null;
+      unitPriceCents?: number | null;
+      subtotalCents: number;
+      taxCents: number;
+      totalCents: number;
+      taxBehavior: string;
+    };
+    InvoiceVersionDto: {
+      /** Format: uuid */
+      id: string;
+      versionNumber: number;
+      status: string;
+      contentHash: string;
+      subtotalCents: number;
+      discountCents: number;
+      taxCents: number;
+      totalCents: number;
+      depositApplicationCents: number;
+      customerCreditApplicationCents: number;
+      amountDueCents: number;
+      billingIdentity: {
+        [key: string]: unknown;
+      };
+      terms: {
+        [key: string]: unknown;
+      };
+      /** Format: date-time */
+      preparedAt: string;
+      /** Format: date-time */
+      postedAt?: string | null;
+      lines: components["schemas"]["InvoiceLineItemDto"][];
+    };
+    InvoiceDeliveryDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      invoiceVersionId: string;
+      channel: string;
+      status: string;
+      destination: {
+        [key: string]: unknown;
+      };
+      /** Format: date-time */
+      attemptedAt: string;
+      /** Format: date-time */
+      sentAt?: string | null;
+      /** Format: date-time */
+      deliveredAt?: string | null;
+      /** Format: date-time */
+      viewedAt?: string | null;
+      failureReason?: string | null;
+    };
+    InvoicePublicLinkSummaryDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      invoiceVersionId: string;
+      recipient: string;
+      /** Format: date-time */
+      expiresAt: string;
+      /** Format: date-time */
+      revokedAt?: string | null;
+      viewCount: number;
+      /** Format: date-time */
+      lastViewedAt?: string | null;
+    };
+    InvoiceDto: {
+      /** Format: uuid */
+      id: string;
+      invoiceNumber: string;
+      invoiceType: string;
+      status: string;
+      currency: string;
+      /** Format: uuid */
+      projectId: string;
+      /** Format: uuid */
+      jobId?: string | null;
+      projectNumber: string;
+      jobNumber?: string | null;
+      customerName: string;
+      totalCents?: number | null;
+      outstandingBalanceCents: number;
+      /** Format: uuid */
+      replacesInvoiceId?: string | null;
+      /** Format: uuid */
+      replacedByInvoiceId?: string | null;
+      /** Format: date */
+      issueDate?: string | null;
+      /** Format: date */
+      dueDate?: string | null;
+      /** Format: date-time */
+      updatedAt: string;
+      adjustments: components["schemas"]["InvoiceAdjustmentDto"][];
+      versions: components["schemas"]["InvoiceVersionDto"][];
+      deliveries: components["schemas"]["InvoiceDeliveryDto"][];
+      publicLinks: components["schemas"]["InvoicePublicLinkSummaryDto"][];
+      /** Format: date-time */
+      voidedAt?: string | null;
+      voidReason?: string | null;
+    };
+    CreateInvoiceDto: {
+      /** @enum {string} */
+      invoiceType: "deposit" | "final" | "additional_charge" | "credit_memo";
+      /** Format: uuid */
+      jobId?: string;
+      /** @default 14 */
+      dueInDays: number;
+    };
+    RecordInvoiceDeliveryDto: {
+      /** @enum {string} */
+      channel: "email" | "text" | "link" | "manual";
+      destination: string;
+      /** @enum {string} */
+      status: "sent" | "delivered" | "failed";
+      /** Format: date-time */
+      occurredAt?: string;
+      providerReference?: string;
+      failureReason?: string;
+    };
+    CreateInvoicePublicLinkDto: {
+      recipient: string;
+      /** @default 14 */
+      expiresInDays: number;
+    };
+    InvoicePublicLinkDto: {
+      invoice: components["schemas"]["InvoiceDto"];
+      /** Format: uuid */
+      linkId: string;
+      customerPath: string;
+      token: string;
+      /** Format: date-time */
+      expiresAt: string;
+    };
+    CreateInvoiceAdjustmentDto: {
+      /** @enum {string} */
+      adjustmentType:
+        "additional_charge" | "credit" | "tax_adjustment" | "write_off" | "due_date_extension";
+      /** @enum {string} */
+      direction?: "debit" | "credit";
+      amountCents: number;
+      reason: string;
+      /** Format: date-time */
+      effectiveAt?: string;
+      sourceType?: string;
+      /** Format: uuid */
+      sourceId?: string;
+      /** Format: date */
+      newDueDate?: string;
+    };
+    InvoiceCorrectionReasonDto: {
+      reason: string;
+    };
+    ReplaceInvoiceDto: {
+      reason: string;
+      dueInDays?: number;
+    };
+    ValueApplicationDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      invoiceId: string;
+      /** @enum {string} */
+      entryKind: "application" | "reversal";
+      amountCents: number;
+      /** Format: uuid */
+      reversesApplicationId?: string | null;
+      reason?: string | null;
+      /** Format: date-time */
+      appliedAt: string;
+    };
+    PaymentDto: {
+      /** Format: uuid */
+      id: string;
+      paymentNumber: string;
+      /** Format: uuid */
+      customerAccountId: string;
+      customerName: string;
+      /** Format: uuid */
+      projectId?: string | null;
+      projectNumber?: string | null;
+      amountCents: number;
+      allocatedCents: number;
+      customerCreditCents: number;
+      refundedCents: number;
+      availableCents: number;
+      currency: string;
+      paymentMethod: string;
+      receivingAccountReference: string;
+      providerName?: string | null;
+      providerTransactionId?: string | null;
+      status: string;
+      payer: {
+        [key: string]: unknown;
+      };
+      receiptStatus: string;
+      /** Format: date-time */
+      receivedAt: string;
+      /** Format: date-time */
+      verifiedAt?: string | null;
+      /** Format: date-time */
+      settledAt?: string | null;
+      /** Format: date-time */
+      reversedAt?: string | null;
+      reversalReason?: string | null;
+      allocations: components["schemas"]["ValueApplicationDto"][];
+    };
+    PaymentListResponseDto: {
+      items: components["schemas"]["PaymentDto"][];
+    };
+    CreatePaymentDto: {
+      amountCents: number;
+      /** @default USD */
+      currency: string;
+      /** @enum {string} */
+      paymentMethod:
+        "cash" | "zelle" | "venmo" | "cash_app" | "paypal" | "card" | "bank_transfer" | "check";
+      receivingAccountReference: string;
+      payerName: string;
+      payerEmail?: string;
+      providerName?: string;
+      providerTransactionId?: string;
+      /** Format: uuid */
+      evidenceDocumentId?: string;
+      /** @enum {string} */
+      receiptStatus?: "missing" | "attached" | "issued" | "waived" | "not_required";
+      /** Format: date-time */
+      receivedAt?: string;
+    };
+    FinancialReversalDto: {
+      reason: string;
+    };
+    ApplyValueDto: {
+      /** Format: uuid */
+      invoiceId: string;
+      amountCents: number;
+    };
+    CreateDepositBalanceDto: {
+      /**
+       * @default advance_payment
+       * @enum {string}
+       */
+      depositType: "advance_payment" | "split_advance";
+    };
+    DepositBalanceDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      projectId: string;
+      /** Format: uuid */
+      customerAccountId: string;
+      /** Format: uuid */
+      sourcePaymentAllocationId: string;
+      depositType: string;
+      currency: string;
+      originalAmountCents: number;
+      appliedCents: number;
+      refundedCents: number;
+      availableCents: number;
+      status: string;
+      applications: components["schemas"]["ValueApplicationDto"][];
+    };
+    DepositBalanceListResponseDto: {
+      items: components["schemas"]["DepositBalanceDto"][];
+    };
+    CustomerCreditDto: {
+      /** Format: uuid */
+      id: string;
+      creditNumber: string;
+      /** Format: uuid */
+      customerAccountId: string;
+      /** Format: uuid */
+      projectId?: string | null;
+      sourceType: string;
+      /** Format: uuid */
+      sourceId: string;
+      currency: string;
+      originalAmountCents: number;
+      appliedCents: number;
+      refundedCents: number;
+      availableCents: number;
+      status: string;
+      description: string;
+      applications: components["schemas"]["ValueApplicationDto"][];
+    };
+    CustomerCreditListResponseDto: {
+      items: components["schemas"]["CustomerCreditDto"][];
+    };
+    CreateCustomerCreditDto: {
+      /** @enum {string} */
+      sourceType: "unapplied_payment" | "overpayment" | "credit_memo";
+      /** Format: uuid */
+      sourceId: string;
+      description?: string;
+    };
+    PublicInvoiceAdjustmentDto: {
+      adjustmentNumber: string;
+      adjustmentType: string;
+      direction: string;
+      amountCents: number;
+      status: string;
+      /** Format: date-time */
+      effectiveAt: string;
+    };
+    PublicInvoiceDeliveryDto: {
+      channel: string;
+      status: string;
+      /** Format: date-time */
+      attemptedAt: string;
+      /** Format: date-time */
+      sentAt?: string | null;
+      /** Format: date-time */
+      deliveredAt?: string | null;
+      /** Format: date-time */
+      viewedAt?: string | null;
+    };
+    PublicInvoiceDto: {
+      invoiceNumber: string;
+      invoiceType: string;
+      status: string;
+      currency: string;
+      customerName: string;
+      projectNumber: string;
+      jobNumber?: string | null;
+      /** Format: date */
+      issueDate?: string | null;
+      /** Format: date */
+      dueDate?: string | null;
+      versionNumber: number;
+      subtotalCents: number;
+      taxCents: number;
+      totalCents: number;
+      appliedCents: number;
+      outstandingBalanceCents: number;
+      lines: components["schemas"]["InvoiceLineItemDto"][];
+      adjustments: components["schemas"]["PublicInvoiceAdjustmentDto"][];
+      deliveries: components["schemas"]["PublicInvoiceDeliveryDto"][];
+    };
+    RefundDto: {
+      /** Format: uuid */
+      id: string;
+      refundNumber: string;
+      /** Format: uuid */
+      customerAccountId: string;
+      /** Format: uuid */
+      projectId?: string | null;
+      /** @enum {string} */
+      sourceType: "payment" | "deposit" | "customer_credit";
+      /** Format: uuid */
+      sourceId: string;
+      amountCents: number;
+      currency: string;
+      refundMethod: string;
+      originalMethod?: string | null;
+      payee: {
+        [key: string]: unknown;
+      };
+      status: string;
+      reason: string;
+      alternateMethodReason?: string | null;
+      /** Format: date-time */
+      approvedAt?: string | null;
+      /** Format: date-time */
+      processedAt?: string | null;
+      /** Format: date-time */
+      settledAt?: string | null;
+      providerName?: string | null;
+      providerRefundId?: string | null;
+      /** Format: uuid */
+      reversesRefundId?: string | null;
+    };
+    RefundListResponseDto: {
+      items: components["schemas"]["RefundDto"][];
+    };
+    CreateRefundDto: {
+      /** @enum {string} */
+      sourceType: "payment" | "deposit" | "customer_credit";
+      /** Format: uuid */
+      sourceId: string;
+      amountCents: number;
+      /** @enum {string} */
+      refundMethod:
+        "cash" | "zelle" | "venmo" | "cash_app" | "paypal" | "card" | "bank_transfer" | "check";
+      payeeName: string;
+      payeeEmail?: string;
+      reason: string;
+      alternateMethodReason?: string;
+    };
+    ApproveRefundDto: {
+      identityVerificationReference?: string;
+    };
+    ProcessRefundDto: {
+      providerName?: string;
+      providerRefundId?: string;
     };
   };
   responses: never;
@@ -4569,6 +5741,1100 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["PublicQuoteDto"];
+        };
+      };
+    };
+  };
+  evaluateProjectFinancialCompletion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FinancialCompletionDto"];
+        };
+      };
+    };
+  };
+  evaluateJobFinancialCompletion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FinancialCompletionDto"];
+        };
+      };
+    };
+  };
+  listInvoices: {
+    parameters: {
+      query?: {
+        projectId?: string;
+        status?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceListResponseDto"];
+        };
+      };
+    };
+  };
+  getInvoice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  createProjectInvoice: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateInvoiceDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  reviseInvoice: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  prepareInvoiceVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  postInvoiceVersion: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  recordInvoiceDelivery: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RecordInvoiceDeliveryDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  createInvoicePublicLink: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateInvoicePublicLinkDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoicePublicLinkDto"];
+        };
+      };
+    };
+  };
+  revokeInvoicePublicLink: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        linkId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  createInvoiceAdjustment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateInvoiceAdjustmentDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  approveInvoiceAdjustment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  postInvoiceAdjustment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  reverseInvoiceAdjustment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InvoiceCorrectionReasonDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  voidInvoice: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InvoiceCorrectionReasonDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  replaceInvoice: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReplaceInvoiceDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InvoiceDto"];
+        };
+      };
+    };
+  };
+  listPayments: {
+    parameters: {
+      query?: {
+        projectId?: string;
+        status?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentListResponseDto"];
+        };
+      };
+    };
+  };
+  getPayment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  createProjectPayment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePaymentDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  createCustomerPayment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreatePaymentDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  verifyPayment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  settlePayment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  reversePayment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinancialReversalDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  allocatePayment: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplyValueDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  reversePaymentAllocation: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinancialReversalDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaymentDto"];
+        };
+      };
+    };
+  };
+  createDepositBalance: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDepositBalanceDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DepositBalanceDto"];
+        };
+      };
+    };
+  };
+  listProjectDepositBalances: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DepositBalanceListResponseDto"];
+        };
+      };
+    };
+  };
+  applyDepositBalance: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplyValueDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DepositBalanceDto"];
+        };
+      };
+    };
+  };
+  reverseDepositApplication: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinancialReversalDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DepositBalanceDto"];
+        };
+      };
+    };
+  };
+  listCustomerCredits: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerCreditListResponseDto"];
+        };
+      };
+    };
+  };
+  createCustomerCredit: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateCustomerCreditDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerCreditDto"];
+        };
+      };
+    };
+  };
+  applyCustomerCredit: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApplyValueDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerCreditDto"];
+        };
+      };
+    };
+  };
+  reverseCustomerCreditApplication: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinancialReversalDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerCreditDto"];
+        };
+      };
+    };
+  };
+  getPublicInvoice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicInvoiceDto"];
+        };
+      };
+    };
+  };
+  listRefunds: {
+    parameters: {
+      query?: {
+        projectId?: string;
+        status?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundListResponseDto"];
+        };
+      };
+    };
+  };
+  getRefund: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  createRefund: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateRefundDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  approveRefund: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ApproveRefundDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  processRefund: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProcessRefundDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  settleRefund: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  failRefund: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinancialReversalDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  cancelRefund: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinancialReversalDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  reverseRefund: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FinancialReversalDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RefundDto"];
         };
       };
     };

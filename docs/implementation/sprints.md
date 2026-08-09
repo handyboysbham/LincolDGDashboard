@@ -231,8 +231,9 @@ Execute a multi-material delivery through operational and invoice readiness.
 
 ## Sprint 1.7.0 — Invoicing and Payments
 
-Implementation status: Phase 1 financial data foundation is complete. Phase 2, the Invoice
-application layer, is next. See the
+Implementation status: complete as of 2026-08-09. Financial data, Invoices, Payments, Advance
+Payment Deposits, Customer Credits, Refunds, whole-Payment reversal, derived financial completion,
+staff Finance workflows, and secure customer Invoice delivery are implemented. See the
 [Sprint 1.7.0 implementation plan](plans/2026-08-04-sprint-1-7-0-invoicing-payments.md).
 
 ### Goal

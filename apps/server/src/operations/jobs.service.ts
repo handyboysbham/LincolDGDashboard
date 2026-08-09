@@ -135,6 +135,12 @@ export class JobsService {
       { key, payload: { action, input, jobId }, scope: `jobs.transition.${action}` },
       async (transaction) => {
         const job = await this.lockJob(transaction, actor.tenantId, jobId);
+        if (action === "complete-financially") {
+          throw invalidState(
+            "JOB_FINANCIAL_COMPLETION_IS_DERIVED",
+            "Use the finance completion evaluator; Job financial completion cannot be set directly",
+          );
+        }
         if (action === "place-hold") {
           requireReason(input.reason);
           if (["closed", "cancelled", "on_hold"].includes(job.status))
@@ -329,7 +335,6 @@ export class JobsService {
           const timestamps: Partial<typeof jobs.$inferInsert> = {};
           if (action === "start") timestamps.startedAt = now;
           if (action === "complete-operationally") timestamps.operationallyCompletedAt = now;
-          if (action === "complete-financially") timestamps.financiallyCompletedAt = now;
           if (action === "close") timestamps.closedAt = now;
           if (action === "reopen") timestamps.reopenedAt = now;
           await transaction

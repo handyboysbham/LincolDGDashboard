@@ -4088,7 +4088,7 @@ export const refunds = pgTable(
     ),
     check(
       "refunds_alternate_method_check",
-      sql`${table.originalMethod} is null or ${table.refundMethod} = ${table.originalMethod} or (${table.alternateMethodReason} is not null and ${table.approvedBy} is not null)`,
+      sql`${table.originalMethod} is null or ${table.refundMethod} = ${table.originalMethod} or (${table.alternateMethodReason} is not null and (${table.status} not in ('approved', 'processing', 'partially_processed', 'processed', 'settled', 'reversed', 'resolved') or ${table.approvedBy} is not null))`,
     ),
     check(
       "refunds_settlement_check",
@@ -4232,6 +4232,53 @@ export const invoiceDeliveries = pgTable(
       table.tenantId,
       table.invoiceId,
       table.attemptedAt,
+    ),
+  ],
+);
+
+export const invoicePublicLinks = pgTable(
+  "invoice_public_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    invoiceId: uuid("invoice_id").notNull(),
+    invoiceVersionId: uuid("invoice_version_id").notNull(),
+    invoiceDeliveryId: uuid("invoice_delivery_id").notNull(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    creationKeyHash: varchar("creation_key_hash", { length: 64 }).notNull(),
+    requestHash: varchar("request_hash", { length: 64 }).notNull(),
+    recipient: varchar("recipient", { length: 320 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    viewCount: integer("view_count").notNull().default(0),
+    lastViewedAt: timestamp("last_viewed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("invoice_public_links_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("invoice_public_links_token_hash_unique").on(table.tokenHash),
+    unique("invoice_public_links_tenant_creation_key_unique").on(
+      table.tenantId,
+      table.creationKeyHash,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceVersionId, table.invoiceId],
+      foreignColumns: [invoiceVersions.tenantId, invoiceVersions.id, invoiceVersions.invoiceId],
+      name: "invoice_public_links_tenant_version_invoice_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.invoiceDeliveryId],
+      foreignColumns: [invoiceDeliveries.tenantId, invoiceDeliveries.id],
+      name: "invoice_public_links_tenant_delivery_fk",
+    }).onDelete("restrict"),
+    check("invoice_public_links_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
+    check("invoice_public_links_view_count_check", sql`${table.viewCount} >= 0`),
+    index("invoice_public_links_tenant_invoice_idx").on(
+      table.tenantId,
+      table.invoiceId,
+      table.expiresAt,
     ),
   ],
 );

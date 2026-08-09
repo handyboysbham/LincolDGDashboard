@@ -15,6 +15,7 @@ import { type SyntheticEvent, useCallback, useEffect, useState } from "react";
 
 import { apiErrorMessage, getApiClient } from "../lib/api-client";
 import { formatMoney, humanizeCommercialValue } from "../lib/commercial-format";
+import { ProjectFinancePanel } from "./project-finance-panel";
 
 type Project = components["schemas"]["ProjectDetailDto"];
 type State =
@@ -112,13 +113,7 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     );
   };
   const transition = (
-    action:
-      | "activate"
-      | "close"
-      | "complete"
-      | "complete-financially"
-      | "complete-operationally"
-      | "start-planning",
+    action: "activate" | "close" | "complete" | "complete-operationally" | "start-planning",
   ) =>
     run(() =>
       getApiClient().POST("/api/v1/projects/{id}/actions/{action}", {
@@ -159,13 +154,11 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
         ? "activate"
         : project.status === "active"
           ? "complete-operationally"
-          : project.status === "operationally_complete"
-            ? "complete-financially"
-            : project.status === "financially_complete"
-              ? "complete"
-              : project.status === "completed"
-                ? "close"
-                : undefined;
+          : project.status === "financially_complete"
+            ? "complete"
+            : project.status === "completed"
+              ? "close"
+              : undefined;
   return (
     <div className="intake-page operations-page">
       <section className="lead-detail-heading">
@@ -241,6 +234,11 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
             <h2>Outcome</h2>
             <p>{project.outcomeStatement}</p>
           </section>
+          <ProjectFinancePanel
+            customerAccountId={project.customerAccountId}
+            jobs={project.jobs}
+            projectId={project.id}
+          />
           <section className="panel operations-section">
             <div className="operations-section-heading">
               <div>

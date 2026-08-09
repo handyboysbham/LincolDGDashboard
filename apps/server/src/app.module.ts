@@ -14,6 +14,7 @@ import { IdempotencyModule } from "./idempotency/idempotency.module.js";
 import { IdentityModule } from "./identity/identity.module.js";
 import { IntakeModule } from "./intake/intake.module.js";
 import { DocumentsModule } from "./documents/documents.module.js";
+import { FinanceModule } from "./finance/finance.module.js";
 import { ObjectStorageModule } from "./object-storage/object-storage.module.js";
 import { OperationsModule } from "./operations/operations.module.js";
 
@@ -31,6 +32,7 @@ import { OperationsModule } from "./operations/operations.module.js";
     IntakeModule,
     OperationsModule,
     CommercialModule,
+    FinanceModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },

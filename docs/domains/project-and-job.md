@@ -119,6 +119,13 @@ After financial completion and closure:
 - corrections require controlled reopening or financial adjustment
 - prior closure history is preserved
 
+Sprint 1.7.0 derives financial completion from posted non-Credit-Memo obligations, active Jobs,
+unapplied Project Payment value, unresolved Project Deposit and Customer Credit value, and active
+Refund workflows. Clients cannot set Job or Project financial completion directly. An evaluator
+records completion only after every blocker clears; later financial corrections atomically return a
+financially complete Job to Invoiced and its Project to Operationally Complete. A financially
+incomplete closed Job is reopened to Planning with Job Event, Audit Event, and outbox history.
+
 The database also rejects ordinary edits to closed Jobs and their schedule, reservation, assignment,
 route, checklist, and hold records. Reopening requires an explicit reason and returns the Job to
 Planning with a preserved reopen timestamp and Job Event.

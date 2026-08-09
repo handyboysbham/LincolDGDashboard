@@ -695,6 +695,12 @@ export class ProjectsService {
       { key, payload: { action, input, projectId }, scope: `projects.transition.${action}` },
       async (transaction) => {
         const project = await this.lockProject(transaction, actor.tenantId, projectId);
+        if (action === "complete-financially") {
+          throw invalidState(
+            "PROJECT_FINANCIAL_COMPLETION_IS_DERIVED",
+            "Use the finance completion evaluator; Project financial completion cannot be set directly",
+          );
+        }
         if (action === "place-hold") {
           requireReason(input.reason);
           if (["closed", "on_hold"].includes(project.status))
@@ -769,7 +775,6 @@ export class ProjectsService {
           const now = new Date();
           const timestamps: Partial<typeof projects.$inferInsert> = {};
           if (action === "complete-operationally") timestamps.operationallyCompletedAt = now;
-          if (action === "complete-financially") timestamps.financiallyCompletedAt = now;
           if (action === "complete") timestamps.completedAt = now;
           if (action === "close") timestamps.closedAt = now;
           if (action === "reopen") timestamps.reopenedAt = now;

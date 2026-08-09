@@ -249,6 +249,7 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "invoice_adjustments",
         "invoice_deliveries",
         "invoice_line_items",
+        "invoice_public_links",
         "invoice_versions",
         "invoices",
         "material_delivery_details",
@@ -319,6 +320,7 @@ describe("Sprint 1.0.0 platform data foundation", () => {
       "invoice_adjustments",
       "invoice_deliveries",
       "invoice_line_items",
+      "invoice_public_links",
       "invoice_versions",
       "invoices",
       "material_delivery_details",
@@ -624,6 +626,83 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         transaction.update(refunds).set({ reason: "Changed" }).where(eq(refunds.id, refundId)),
       ),
       "Settled Refunds are immutable",
+    );
+
+    const refundReversalId = randomUUID();
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(refunds).values({
+        alternateMethodReason: null,
+        amountCents: 600,
+        approvedAt: new Date(),
+        approvedBy: userA,
+        currency: "USD",
+        customerAccountId: materialFixture.customerId,
+        customerCreditId,
+        id: refundReversalId,
+        originalMethod: "check",
+        payeeSnapshot: { displayName: "Material Delivery Fixture" },
+        projectId: materialFixture.projectId,
+        reason: "Provider returned the settled Refund",
+        refundMethod: "check",
+        refundNumber: "REF-2026-00002",
+        reversesRefundId: refundId,
+        sourceType: "customer_credit",
+        status: "reversed",
+        tenantId: tenantA,
+      }),
+    );
+    await expectDatabaseFailure(
+      withTenantTransaction(runtime(), tenantA, (transaction) =>
+        transaction.insert(refunds).values({
+          amountCents: 599,
+          approvedAt: new Date(),
+          approvedBy: userA,
+          currency: "USD",
+          customerAccountId: materialFixture.customerId,
+          customerCreditId,
+          originalMethod: "check",
+          payeeSnapshot: { displayName: "Material Delivery Fixture" },
+          projectId: materialFixture.projectId,
+          reason: "Invalid non-exact reversal",
+          refundMethod: "check",
+          refundNumber: "REF-2026-INVALID",
+          reversesRefundId: randomUUID(),
+          sourceType: "customer_credit",
+          status: "reversed",
+          tenantId: tenantA,
+        }),
+      ),
+      "Refund reversal must exactly match one settled Refund",
+    );
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(customerCreditApplications).values({
+        amountCents: 600,
+        applicationKey: "post-refund-reversal-credit-application",
+        appliedBy: userA,
+        customerAccountId: materialFixture.customerId,
+        customerCreditId,
+        invoiceId: finalInvoice.invoiceId,
+        tenantId: tenantA,
+      }),
+    );
+
+    await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.insert(refunds).values({
+        alternateMethodReason: "Customer closed the original account",
+        amountCents: 100,
+        currency: "USD",
+        customerAccountId: materialFixture.customerId,
+        customerCreditId: concurrencyCreditId,
+        originalMethod: "zelle",
+        payeeSnapshot: { displayName: "Material Delivery Fixture" },
+        projectId: materialFixture.projectId,
+        reason: "Return remaining accommodation value",
+        refundMethod: "check",
+        refundNumber: "REF-2026-00003",
+        sourceType: "customer_credit",
+        status: "review_required",
+        tenantId: tenantA,
+      }),
     );
 
     const tenantBInvoices = await withTenantTransaction(runtime(), tenantB, (transaction) =>

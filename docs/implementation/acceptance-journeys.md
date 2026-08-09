@@ -85,8 +85,9 @@
 7. Verify an overlapping reservation for the same asset fails with a stable conflict.
 8. Confirm the schedule, pass dispatch readiness, and start the Job.
 9. Add a Route Stop and required Checklist, then complete its items.
-10. Complete the operational and financial lifecycle, close the Job, reject an ordinary child edit,
-    and reopen it with a reason.
+10. Complete the operational lifecycle, reject ordinary edits after closure, and preserve explicit
+    reopening history. Financial completion is derived by the finance journey rather than a direct
+    lifecycle action.
 
 ### Negative tests
 
@@ -101,8 +102,22 @@
 ## MD-E2E-001 — Multi-Material Delivery
 
 Implementation status: Sprint 1.6.0 verifies the PostgreSQL-backed operational portion through steps
-9–16, including the staff and mobile driver production routes. Sprint 1.7.0 will extend the same
-canonical journey through final invoicing, payment allocation, and financial completion.
+9–16, including the staff and mobile driver production routes. Sprint 1.7.0 now also verifies a
+Quote-derived
+$185 Deposit Invoice and a source-reconciled Final Invoice with versioning, explicit
+preparation, posting, Job Charge capture, delivery evidence, idempotent replay, and Job advancement.
+The journey voids and reissues the Deposit Invoice, approves/posts/reverses a Final Invoice credit,
+and atomically replaces the corrected Final Invoice without rewriting either posted Version. Phase
+3 verifies and settles the $185
+and $235 Payments, creates the Advance Payment Deposit exactly once, applies/reverses/reapplies
+Payment, Deposit, and Customer Credit value, rejects duplicate and excess applications, and converts
+overpayment or post-payment correction value into Customer Credit. Phase 4 verifies alternate-method
+Refund review and identity evidence, settlement, exact Refund reversal and reissue, derived Job and
+Project financial completion, whole-Payment reversal across direct and Deposit/Credit dependencies,
+and automatic reopening of paid Invoices and a closed Job. Phase 5 connects the same commands to the
+Project and Billing workspaces, verifies production routes for Invoice, Payment, Refund, and
+customer Invoice views, and proves a scoped customer link can be viewed and revoked without exposing
+internal correction reasons or cost data.
 
 ### Configuration
 
@@ -155,7 +170,16 @@ Amount Due                  $235
 ```
 
 18. Verify and allocate $235 Payment.
-19. Mark Invoice Paid, Job Financially Complete, and close Project.
+19. Mark Invoice Paid, derive Job and Project financial completion, and close the Job.
+
+The implemented Phase 4 continuation also refunds a duplicate receipt through an approved alternate
+method, reverses and reissues that Refund without mutating its settled history, derives financial
+completion, then reverses both final and advance Payments to prove that the Invoice, closed Job, and
+Project reopen from authoritative ledgers.
+
+The Phase 5 customer-delivery continuation creates an expiring secure link for the posted
+replacement Final Invoice, records its first customer view as delivery evidence, returns only
+customer-safe financial presentation, and proves revocation returns Gone.
 
 ### Negative tests
 
@@ -166,6 +190,8 @@ Amount Due                  $235
 - Sent Quote content and line items reject direct mutation.
 - A superseded link returns Gone and cannot accept.
 - A declined Quote remains terminal and cannot accept later.
+- Alternate-method Refund approval without identity-verification evidence is rejected.
+- A second whole-Payment reversal is rejected without duplicate ledger entries.
 
 ---
 
