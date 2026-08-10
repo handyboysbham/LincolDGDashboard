@@ -33,6 +33,7 @@ Do not rely on chat history after a decision has been consolidated into these fi
 - [Job Charge](domains/job-charge.md)
 - [Invoice Architecture](domains/invoice.md)
 - [Payment, Allocation, Credit, and Refund](domains/payment.md)
+- [Communications and Customer Experience](domains/communications-and-customer-experience.md)
 
 ## Implementation
 
@@ -42,6 +43,7 @@ Do not rely on chat history after a decision has been consolidated into these fi
 - [Sprint 1.6.0 Material Delivery Operations Plan](implementation/plans/2026-08-03-sprint-1-6-0-material-delivery-operations.md)
 - [Sprint 1.7.0 Invoicing and Payments Plan](implementation/plans/2026-08-04-sprint-1-7-0-invoicing-payments.md)
 - [Sprint 1.8.0 Dump Trailer Rental Plan](implementation/plans/2026-08-09-sprint-1-8-0-dump-trailer-rental.md)
+- [Sprint 1.9.0 Communications and Customer Experience Plan](implementation/plans/2026-08-09-sprint-1-9-0-communications-customer-experience.md)
 - [Codex Handoff](implementation/codex-handoff.md)
 
 ## Runbooks

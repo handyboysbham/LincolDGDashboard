@@ -5,6 +5,7 @@ import { AuthModule } from "./auth/auth.module.js";
 import { DevelopmentAuthGuard } from "./auth/development-auth.guard.js";
 import { PermissionsGuard } from "./auth/permissions.guard.js";
 import { CommercialModule } from "./commercial/commercial.module.js";
+import { CommunicationsModule } from "./communications/communications.module.js";
 import { ConfigurationModule } from "./config/configuration.module.js";
 import { ContextModule } from "./context/context.module.js";
 import { DatabaseModule } from "./database/database.module.js";
@@ -33,6 +34,7 @@ import { OperationsModule } from "./operations/operations.module.js";
     OperationsModule,
     CommercialModule,
     FinanceModule,
+    CommunicationsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },

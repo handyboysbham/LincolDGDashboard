@@ -45,7 +45,7 @@ export async function createApiApplication(): Promise<ApiApplication> {
   const swaggerConfiguration = new DocumentBuilder()
     .setTitle("Lincoln Dirt and Gravel API")
     .setDescription("Lincoln Dirt and Gravel operating system API")
-    .setVersion("1.7.0")
+    .setVersion("1.9.0")
     .build();
   const document = SwaggerModule.createDocument(application, swaggerConfiguration);
   SwaggerModule.setup("api/docs", application, document, {

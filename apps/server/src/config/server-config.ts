@@ -15,6 +15,19 @@ export interface ServerConfig {
     mode: "development";
   };
   databaseUrl: string;
+  notifications: {
+    emailApiKey: string | null;
+    emailApiUrl: string;
+    emailFrom: string;
+    emailProvider: "capture" | "resend";
+    reminderLeadMinutes: number;
+    smsAccountSid: string | null;
+    smsAuthToken: string | null;
+    smsFrom: string | null;
+    smsProvider: "capture" | "disabled" | "twilio";
+    timeoutMs: number;
+    twilioApiBaseUrl: string;
+  };
   objectStorage: {
     accessKeyId: string;
     bucket: string;
@@ -69,6 +82,16 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
   }
 
   const minioEndpoint = required("MINIO_ENDPOINT", environment.MINIO_ENDPOINT).replace(/\/$/, "");
+  const emailProvider = enumValue(
+    "NOTIFICATION_EMAIL_PROVIDER",
+    environment.NOTIFICATION_EMAIL_PROVIDER ?? "capture",
+    ["capture", "resend"] as const,
+  );
+  const smsProvider = enumValue(
+    "NOTIFICATION_SMS_PROVIDER",
+    environment.NOTIFICATION_SMS_PROVIDER ?? "disabled",
+    ["capture", "disabled", "twilio"] as const,
+  );
 
   return {
     api: {
@@ -83,6 +106,46 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
       mode: authMode,
     },
     databaseUrl: required("DATABASE_URL", environment.DATABASE_URL),
+    notifications: {
+      emailApiKey:
+        emailProvider === "resend"
+          ? required("NOTIFICATION_EMAIL_API_KEY", environment.NOTIFICATION_EMAIL_API_KEY)
+          : null,
+      emailApiUrl: (environment.NOTIFICATION_EMAIL_API_URL ?? "https://api.resend.com").replace(
+        /\/$/,
+        "",
+      ),
+      emailFrom: required("MAIL_FROM", environment.MAIL_FROM),
+      emailProvider,
+      reminderLeadMinutes: integer(
+        "NOTIFICATION_REMINDER_LEAD_MINUTES",
+        environment.NOTIFICATION_REMINDER_LEAD_MINUTES ?? "1440",
+        5,
+        10_080,
+      ),
+      smsAccountSid:
+        smsProvider === "twilio"
+          ? required("NOTIFICATION_SMS_ACCOUNT_SID", environment.NOTIFICATION_SMS_ACCOUNT_SID)
+          : null,
+      smsAuthToken:
+        smsProvider === "twilio"
+          ? required("NOTIFICATION_SMS_AUTH_TOKEN", environment.NOTIFICATION_SMS_AUTH_TOKEN)
+          : null,
+      smsFrom:
+        smsProvider === "twilio"
+          ? required("NOTIFICATION_SMS_FROM", environment.NOTIFICATION_SMS_FROM)
+          : null,
+      smsProvider,
+      timeoutMs: integer(
+        "NOTIFICATION_PROVIDER_TIMEOUT_MS",
+        environment.NOTIFICATION_PROVIDER_TIMEOUT_MS ?? "10000",
+        1_000,
+        60_000,
+      ),
+      twilioApiBaseUrl: (
+        environment.NOTIFICATION_TWILIO_API_BASE_URL ?? "https://api.twilio.com"
+      ).replace(/\/$/, ""),
+    },
     objectStorage: {
       accessKeyId: required("MINIO_APP_USER", environment.MINIO_APP_USER),
       bucket: required("MINIO_BUCKET", environment.MINIO_BUCKET),

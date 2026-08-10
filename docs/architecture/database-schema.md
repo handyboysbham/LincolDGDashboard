@@ -157,6 +157,17 @@ Loads remain immutable terminal facts, but no longer block completion after a sa
 replacement chain contains a reconciled Load. An unresolved, cancelled-only, or cyclic replacement
 chain still blocks completion.
 
+Migration `0012` adds tenant-owned Notification Templates, Notification Preferences, Notification
+Deliveries, and Notification Delivery Attempts. It enforces immutable published Template content,
+controlled delivery transitions, durable history, tenant-aware foreign keys, forced Row-Level
+Security, and runtime grants without delete privileges.
+
+Migration `0013` adds Project Public Links and append-only Project Public Link Views, and associates
+Notification Deliveries with the capability used for customer Project presentation. Project tokens
+are stored only as hashes; active summary links are unique per Project, and expiration, revocation,
+view evidence, tenant-aware relationships, forced Row-Level Security, and no-delete history guards
+are enforced in PostgreSQL.
+
 ### Projects and operations
 
 - projects
@@ -211,7 +222,10 @@ chain still blocks completion.
 - document_public_links
 - notes
 - tasks
-- communications
+- notification_templates
+- notification_preferences
+- notification_deliveries
+- notification_delivery_attempts
 - cases
 
 ## Important constraints
@@ -241,6 +255,10 @@ chain still blocks completion.
   unloading, evidence, empty-trailer, and Expense facts when applicable.
 - Completed Rental Inspections, approved Extensions, failed Pickup Attempts, and reconciled Disposal
   Loads preserve immutable outcome facts.
+- Published Notification Templates are immutable, delivery content and origin cannot be rewritten,
+  and provider Attempts remain durable after completion.
+- Project public-link tokens are stored only as hashes; revoked link identity is immutable, links
+  cannot be deleted, and Project public-link view evidence is append-only.
 - Material Load children, Route Stops, Expenses, Allocations, variances, substitutions, and Job
   Charges are constrained to the same tenant and Job.
 - Ready Material Load Validations cannot contain failed capacity, compatibility, or separation
@@ -272,8 +290,10 @@ Every implemented tenant table has forced Row-Level Security. Runtime policies c
 with `app.current_tenant_id`; duplicate lookups and all pricing, Estimate, Quote, acceptance,
 Project, Contract, Job, scheduling, asset, readiness, checklist, route, event, hold, Material
 Delivery, Expense, Expense Allocation, Job Charge, Invoice, Payment, Allocation, Deposit, Customer
-Credit, Refund, Dump Trailer Rental, Extension, Pickup Attempt, Disposal Load, and Rental Inspection
-queries are subject to the same tenant boundary.
+Credit, Refund, Dump Trailer Rental, Extension, Pickup Attempt, Disposal Load, Rental Inspection,
+Notification Template, Notification Preference, Notification Delivery, and Notification Delivery
+Attempt, Project Public Link, and Project Public Link View queries are subject to the same tenant
+boundary.
 
 ## Derived values
 

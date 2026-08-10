@@ -15,6 +15,29 @@ Every transition must:
 9. Create tasks and notifications.
 10. Commit atomically.
 
+## Notification delivery
+
+Notification Templates transition from Draft to Published and then Retired. Published content is
+immutable; publishing a replacement version retires the prior published version for the same key and
+channel. Notification Deliveries transition from Pending to Sending and then Delivered or Failed;
+Failed may retry through Sending. A disabled preference transitions the newly derived Delivery from
+Pending directly to terminal Suppressed. Provider calls occur only after the originating outbox
+event is committed, and every attempt uses an idempotency key recorded with durable delivery
+history.
+
+## Customer Project capability
+
+```text
+Active → Revoked
+Active → Expired (derived from time)
+```
+
+Creating or rotating a capability locks the Project, validates the Customer relationship, revokes
+the prior active summary link when necessary, and writes Audit Events and outbox events atomically.
+Revocation is an explicit idempotent command. A public view does not change lifecycle status; it
+records append-only view evidence and derived first/last-view metadata after token, scope,
+expiration, revocation, and rate-limit checks pass.
+
 ## Lead
 
 ```text

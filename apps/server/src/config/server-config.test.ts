@@ -14,6 +14,7 @@ const baseEnvironment: NodeJS.ProcessEnv = {
   MINIO_APP_USER: "object-storage-user",
   MINIO_BUCKET: "documents",
   MINIO_ENDPOINT: "http://127.0.0.1:9000",
+  MAIL_FROM: "local@example.test",
   WEB_ORIGIN: "http://127.0.0.1:3000",
 };
 
@@ -25,6 +26,11 @@ describe("loadServerConfig", () => {
     expect(configuration.worker.tenantIds).toEqual(["00000000-0000-4000-8000-000000000001"]);
     expect(configuration.api.port).toBe(3001);
     expect(configuration.objectStorage.maxUploadBytes).toBe(20_971_520);
+    expect(configuration.notifications).toMatchObject({
+      emailProvider: "capture",
+      reminderLeadMinutes: 1440,
+      smsProvider: "disabled",
+    });
   });
 
   it("rejects development authentication outside local development", () => {
@@ -37,5 +43,14 @@ describe("loadServerConfig", () => {
     expect(() => loadServerConfig({ ...baseEnvironment, WORKER_TENANT_IDS: "not-a-uuid" })).toThrow(
       "WORKER_TENANT_IDS must be a valid UUID",
     );
+  });
+
+  it("requires provider credentials only when a production adapter is selected", () => {
+    expect(() =>
+      loadServerConfig({ ...baseEnvironment, NOTIFICATION_EMAIL_PROVIDER: "resend" }),
+    ).toThrow("NOTIFICATION_EMAIL_API_KEY is required");
+    expect(() =>
+      loadServerConfig({ ...baseEnvironment, NOTIFICATION_SMS_PROVIDER: "twilio" }),
+    ).toThrow("NOTIFICATION_SMS_ACCOUNT_SID is required");
   });
 });

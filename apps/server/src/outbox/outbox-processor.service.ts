@@ -12,6 +12,14 @@ import { ServerConfigService } from "../config/server-config.service.js";
 import { DATABASE } from "../database/database.tokens.js";
 import { OutboxHandlerRegistry } from "./outbox-handler.registry.js";
 
+export class NonRetryableOutboxError extends Error {
+  public override readonly name = "NonRetryableOutboxError";
+
+  public constructor(public readonly code: string) {
+    super("Outbox event cannot be retried automatically");
+  }
+}
+
 @Injectable()
 export class OutboxProcessorService {
   private readonly logger = new Logger(OutboxProcessorService.name);
@@ -54,13 +62,14 @@ export class OutboxProcessorService {
     } catch (error) {
       const worker = this.configuration.value.worker;
       const retryDelayMs = Math.min(2 ** Math.max(event.attempts - 1, 0) * 1_000, 300_000);
+      const nonRetryable = error instanceof NonRetryableOutboxError;
       const result = await withTenantTransaction(
         this.database,
         event.tenantId,
         async (transaction) =>
           failOutboxEvent(transaction, {
-            attempts: event.attempts,
-            error: error instanceof Error ? error.name : "UnknownError",
+            attempts: nonRetryable ? worker.maxAttempts : event.attempts,
+            error: nonRetryable ? error.code : error instanceof Error ? error.name : "UnknownError",
             eventId: event.id,
             maxAttempts: worker.maxAttempts,
             retryAt: new Date(Date.now() + retryDelayMs),

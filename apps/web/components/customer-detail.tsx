@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { apiErrorMessage, getApiClient } from "../lib/api-client";
+import { CustomerNotificationPreferences } from "./customer-notification-preferences";
 
 type Customer = components["schemas"]["CustomerDetailDto"];
 
@@ -187,6 +188,7 @@ export function CustomerDetail({ customerId }: { customerId: string }) {
           ))}
         </aside>
       </div>
+      <CustomerNotificationPreferences contacts={customer.contacts} customerId={customer.id} />
     </div>
   );
 }

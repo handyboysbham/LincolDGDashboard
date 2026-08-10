@@ -1,5 +1,55 @@
 # End-to-End Acceptance Journeys
 
+## COMMS-E2E-001 — Outbox-Driven Customer Communication
+
+Implementation status: implemented in Sprint 1.9.0; the expanded clean-database and interactive
+production-build reruns remain pending. Coverage includes Template publication, preference
+evaluation, explicit and lifecycle-event queueing, scheduled reminders, configured providers, outbox
+and scheduled-work processing, idempotent delivery, suppression, retry and dead-letter operations,
+tenant isolation, staff Communications workflows, and the secure customer Project experience.
+
+### Journey
+
+1. Create and publish an email Template with declared customer-safe variables.
+2. Enable schedule email for the Customer's primary Contact.
+3. Queue a schedule notification and replay the command with the same idempotency key.
+4. Process the committed `notification.requested` outbox event.
+5. Record exactly one Notification Delivery and one successful provider Attempt.
+6. Disable the preference and record a Suppressed Delivery without a provider call.
+7. Fail a provider attempt, retry through the outbox worker, and retain ordered failure/success
+   Attempts under one Delivery.
+8. Process a committed Job schedule event through the lifecycle policy registry.
+9. Create or reuse a hashed Project summary capability and provide its plaintext URL only to the
+   in-memory provider request.
+10. Replay the source event and retain one Delivery and provider call.
+11. Open the customer Project summary and view allowlisted status, schedule, milestone, financial,
+    and customer-visible Document presentation.
+12. Record first-view and append-only view evidence, then revoke the capability and fail safely.
+13. Schedule a reminder from the committed Job schedule event and re-read current Job readiness at
+    execution time.
+14. Deliver one reminder with a stable provider idempotency key, then replay its scheduled work and
+    retain one Delivery and provider call.
+15. Permanently reject one provider request, expose only its controlled error code in Communications
+    operations, and retry it with an audited idempotent command.
+16. Edit Contact email and SMS preferences through the Customer staff view.
+17. Load the staff Communications and customer Project routes from a production build, including
+    loading, empty, unavailable, expired, and revoked states.
+
+### Negative tests
+
+- a Template cannot declare cost, margin, approval-discussion, supplier-cost, or internal-note data
+- queued variables must exactly match the published Template allowlist
+- a foreign-tenant Contact cannot be targeted or read
+- provider exception messages and credentials are not persisted
+- scheduled reminders become stale safely when Job time or terminal state changes
+- retry commands cannot operate on successful, suppressed, active, or foreign-tenant work
+- Delivered and Suppressed history cannot be rewritten or deleted
+- Project responses exclude employee identifiers, costs, margins, internal notes, private Documents,
+  and approval discussions
+- tampered, expired, revoked, and cross-tenant Project capabilities fail safely
+
+---
+
 ## BOOT-E2E-001 — Repository Bootstrap
 
 ### Configuration

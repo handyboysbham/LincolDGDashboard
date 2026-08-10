@@ -1,12 +1,13 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import type { TenantTransaction } from "./client.js";
-import { outboxEvents } from "./schema.js";
+import { outboxEvents, scheduledJobs } from "./schema.js";
 
 export interface ClaimedOutboxEvent {
   aggregateId: string;
   aggregateType: string;
   attempts: number;
+  createdBy: string | null;
   eventType: string;
   id: string;
   payload: Record<string, unknown>;
@@ -72,7 +73,8 @@ export async function claimOutboxEvents(
       events.aggregate_id as "aggregateId",
       events.event_type as "eventType",
       events.payload,
-      events.attempts
+      events.attempts,
+      events.created_by as "createdBy"
   `);
 
   return result.rows as unknown as ClaimedOutboxEvent[];
@@ -177,6 +179,64 @@ export async function failOutboxEvent(
       ),
     )
     .returning({ id: outboxEvents.id });
+
+  return failed.length === 1 ? status : "not_owned";
+}
+
+export async function completeScheduledJob(
+  transaction: TenantTransaction,
+  input: { jobId: string; workerId: string },
+): Promise<boolean> {
+  const completed = await transaction
+    .update(scheduledJobs)
+    .set({
+      completedAt: new Date(),
+      lastError: null,
+      lockedBy: null,
+      lockedUntil: null,
+      status: "completed",
+    })
+    .where(
+      and(
+        eq(scheduledJobs.id, input.jobId),
+        eq(scheduledJobs.status, "processing"),
+        eq(scheduledJobs.lockedBy, input.workerId),
+      ),
+    )
+    .returning({ id: scheduledJobs.id });
+
+  return completed.length === 1;
+}
+
+export async function failScheduledJob(
+  transaction: TenantTransaction,
+  input: {
+    attempts: number;
+    error: string;
+    jobId: string;
+    maxAttempts: number;
+    retryAt: Date;
+    workerId: string;
+  },
+): Promise<"dead_letter" | "pending" | "not_owned"> {
+  const status = input.attempts >= input.maxAttempts ? "dead_letter" : "pending";
+  const failed = await transaction
+    .update(scheduledJobs)
+    .set({
+      lastError: input.error.slice(0, 4_000),
+      lockedBy: null,
+      lockedUntil: null,
+      runAt: input.retryAt,
+      status,
+    })
+    .where(
+      and(
+        eq(scheduledJobs.id, input.jobId),
+        eq(scheduledJobs.status, "processing"),
+        eq(scheduledJobs.lockedBy, input.workerId),
+      ),
+    )
+    .returning({ id: scheduledJobs.id });
 
   return failed.length === 1 ? status : "not_owned";
 }

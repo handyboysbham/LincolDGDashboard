@@ -8,6 +8,7 @@ import {
 
 import { ServerConfigService } from "../config/server-config.service.js";
 import { OutboxProcessorService } from "../outbox/outbox-processor.service.js";
+import { ScheduledJobProcessorService } from "../scheduled/scheduled-job-processor.service.js";
 import { WorkerHeartbeatService } from "./worker-heartbeat.service.js";
 
 @Injectable()
@@ -21,6 +22,8 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
     @Inject(ServerConfigService) private readonly configuration: ServerConfigService,
     @Inject(WorkerHeartbeatService) private readonly heartbeat: WorkerHeartbeatService,
     @Inject(OutboxProcessorService) private readonly outbox: OutboxProcessorService,
+    @Inject(ScheduledJobProcessorService)
+    private readonly scheduledJobs: ScheduledJobProcessorService,
   ) {}
 
   public async onApplicationBootstrap(): Promise<void> {
@@ -49,6 +52,7 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
     this.polling = true;
     try {
       for (const tenantId of this.configuration.value.worker.tenantIds) {
+        await this.scheduledJobs.processOnce(tenantId);
         await this.outbox.processOnce(tenantId);
       }
     } catch {

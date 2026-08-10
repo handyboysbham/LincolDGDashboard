@@ -61,6 +61,22 @@ Development authentication is allowed only with `APP_ENV=local`. The tenant, use
 come from `.env`; clients cannot select tenant context with an `x-tenant-id` header. Set
 `READY_REQUIRE_WORKER=true` when readiness should also require a fresh worker heartbeat.
 
+## Communications development
+
+Local development uses `NOTIFICATION_EMAIL_PROVIDER=capture` and
+`NOTIFICATION_SMS_PROVIDER=disabled`; capture returns deterministic provider identifiers and stores
+or logs no outbound message content. Set `NOTIFICATION_EMAIL_PROVIDER=resend` only with a
+server-side `NOTIFICATION_EMAIL_API_KEY` and reviewed `MAIL_FROM`. Optional Twilio SMS requires the
+account SID, auth token, and sender variables shown in `.env.example`. Never use `NEXT_PUBLIC_`
+variables for provider credentials.
+
+`NOTIFICATION_PROVIDER_TIMEOUT_MS` bounds each provider request.
+`NOTIFICATION_REMINDER_LEAD_MINUTES` controls when a confirmed Job reminder becomes eligible. The
+worker must remain active to process both outbox events and due reminders. Open `/communications` to
+inspect masked Delivery evidence, queue health, reminders, and controlled dead-letter codes. Retry
+buttons preserve all prior Delivery Attempts and create Audit Events; do not repair statuses with
+SQL in shared environments.
+
 ## Customer Intake development
 
 After migration and seed, open `/leads/new` to create either a Material Delivery or Dump Trailer

@@ -12,6 +12,7 @@ const environment: NodeJS.ProcessEnv = {
   DEVELOPMENT_TENANT_ID: "00000000-0000-4000-8000-000000000001",
   DEVELOPMENT_USER_ID: "00000000-0000-4000-8000-000000000201",
   DOCUMENT_PUBLIC_LINK_SIGNING_KEY: "unit-test-signing-key-with-32-characters",
+  MAIL_FROM: "health-check@example.test",
   MINIO_APP_PASSWORD: "object-storage-secret",
   MINIO_APP_USER: "object-storage-user",
   MINIO_BUCKET: "documents",

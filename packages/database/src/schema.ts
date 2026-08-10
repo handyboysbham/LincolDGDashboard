@@ -1656,6 +1656,78 @@ export const projects = pgTable(
   ],
 );
 
+export const projectPublicLinks = pgTable(
+  "project_public_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: uuid("project_id").notNull(),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    scope: varchar("scope", { length: 40 }).notNull().default("summary"),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    firstViewedAt: timestamp("first_viewed_at", { withTimezone: true }),
+    lastViewedAt: timestamp("last_viewed_at", { withTimezone: true }),
+    viewCount: integer("view_count").notNull().default(0),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("project_public_links_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("project_public_links_token_hash_unique").on(table.tokenHash),
+    foreignKey({
+      columns: [table.tenantId, table.projectId, table.customerAccountId],
+      foreignColumns: [projects.tenantId, projects.id, projects.customerAccountId],
+      name: "project_public_links_tenant_project_customer_fk",
+    }).onDelete("restrict"),
+    uniqueIndex("project_public_links_one_active_scope_idx")
+      .on(table.tenantId, table.projectId, table.scope)
+      .where(sql`${table.revokedAt} is null`),
+    check("project_public_links_scope_check", sql`${table.scope} in ('summary')`),
+    check("project_public_links_expiry_check", sql`${table.expiresAt} > ${table.createdAt}`),
+    check("project_public_links_view_count_check", sql`${table.viewCount} >= 0`),
+    check(
+      "project_public_links_view_history_check",
+      sql`(${table.viewCount} = 0 and ${table.firstViewedAt} is null and ${table.lastViewedAt} is null) or (${table.viewCount} > 0 and ${table.firstViewedAt} is not null and ${table.lastViewedAt} is not null and ${table.lastViewedAt} >= ${table.firstViewedAt})`,
+    ),
+    index("project_public_links_tenant_project_idx").on(
+      table.tenantId,
+      table.projectId,
+      table.expiresAt,
+    ),
+    index("project_public_links_expiry_idx").on(table.expiresAt),
+  ],
+);
+
+export const projectPublicLinkViews = pgTable(
+  "project_public_link_views",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectPublicLinkId: uuid("project_public_link_id").notNull(),
+    viewedAt: timestamp("viewed_at", { withTimezone: true }).notNull().defaultNow(),
+    correlationId: uuid("correlation_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique("project_public_link_views_tenant_id_id_unique").on(table.tenantId, table.id),
+    foreignKey({
+      columns: [table.tenantId, table.projectPublicLinkId],
+      foreignColumns: [projectPublicLinks.tenantId, projectPublicLinks.id],
+      name: "project_public_link_views_tenant_link_fk",
+    }).onDelete("restrict"),
+    index("project_public_link_views_tenant_link_viewed_idx").on(
+      table.tenantId,
+      table.projectPublicLinkId,
+      table.viewedAt,
+    ),
+  ],
+);
+
 export const contracts = pgTable(
   "contracts",
   {
@@ -5094,6 +5166,249 @@ export const invoiceLineItems = pgTable(
       table.tenantId,
       table.invoiceVersionId,
       table.sequence,
+    ),
+  ],
+);
+
+export const notificationTemplates = pgTable(
+  "notification_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    templateKey: varchar("template_key", { length: 100 }).notNull(),
+    channel: varchar("channel", { length: 20 }).notNull(),
+    version: integer("version").notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    subjectTemplate: varchar("subject_template", { length: 300 }),
+    bodyTemplate: text("body_template").notNull(),
+    allowedVariables: jsonb("allowed_variables").$type<string[]>().notNull().default([]),
+    status: varchar("status", { length: 30 }).notNull().default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    retiredAt: timestamp("retired_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("notification_templates_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("notification_templates_tenant_key_channel_version_unique").on(
+      table.tenantId,
+      table.templateKey,
+      table.channel,
+      table.version,
+    ),
+    uniqueIndex("notification_templates_one_published_idx")
+      .on(table.tenantId, table.templateKey, table.channel)
+      .where(sql`${table.status} = 'published'`),
+    check("notification_templates_key_check", sql`length(${table.templateKey}) > 0`),
+    check("notification_templates_version_check", sql`${table.version} > 0`),
+    check("notification_templates_channel_check", sql`${table.channel} in ('email', 'sms')`),
+    check(
+      "notification_templates_status_check",
+      sql`${table.status} in ('draft', 'published', 'retired')`,
+    ),
+    check(
+      "notification_templates_subject_check",
+      sql`${table.channel} <> 'email' or ${table.subjectTemplate} is not null`,
+    ),
+    check(
+      "notification_templates_publication_check",
+      sql`(${table.status} = 'draft' and ${table.publishedAt} is null and ${table.retiredAt} is null) or (${table.status} = 'published' and ${table.publishedAt} is not null and ${table.retiredAt} is null) or (${table.status} = 'retired' and ${table.publishedAt} is not null and ${table.retiredAt} is not null)`,
+    ),
+    index("notification_templates_tenant_status_idx").on(
+      table.tenantId,
+      table.status,
+      table.templateKey,
+    ),
+  ],
+);
+
+export const notificationPreferences = pgTable(
+  "notification_preferences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    contactId: uuid("contact_id").notNull(),
+    notificationType: varchar("notification_type", { length: 80 }).notNull(),
+    emailEnabled: boolean("email_enabled").notNull().default(true),
+    smsEnabled: boolean("sms_enabled").notNull().default(false),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("notification_preferences_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("notification_preferences_tenant_contact_type_unique").on(
+      table.tenantId,
+      table.contactId,
+      table.notificationType,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId, table.contactId],
+      foreignColumns: [
+        accountContacts.tenantId,
+        accountContacts.customerAccountId,
+        accountContacts.contactId,
+      ],
+      name: "notification_preferences_tenant_account_contact_fk",
+    }).onDelete("restrict"),
+    check("notification_preferences_type_check", sql`length(${table.notificationType}) > 0`),
+    index("notification_preferences_tenant_customer_idx").on(
+      table.tenantId,
+      table.customerAccountId,
+    ),
+  ],
+);
+
+export const notificationDeliveries = pgTable(
+  "notification_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    originOutboxEventId: uuid("origin_outbox_event_id").notNull(),
+    templateId: uuid("template_id").notNull(),
+    customerAccountId: uuid("customer_account_id").notNull(),
+    contactId: uuid("contact_id").notNull(),
+    projectId: uuid("project_id"),
+    projectPublicLinkId: uuid("project_public_link_id"),
+    notificationType: varchar("notification_type", { length: 80 }).notNull(),
+    channel: varchar("channel", { length: 20 }).notNull(),
+    recipient: varchar("recipient", { length: 320 }).notNull(),
+    subject: varchar("subject", { length: 300 }),
+    renderedBody: text("rendered_body").notNull(),
+    provider: varchar("provider", { length: 80 }).notNull(),
+    providerMessageId: varchar("provider_message_id", { length: 240 }),
+    dedupeKey: varchar("dedupe_key", { length: 200 }).notNull(),
+    status: varchar("status", { length: 30 }).notNull().default("pending"),
+    suppressionReason: varchar("suppression_reason", { length: 120 }),
+    lastErrorCode: varchar("last_error_code", { length: 120 }),
+    firstAttemptedAt: timestamp("first_attempted_at", { withTimezone: true }),
+    lastAttemptedAt: timestamp("last_attempted_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("notification_deliveries_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("notification_deliveries_tenant_dedupe_unique").on(table.tenantId, table.dedupeKey),
+    foreignKey({
+      columns: [table.tenantId, table.originOutboxEventId],
+      foreignColumns: [outboxEvents.tenantId, outboxEvents.id],
+      name: "notification_deliveries_tenant_outbox_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.templateId],
+      foreignColumns: [notificationTemplates.tenantId, notificationTemplates.id],
+      name: "notification_deliveries_tenant_template_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.customerAccountId, table.contactId],
+      foreignColumns: [
+        accountContacts.tenantId,
+        accountContacts.customerAccountId,
+        accountContacts.contactId,
+      ],
+      name: "notification_deliveries_tenant_account_contact_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.projectId],
+      foreignColumns: [projects.tenantId, projects.id],
+      name: "notification_deliveries_tenant_project_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.projectPublicLinkId],
+      foreignColumns: [projectPublicLinks.tenantId, projectPublicLinks.id],
+      name: "notification_deliveries_tenant_project_link_fk",
+    }).onDelete("restrict"),
+    check(
+      "notification_deliveries_project_link_check",
+      sql`${table.projectPublicLinkId} is null or ${table.projectId} is not null`,
+    ),
+    check("notification_deliveries_channel_check", sql`${table.channel} in ('email', 'sms')`),
+    check(
+      "notification_deliveries_status_check",
+      sql`${table.status} in ('pending', 'sending', 'delivered', 'failed', 'suppressed')`,
+    ),
+    check(
+      "notification_deliveries_subject_check",
+      sql`${table.channel} <> 'email' or ${table.subject} is not null`,
+    ),
+    check(
+      "notification_deliveries_suppression_check",
+      sql`${table.status} <> 'suppressed' or ${table.suppressionReason} is not null`,
+    ),
+    check(
+      "notification_deliveries_delivery_check",
+      sql`${table.status} <> 'delivered' or ${table.deliveredAt} is not null`,
+    ),
+    index("notification_deliveries_tenant_status_idx").on(
+      table.tenantId,
+      table.status,
+      table.createdAt,
+    ),
+    index("notification_deliveries_tenant_customer_idx").on(
+      table.tenantId,
+      table.customerAccountId,
+      table.createdAt,
+    ),
+    index("notification_deliveries_tenant_project_idx").on(
+      table.tenantId,
+      table.projectId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const notificationDeliveryAttempts = pgTable(
+  "notification_delivery_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    notificationDeliveryId: uuid("notification_delivery_id").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    provider: varchar("provider", { length: 80 }).notNull(),
+    providerIdempotencyKey: varchar("provider_idempotency_key", { length: 200 }).notNull(),
+    providerMessageId: varchar("provider_message_id", { length: 240 }),
+    status: varchar("status", { length: 30 }).notNull().default("sending"),
+    errorCode: varchar("error_code", { length: 120 }),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique("notification_delivery_attempts_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("notification_delivery_attempts_tenant_delivery_number_unique").on(
+      table.tenantId,
+      table.notificationDeliveryId,
+      table.attemptNumber,
+    ),
+    index("notification_delivery_attempts_tenant_provider_key_idx").on(
+      table.tenantId,
+      table.providerIdempotencyKey,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.notificationDeliveryId],
+      foreignColumns: [notificationDeliveries.tenantId, notificationDeliveries.id],
+      name: "notification_delivery_attempts_tenant_delivery_fk",
+    }).onDelete("restrict"),
+    check("notification_delivery_attempts_number_check", sql`${table.attemptNumber} > 0`),
+    check(
+      "notification_delivery_attempts_status_check",
+      sql`${table.status} in ('sending', 'delivered', 'failed')`,
+    ),
+    check(
+      "notification_delivery_attempts_completion_check",
+      sql`(${table.status} = 'sending' and ${table.completedAt} is null) or (${table.status} in ('delivered', 'failed') and ${table.completedAt} is not null)`,
+    ),
+    index("notification_delivery_attempts_tenant_delivery_idx").on(
+      table.tenantId,
+      table.notificationDeliveryId,
+      table.attemptNumber,
     ),
   ],
 );

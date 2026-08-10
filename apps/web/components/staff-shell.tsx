@@ -11,6 +11,7 @@ import {
   Inbox,
   LayoutDashboard,
   Menu,
+  MessagesSquare,
   Receipt,
   Search,
   Settings,
@@ -28,6 +29,7 @@ const primaryNavigation = [
   { href: "/leads", icon: ClipboardList, label: "Leads" },
   { href: "/jobs", icon: Truck, label: "Jobs" },
   { href: "/customers", icon: Users, label: "Customers" },
+  { href: "/communications", icon: MessagesSquare, label: "Communications" },
 ];
 
 const businessNavigation = [

@@ -2228,6 +2228,198 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/notification-templates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listNotificationTemplates"];
+    put?: never;
+    post: operations["createNotificationTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notification-templates/{id}/actions/publish": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["publishNotificationTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/customers/{customerId}/notification-preferences": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listNotificationPreferences"];
+    put?: never;
+    post: operations["setNotificationPreference"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listNotificationDeliveries"];
+    put?: never;
+    post: operations["queueNotification"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getNotificationDelivery"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/notifications/{id}/actions/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["retryNotificationDelivery"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{projectId}/public-links": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createCustomerProjectLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/projects/{projectId}/public-links/{linkId}/actions/revoke": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["revokeCustomerProjectLink"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/projects/{token}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getPublicCustomerProject"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/communication-operations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getCommunicationOperations"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/communication-operations/outbox/{id}/actions/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["retryCommunicationDeadLetter"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/communication-operations/scheduled-jobs/{id}/actions/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["retryCommunicationReminder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4353,6 +4545,243 @@ export interface components {
     ProcessRefundDto: {
       providerName?: string;
       providerRefundId?: string;
+    };
+    NotificationTemplateDto: {
+      /** Format: uuid */
+      id: string;
+      templateKey: string;
+      /** @enum {string} */
+      channel: "email" | "sms";
+      version: number;
+      name: string;
+      subjectTemplate: string | null;
+      bodyTemplate: string;
+      allowedVariables: string[];
+      /** @enum {string} */
+      status: "draft" | "published" | "retired";
+      publishedAt: string | null;
+      retiredAt: string | null;
+    };
+    NotificationTemplateListDto: {
+      items: components["schemas"]["NotificationTemplateDto"][];
+    };
+    CreateNotificationTemplateDto: {
+      /** @example schedule.confirmed */
+      templateKey: string;
+      /** @enum {string} */
+      channel: "email" | "sms";
+      /** @example Schedule confirmation */
+      name: string;
+      /** @example Your Lincoln Dirt and Gravel schedule */
+      subjectTemplate?: string;
+      /** @example Hello {{customerName}}, your service is scheduled for {{scheduledAt}}. */
+      bodyTemplate: string;
+      /**
+       * @example [
+       *       "customerName",
+       *       "scheduledAt"
+       *     ]
+       */
+      allowedVariables: string[];
+    };
+    NotificationPreferenceDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      customerAccountId: string;
+      /** Format: uuid */
+      contactId: string;
+      notificationType: string;
+      emailEnabled: boolean;
+      smsEnabled: boolean;
+    };
+    NotificationPreferenceListDto: {
+      items: components["schemas"]["NotificationPreferenceDto"][];
+    };
+    UpsertNotificationPreferenceDto: {
+      /** Format: uuid */
+      contactId: string;
+      /** @example schedule */
+      notificationType: string;
+      emailEnabled: boolean;
+      smsEnabled: boolean;
+    };
+    NotificationAttemptDto: {
+      /** Format: uuid */
+      id: string;
+      attemptNumber: number;
+      provider: string;
+      /** @enum {string} */
+      status: "sending" | "delivered" | "failed";
+      errorCode: string | null;
+      attemptedAt: string;
+      completedAt: string | null;
+    };
+    NotificationDeliveryDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      customerAccountId: string;
+      /** Format: uuid */
+      contactId: string;
+      /** Format: uuid */
+      projectId: string | null;
+      notificationType: string;
+      /** @enum {string} */
+      channel: "email" | "sms";
+      recipient: string;
+      subject: string | null;
+      provider: string;
+      /** @enum {string} */
+      status: "pending" | "sending" | "delivered" | "failed" | "suppressed";
+      suppressionReason: string | null;
+      lastErrorCode: string | null;
+      deliveredAt: string | null;
+      createdAt: string;
+      attempts: components["schemas"]["NotificationAttemptDto"][];
+    };
+    NotificationDeliveryListDto: {
+      items: components["schemas"]["NotificationDeliveryDto"][];
+    };
+    CommunicationRetryDto: {
+      /** Format: uuid */
+      operationId: string;
+      /** @enum {string} */
+      status: "queued";
+    };
+    QueueNotificationDto: {
+      /** Format: uuid */
+      customerAccountId: string;
+      /** Format: uuid */
+      contactId: string;
+      /** Format: uuid */
+      projectId?: string;
+      /** @example schedule */
+      notificationType: string;
+      /** @example schedule.confirmed */
+      templateKey: string;
+      /** @enum {string} */
+      channel: "email" | "sms";
+      variables: {
+        [key: string]: string;
+      };
+    };
+    QueuedNotificationDto: {
+      /** Format: uuid */
+      outboxEventId: string;
+      /** @enum {string} */
+      status: "queued";
+    };
+    CreateProjectPublicLinkDto: {
+      /** @default 86400 */
+      expiresInSeconds: number;
+    };
+    ProjectPublicLinkDto: {
+      /** Format: uuid */
+      linkId: string;
+      customerPath: string;
+      expiresAt: string;
+    };
+    PublicProjectContactDto: {
+      displayName: string;
+      email: string | null;
+      phone: string | null;
+    };
+    PublicProjectLocationDto: {
+      label: string;
+      addressLine1: string;
+      addressLine2: string | null;
+      city: string;
+      region: string;
+      postalCode: string;
+    };
+    PublicProjectScheduleDto: {
+      jobNumber: string;
+      serviceType: string;
+      status: string;
+      scheduledStartAt: string | null;
+      scheduledEndAt: string | null;
+    };
+    PublicProjectMilestoneDto: {
+      type: string;
+      label: string;
+      occurredAt: string;
+    };
+    PublicProjectInvoiceDto: {
+      invoiceNumber: string;
+      invoiceType: string;
+      status: string;
+      issueDate: string | null;
+      dueDate: string | null;
+      totalCents: number | null;
+      amountDueCents: number | null;
+      customerPath: string | null;
+    };
+    PublicProjectPaymentDto: {
+      paymentNumber: string;
+      amountCents: number;
+      currency: string;
+      status: string;
+      receivedAt: string;
+      settledAt: string | null;
+    };
+    PublicProjectRefundDto: {
+      refundNumber: string;
+      amountCents: number;
+      currency: string;
+      status: string;
+      settledAt: string | null;
+    };
+    PublicProjectDocumentDto: {
+      filename: string;
+      mediaType: string;
+      purpose: string;
+      customerPath: string;
+    };
+    PublicProjectDto: {
+      projectNumber: string;
+      serviceType: string;
+      status: string;
+      outcomeStatement: string;
+      contact: components["schemas"]["PublicProjectContactDto"];
+      location: components["schemas"]["PublicProjectLocationDto"];
+      schedule: components["schemas"]["PublicProjectScheduleDto"][];
+      milestones: components["schemas"]["PublicProjectMilestoneDto"][];
+      invoices: components["schemas"]["PublicProjectInvoiceDto"][];
+      payments: components["schemas"]["PublicProjectPaymentDto"][];
+      refunds: components["schemas"]["PublicProjectRefundDto"][];
+      documents: components["schemas"]["PublicProjectDocumentDto"][];
+    };
+    CommunicationQueueMetricsDto: {
+      pending: number;
+      sending: number;
+      delivered: number;
+      failed: number;
+      suppressed: number;
+    };
+    CommunicationDeadLetterDto: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      kind: "outbox" | "scheduled_job";
+      operationType: string;
+      attempts: number;
+      errorCode: string | null;
+      availableAt: string;
+    };
+    ScheduledReminderDto: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      status: "pending" | "processing" | "completed" | "dead_letter";
+      runAt: string;
+      attempts: number;
+      errorCode: string | null;
+    };
+    CommunicationOperationsDto: {
+      metrics: components["schemas"]["CommunicationQueueMetricsDto"];
+      deadLetters: components["schemas"]["CommunicationDeadLetterDto"][];
+      reminders: components["schemas"]["ScheduledReminderDto"][];
     };
   };
   responses: never;
@@ -7981,6 +8410,349 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["RefundDto"];
+        };
+      };
+    };
+  };
+  listNotificationTemplates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationTemplateListDto"];
+        };
+      };
+    };
+  };
+  createNotificationTemplate: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateNotificationTemplateDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationTemplateDto"];
+        };
+      };
+    };
+  };
+  publishNotificationTemplate: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationTemplateDto"];
+        };
+      };
+    };
+  };
+  listNotificationPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customerId: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationPreferenceListDto"];
+        };
+      };
+    };
+  };
+  setNotificationPreference: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        customerId: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpsertNotificationPreferenceDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationPreferenceDto"];
+        };
+      };
+    };
+  };
+  listNotificationDeliveries: {
+    parameters: {
+      query?: {
+        limit?: number;
+        status?: unknown;
+        projectId?: unknown;
+        customerAccountId?: unknown;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationDeliveryListDto"];
+        };
+      };
+    };
+  };
+  queueNotification: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["QueueNotificationDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QueuedNotificationDto"];
+        };
+      };
+    };
+  };
+  getNotificationDelivery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["NotificationDeliveryDto"];
+        };
+      };
+    };
+  };
+  retryNotificationDelivery: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommunicationRetryDto"];
+        };
+      };
+    };
+  };
+  createCustomerProjectLink: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        projectId: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateProjectPublicLinkDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProjectPublicLinkDto"];
+        };
+      };
+    };
+  };
+  revokeCustomerProjectLink: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        linkId: unknown;
+        projectId: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getPublicCustomerProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PublicProjectDto"];
+        };
+      };
+    };
+  };
+  getCommunicationOperations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommunicationOperationsDto"];
+        };
+      };
+    };
+  };
+  retryCommunicationDeadLetter: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommunicationRetryDto"];
+        };
+      };
+    };
+  };
+  retryCommunicationReminder: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CommunicationRetryDto"];
         };
       };
     };

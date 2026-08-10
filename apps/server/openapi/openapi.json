@@ -6087,12 +6087,544 @@
         "summary": "",
         "tags": ["Finance"]
       }
+    },
+    "/api/v1/notification-templates": {
+      "get": {
+        "operationId": "listNotificationTemplates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationTemplateListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      },
+      "post": {
+        "operationId": "createNotificationTemplate",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNotificationTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationTemplateDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/notification-templates/{id}/actions/publish": {
+      "post": {
+        "operationId": "publishNotificationTemplate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationTemplateDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/customers/{customerId}/notification-preferences": {
+      "get": {
+        "operationId": "listNotificationPreferences",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferenceListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      },
+      "post": {
+        "operationId": "setNotificationPreference",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertNotificationPreferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferenceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "listNotificationDeliveries",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "customerAccountId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationDeliveryListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      },
+      "post": {
+        "operationId": "queueNotification",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueueNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueuedNotificationDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/notifications/{id}": {
+      "get": {
+        "operationId": "getNotificationDelivery",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationDeliveryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/notifications/{id}/actions/retry": {
+      "post": {
+        "operationId": "retryNotificationDelivery",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationRetryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/projects/{projectId}/public-links": {
+      "post": {
+        "operationId": "createCustomerProjectLink",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectPublicLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectPublicLinkDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/projects/{projectId}/public-links/{linkId}/actions/revoke": {
+      "post": {
+        "operationId": "revokeCustomerProjectLink",
+        "parameters": [
+          {
+            "name": "linkId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/public/projects/{token}": {
+      "get": {
+        "operationId": "getPublicCustomerProject",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProjectDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Public projects"]
+      }
+    },
+    "/api/v1/communication-operations": {
+      "get": {
+        "operationId": "getCommunicationOperations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationOperationsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/communication-operations/outbox/{id}/actions/retry": {
+      "post": {
+        "operationId": "retryCommunicationDeadLetter",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationRetryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
+    },
+    "/api/v1/communication-operations/scheduled-jobs/{id}/actions/retry": {
+      "post": {
+        "operationId": "retryCommunicationReminder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunicationRetryDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Communications"]
+      }
     }
   },
   "info": {
     "title": "Lincoln Dirt and Gravel API",
     "description": "Lincoln Dirt and Gravel operating system API",
-    "version": "1.7.0",
+    "version": "1.9.0",
     "contact": {}
   },
   "tags": [],
@@ -12726,6 +13258,769 @@
             "maxLength": 200
           }
         }
+      },
+      "NotificationTemplateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "templateKey": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": ["email", "sms"]
+          },
+          "version": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subjectTemplate": {
+            "type": "string",
+            "nullable": true
+          },
+          "bodyTemplate": {
+            "type": "string"
+          },
+          "allowedVariables": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "published", "retired"]
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "retiredAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "templateKey",
+          "channel",
+          "version",
+          "name",
+          "subjectTemplate",
+          "bodyTemplate",
+          "allowedVariables",
+          "status",
+          "publishedAt",
+          "retiredAt"
+        ]
+      },
+      "NotificationTemplateListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationTemplateDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CreateNotificationTemplateDto": {
+        "type": "object",
+        "properties": {
+          "templateKey": {
+            "type": "string",
+            "example": "schedule.confirmed"
+          },
+          "channel": {
+            "type": "string",
+            "enum": ["email", "sms"]
+          },
+          "name": {
+            "type": "string",
+            "example": "Schedule confirmation"
+          },
+          "subjectTemplate": {
+            "type": "string",
+            "example": "Your Lincoln Dirt and Gravel schedule"
+          },
+          "bodyTemplate": {
+            "type": "string",
+            "example": "Hello {{customerName}}, your service is scheduled for {{scheduledAt}}."
+          },
+          "allowedVariables": {
+            "example": ["customerName", "scheduledAt"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["templateKey", "channel", "name", "bodyTemplate", "allowedVariables"]
+      },
+      "NotificationPreferenceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contactId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notificationType": {
+            "type": "string"
+          },
+          "emailEnabled": {
+            "type": "boolean"
+          },
+          "smsEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "customerAccountId",
+          "contactId",
+          "notificationType",
+          "emailEnabled",
+          "smsEnabled"
+        ]
+      },
+      "NotificationPreferenceListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationPreferenceDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "UpsertNotificationPreferenceDto": {
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notificationType": {
+            "type": "string",
+            "example": "schedule"
+          },
+          "emailEnabled": {
+            "type": "boolean"
+          },
+          "smsEnabled": {
+            "type": "boolean"
+          }
+        },
+        "required": ["contactId", "notificationType", "emailEnabled", "smsEnabled"]
+      },
+      "NotificationAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attemptNumber": {
+            "type": "number"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["sending", "delivered", "failed"]
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "attemptedAt": {
+            "type": "string"
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "attemptNumber",
+          "provider",
+          "status",
+          "errorCode",
+          "attemptedAt",
+          "completedAt"
+        ]
+      },
+      "NotificationDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contactId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "notificationType": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": ["email", "sms"]
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string",
+            "nullable": true
+          },
+          "provider": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "sending", "delivered", "failed", "suppressed"]
+          },
+          "suppressionReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastErrorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveredAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationAttemptDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "customerAccountId",
+          "contactId",
+          "projectId",
+          "notificationType",
+          "channel",
+          "recipient",
+          "subject",
+          "provider",
+          "status",
+          "suppressionReason",
+          "lastErrorCode",
+          "deliveredAt",
+          "createdAt",
+          "attempts"
+        ]
+      },
+      "NotificationDeliveryListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationDeliveryDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CommunicationRetryDto": {
+        "type": "object",
+        "properties": {
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued"]
+          }
+        },
+        "required": ["operationId", "status"]
+      },
+      "QueueNotificationDto": {
+        "type": "object",
+        "properties": {
+          "customerAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contactId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notificationType": {
+            "type": "string",
+            "example": "schedule"
+          },
+          "templateKey": {
+            "type": "string",
+            "example": "schedule.confirmed"
+          },
+          "channel": {
+            "type": "string",
+            "enum": ["email", "sms"]
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "customerAccountId",
+          "contactId",
+          "notificationType",
+          "templateKey",
+          "channel",
+          "variables"
+        ]
+      },
+      "QueuedNotificationDto": {
+        "type": "object",
+        "properties": {
+          "outboxEventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued"]
+          }
+        },
+        "required": ["outboxEventId", "status"]
+      },
+      "CreateProjectPublicLinkDto": {
+        "type": "object",
+        "properties": {
+          "expiresInSeconds": {
+            "type": "number",
+            "default": 86400,
+            "maximum": 604800,
+            "minimum": 300
+          }
+        }
+      },
+      "ProjectPublicLinkDto": {
+        "type": "object",
+        "properties": {
+          "linkId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerPath": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        },
+        "required": ["linkId", "customerPath", "expiresAt"]
+      },
+      "PublicProjectContactDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["displayName", "email", "phone"]
+      },
+      "PublicProjectLocationDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "addressLine1": {
+            "type": "string"
+          },
+          "addressLine2": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          }
+        },
+        "required": ["label", "addressLine1", "addressLine2", "city", "region", "postalCode"]
+      },
+      "PublicProjectScheduleDto": {
+        "type": "object",
+        "properties": {
+          "jobNumber": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "scheduledStartAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "scheduledEndAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["jobNumber", "serviceType", "status", "scheduledStartAt", "scheduledEndAt"]
+      },
+      "PublicProjectMilestoneDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string"
+          }
+        },
+        "required": ["type", "label", "occurredAt"]
+      },
+      "PublicProjectInvoiceDto": {
+        "type": "object",
+        "properties": {
+          "invoiceNumber": {
+            "type": "string"
+          },
+          "invoiceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "issueDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "dueDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "totalCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "amountDueCents": {
+            "type": "number",
+            "nullable": true
+          },
+          "customerPath": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "invoiceNumber",
+          "invoiceType",
+          "status",
+          "issueDate",
+          "dueDate",
+          "totalCents",
+          "amountDueCents",
+          "customerPath"
+        ]
+      },
+      "PublicProjectPaymentDto": {
+        "type": "object",
+        "properties": {
+          "paymentNumber": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "receivedAt": {
+            "type": "string"
+          },
+          "settledAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "paymentNumber",
+          "amountCents",
+          "currency",
+          "status",
+          "receivedAt",
+          "settledAt"
+        ]
+      },
+      "PublicProjectRefundDto": {
+        "type": "object",
+        "properties": {
+          "refundNumber": {
+            "type": "string"
+          },
+          "amountCents": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "settledAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["refundNumber", "amountCents", "currency", "status", "settledAt"]
+      },
+      "PublicProjectDocumentDto": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "customerPath": {
+            "type": "string"
+          }
+        },
+        "required": ["filename", "mediaType", "purpose", "customerPath"]
+      },
+      "PublicProjectDto": {
+        "type": "object",
+        "properties": {
+          "projectNumber": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "outcomeStatement": {
+            "type": "string"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/PublicProjectContactDto"
+          },
+          "location": {
+            "$ref": "#/components/schemas/PublicProjectLocationDto"
+          },
+          "schedule": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProjectScheduleDto"
+            }
+          },
+          "milestones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProjectMilestoneDto"
+            }
+          },
+          "invoices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProjectInvoiceDto"
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProjectPaymentDto"
+            }
+          },
+          "refunds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProjectRefundDto"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicProjectDocumentDto"
+            }
+          }
+        },
+        "required": [
+          "projectNumber",
+          "serviceType",
+          "status",
+          "outcomeStatement",
+          "contact",
+          "location",
+          "schedule",
+          "milestones",
+          "invoices",
+          "payments",
+          "refunds",
+          "documents"
+        ]
+      },
+      "CommunicationQueueMetricsDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number"
+          },
+          "sending": {
+            "type": "number"
+          },
+          "delivered": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number"
+          },
+          "suppressed": {
+            "type": "number"
+          }
+        },
+        "required": ["pending", "sending", "delivered", "failed", "suppressed"]
+      },
+      "CommunicationDeadLetterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["outbox", "scheduled_job"]
+          },
+          "operationType": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "number"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "availableAt": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "kind", "operationType", "attempts", "errorCode", "availableAt"]
+      },
+      "ScheduledReminderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "completed", "dead_letter"]
+          },
+          "runAt": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "number"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["id", "status", "runAt", "attempts", "errorCode"]
+      },
+      "CommunicationOperationsDto": {
+        "type": "object",
+        "properties": {
+          "metrics": {
+            "$ref": "#/components/schemas/CommunicationQueueMetricsDto"
+          },
+          "deadLetters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunicationDeadLetterDto"
+            }
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledReminderDto"
+            }
+          }
+        },
+        "required": ["metrics", "deadLetters", "reminders"]
       }
     }
   }
