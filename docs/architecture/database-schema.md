@@ -168,6 +168,11 @@ are stored only as hashes; active summary links are unique per Project, and expi
 view evidence, tenant-aware relationships, forced Row-Level Security, and no-delete history guards
 are enforced in PostgreSQL.
 
+Migration `0015` reconciles the restricted `ldg_app` runtime role for hosted environments that
+provision the login after the application schema. It grants only the table operations established by
+the originating migrations, preserves append-only and financial no-delete rules, allows tenant
+context setup, and keeps migration history inaccessible to the runtime role.
+
 ### Projects and operations
 
 - projects

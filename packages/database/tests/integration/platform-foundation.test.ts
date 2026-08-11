@@ -1411,6 +1411,40 @@ describe("Sprint 1.0.0 platform data foundation", () => {
     expect(ownerResult.rows[0]?.runtime_owned_tables).toBe("0");
   });
 
+  it("reconciles least-privilege runtime access without exposing migration history", async () => {
+    const privilegeResult = await migratorPool().query<{
+      can_delete_finance: boolean;
+      can_delete_job: boolean;
+      can_execute_tenant_context: boolean;
+      can_read_migration_history: boolean;
+      can_select_organization: boolean;
+      can_update_audit_event: boolean;
+    }>(
+      `
+        select
+          has_function_privilege($1, 'public.set_tenant_context(uuid)', 'EXECUTE')
+            as can_execute_tenant_context,
+          has_table_privilege($1, 'public.organizations', 'SELECT')
+            as can_select_organization,
+          has_table_privilege($1, 'public.jobs', 'DELETE') as can_delete_job,
+          has_table_privilege($1, 'public.payments', 'DELETE') as can_delete_finance,
+          has_table_privilege($1, 'public.audit_events', 'UPDATE') as can_update_audit_event,
+          has_table_privilege($1, 'public.__drizzle_migrations', 'SELECT')
+            as can_read_migration_history
+      `,
+      [environment("POSTGRES_RUNTIME_USER")],
+    );
+
+    expect(privilegeResult.rows[0]).toEqual({
+      can_delete_finance: false,
+      can_delete_job: true,
+      can_execute_tenant_context: true,
+      can_read_migration_history: false,
+      can_select_organization: true,
+      can_update_audit_event: false,
+    });
+  });
+
   it("isolates tenant reads and rejects cross-tenant writes and relationships", async () => {
     const visibleOrganizations = await withTenantTransaction(
       runtime(),

@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createApiApplication, type ApiApplication } from "../../src/create-api-application.js";
-import { loadRootEnvironment } from "../../src/environment.js";
+import { loadLocalDatabaseEnvironment } from "./local-database-environment.js";
 
-loadRootEnvironment();
+loadLocalDatabaseEnvironment();
 
 describe("API foundation", () => {
   let api: ApiApplication | undefined;

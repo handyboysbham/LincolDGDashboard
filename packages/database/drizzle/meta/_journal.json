@@ -106,6 +106,13 @@
       "when": 1786392000000,
       "tag": "0014_notification_provider_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1786486602836,
+      "tag": "0015_supabase_runtime_role_grants",
+      "breakpoints": true
     }
   ]
 }
