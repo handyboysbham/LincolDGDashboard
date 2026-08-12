@@ -605,17 +605,46 @@ describe(
         status: "posted",
       });
 
+      const companyPaymentAccount = await command(
+        "POST",
+        "/api/v1/administration/payment-accounts",
+        "deposit-company-payment-account",
+        {
+          accountReference: "Lincoln DG operating account",
+          code: "canonical-operating-zelle",
+          isDefault: true,
+          name: "Canonical operating Zelle",
+          paymentMethod: "zelle",
+        },
+      );
+      expect(companyPaymentAccount.statusCode).toBe(201);
+      const companyPaymentAccountId = companyPaymentAccount.json<{ id: string }>().id;
+      const mismatchedPaymentAccount = await command(
+        "POST",
+        `/api/v1/projects/${acceptedBody.project.id}/payments`,
+        "deposit-payment-method-mismatch",
+        {
+          amountCents: 18_500,
+          companyPaymentAccountId,
+          payerName: "Casey Customer",
+          paymentMethod: "check",
+        },
+      );
+      expect(mismatchedPaymentAccount.statusCode).toBe(400);
+      expect(mismatchedPaymentAccount.json()).toMatchObject({
+        error: { code: "PAYMENT_ACCOUNT_METHOD_MISMATCH" },
+      });
       const depositPaymentCreated = await command(
         "POST",
         `/api/v1/projects/${acceptedBody.project.id}/payments`,
         "deposit-payment-create",
         {
           amountCents: 18_500,
+          companyPaymentAccountId,
           payerName: "Casey Customer",
           paymentMethod: "zelle",
           providerName: "Zelle",
           providerTransactionId: "canonical-deposit-payment-001",
-          receivingAccountReference: "Lincoln DG operating account",
         },
       );
       expect(depositPaymentCreated.statusCode).toBe(201);
@@ -623,6 +652,8 @@ describe(
       expect(depositPayment).toMatchObject({
         amountCents: 18_500,
         availableCents: 18_500,
+        companyPaymentAccountId,
+        receivingAccountReference: "Lincoln DG operating account",
         status: "verification_required",
       });
       const unsettledAllocation = await command(
@@ -1480,12 +1511,48 @@ describe(
         },
       );
       expect(routeStop.statusCode).toBe(201);
+      const checklistDraft = await command(
+        "POST",
+        "/api/v1/administration/checklist-templates",
+        "job-checklist-template",
+        {
+          items: [
+            {
+              label: "Confirm safe access",
+              requiresEvidence: false,
+              responseType: "confirmation",
+              sequence: 1,
+            },
+            {
+              label: "Capture completion evidence",
+              requiresEvidence: true,
+              responseType: "photo",
+              sequence: 2,
+            },
+          ],
+          name: "Delivery completion",
+          required: true,
+          serviceType: "material_delivery",
+          templateCode: "delivery-completion",
+        },
+      );
+      expect(checklistDraft.statusCode).toBe(201);
+      const checklistTemplateId = checklistDraft.json<{ id: string }>().id;
+      const checklistPublished = await command(
+        "POST",
+        `/api/v1/administration/checklist-templates/${checklistTemplateId}/actions/publish`,
+        "job-checklist-template-publish",
+      );
+      expect(checklistPublished.statusCode).toBe(200);
       const checklist = await command("POST", `/api/v1/jobs/${jobId}/checklists`, "job-checklist", {
-        items: [{ label: "Confirm safe access" }, { label: "Capture completion evidence" }],
-        name: "Delivery completion",
-        templateCode: "delivery-completion-v1",
+        checklistTemplateId,
       });
       expect(checklist.statusCode).toBe(201);
+      expect(checklist.json()).toMatchObject({
+        items: [{ label: "Confirm safe access" }, { label: "Capture completion evidence" }],
+        name: "Delivery completion",
+        templateCode: "delivery-completion",
+      });
       const checklistItems = checklist.json<{ items: { id: string }[] }>().items;
       for (const [index, item] of checklistItems.entries()) {
         const completed = await command(

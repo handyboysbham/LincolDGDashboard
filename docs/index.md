@@ -44,6 +44,7 @@ Do not rely on chat history after a decision has been consolidated into these fi
 - [Sprint 1.7.0 Invoicing and Payments Plan](implementation/plans/2026-08-04-sprint-1-7-0-invoicing-payments.md)
 - [Sprint 1.8.0 Dump Trailer Rental Plan](implementation/plans/2026-08-09-sprint-1-8-0-dump-trailer-rental.md)
 - [Sprint 1.9.0 Communications and Customer Experience Plan](implementation/plans/2026-08-09-sprint-1-9-0-communications-customer-experience.md)
+- [Sprint 1.10.0 Administration and Launch Readiness Plan](implementation/plans/2026-08-11-sprint-1-10-0-administration-launch-readiness.md)
 - [Codex Handoff](implementation/codex-handoff.md)
 
 ## Runbooks

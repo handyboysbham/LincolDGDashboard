@@ -184,11 +184,11 @@ export function StaffShell({
           >
             <Menu aria-hidden="true" size={20} />
           </button>
-          <div className="global-search">
+          <Link className="global-search" href="/settings#administration-search">
             <Search aria-hidden="true" size={18} />
             <span>Search customers, jobs, invoices…</span>
             <kbd>⌘ K</kbd>
-          </div>
+          </Link>
           <div className="topbar-date">
             <span>Monday</span>
             <strong>Aug 3</strong>

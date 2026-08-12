@@ -1,6 +1,451 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/administration": {
+      "get": {
+        "operationId": "getAdministrationWorkspace",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationWorkspaceDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/search": {
+      "get": {
+        "operationId": "searchAdministrationRecords",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationSearchDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/audit-events": {
+      "get": {
+        "operationId": "listAdministrationAuditEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "type": "number"
+            }
+          },
+          {
+            "name": "eventType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationAuditEventListDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/payment-accounts": {
+      "post": {
+        "operationId": "createCompanyPaymentAccount",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyPaymentAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyPaymentAccountDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/payment-accounts/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionCompanyPaymentAccount",
+        "parameters": [
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["activate", "deactivate"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyPaymentAccountDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/checklist-templates": {
+      "post": {
+        "operationId": "createChecklistTemplate",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChecklistTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChecklistTemplateDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/checklist-templates/{id}/actions/publish": {
+      "post": {
+        "operationId": "publishChecklistTemplate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChecklistTemplateDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/users/{id}/actions/{action}": {
+      "post": {
+        "operationId": "transitionAdministrationUser",
+        "parameters": [
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["activate", "deactivate"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationUserDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/users/{id}/roles/actions/{action}": {
+      "post": {
+        "operationId": "changeAdministrationUserRole",
+        "parameters": [
+          {
+            "name": "action",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": ["assign", "revoke"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignUserRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationUserDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/suppliers": {
+      "post": {
+        "operationId": "createAdministrationSupplier",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationSupplierDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/suppliers/{id}/facilities": {
+      "post": {
+        "operationId": "createAdministrationSupplierFacility",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierFacilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationSupplierDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
     "/health/live": {
       "get": {
         "operationId": "getLiveHealth",
@@ -6631,6 +7076,565 @@
   "servers": [],
   "components": {
     "schemas": {
+      "AdministrationMetricDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "attention": {
+            "type": "number"
+          }
+        },
+        "required": ["total", "attention"]
+      },
+      "AdministrationOverviewDto": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "$ref": "#/components/schemas/AdministrationMetricDto"
+          },
+          "assets": {
+            "$ref": "#/components/schemas/AdministrationMetricDto"
+          },
+          "suppliers": {
+            "$ref": "#/components/schemas/AdministrationMetricDto"
+          },
+          "paymentAccounts": {
+            "$ref": "#/components/schemas/AdministrationMetricDto"
+          },
+          "checklistTemplates": {
+            "$ref": "#/components/schemas/AdministrationMetricDto"
+          },
+          "openJobs": {
+            "type": "number"
+          },
+          "pastDueInvoices": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "users",
+          "assets",
+          "suppliers",
+          "paymentAccounts",
+          "checklistTemplates",
+          "openJobs",
+          "pastDueInvoices"
+        ]
+      },
+      "AdministrationRoleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "code", "name", "permissions", "status"]
+      },
+      "AdministrationUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationRoleDto"
+            }
+          }
+        },
+        "required": ["id", "displayName", "email", "status", "roles"]
+      },
+      "AdministrationAssetDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetNumber": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "assetNumber", "name", "assetType", "status"]
+      },
+      "AdministrationFacilityDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "addressSummary": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "label", "addressSummary", "status"]
+      },
+      "AdministrationSupplierDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "facilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationFacilityDto"
+            }
+          }
+        },
+        "required": ["id", "name", "status", "facilities"]
+      },
+      "CompanyPaymentAccountDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "zelle",
+              "venmo",
+              "cash_app",
+              "paypal",
+              "card",
+              "bank_transfer",
+              "check"
+            ]
+          },
+          "accountReference": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "paymentMethod",
+          "accountReference",
+          "instructions",
+          "isDefault",
+          "status"
+        ]
+      },
+      "ChecklistTemplateItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "responseType": {
+            "type": "string",
+            "enum": ["confirmation", "text", "number", "photo"]
+          },
+          "requiresEvidence": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "sequence", "label", "instructions", "responseType", "requiresEvidence"]
+      },
+      "ChecklistTemplateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "templateCode": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistTemplateItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "templateCode",
+          "version",
+          "name",
+          "serviceType",
+          "required",
+          "status",
+          "publishedAt",
+          "items"
+        ]
+      },
+      "AdministrationAuditEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "commandName": {
+            "type": "string"
+          },
+          "actorDisplayName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "occurredAt",
+          "eventType",
+          "entityType",
+          "entityId",
+          "commandName",
+          "actorDisplayName"
+        ]
+      },
+      "AdministrationWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "overview": {
+            "$ref": "#/components/schemas/AdministrationOverviewDto"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationUserDto"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationRoleDto"
+            }
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationAssetDto"
+            }
+          },
+          "suppliers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationSupplierDto"
+            }
+          },
+          "paymentAccounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyPaymentAccountDto"
+            }
+          },
+          "checklistTemplates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistTemplateDto"
+            }
+          },
+          "recentAuditEvents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationAuditEventDto"
+            }
+          }
+        },
+        "required": [
+          "overview",
+          "users",
+          "roles",
+          "assets",
+          "suppliers",
+          "paymentAccounts",
+          "checklistTemplates",
+          "recentAuditEvents"
+        ]
+      },
+      "AdministrationSearchResultDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["customer", "project", "job", "invoice", "payment"]
+          },
+          "primaryLabel": {
+            "type": "string"
+          },
+          "secondaryLabel": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "type", "primaryLabel", "secondaryLabel", "status", "path"]
+      },
+      "AdministrationSearchDto": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationSearchResultDto"
+            }
+          }
+        },
+        "required": ["query", "items"]
+      },
+      "AdministrationAuditEventListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationAuditEventDto"
+            }
+          }
+        },
+        "required": ["items"]
+      },
+      "CreateCompanyPaymentAccountDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "operating-zelle"
+          },
+          "name": {
+            "type": "string",
+            "example": "Lincoln DG Zelle"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "zelle",
+              "venmo",
+              "cash_app",
+              "paypal",
+              "card",
+              "bank_transfer",
+              "check"
+            ]
+          },
+          "accountReference": {
+            "type": "string",
+            "example": "billing@lincolndg.example"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["code", "name", "paymentMethod", "accountReference"]
+      },
+      "CreateChecklistTemplateItemDto": {
+        "type": "object",
+        "properties": {
+          "sequence": {
+            "type": "number",
+            "minimum": 1
+          },
+          "label": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "responseType": {
+            "type": "string",
+            "enum": ["confirmation", "text", "number", "photo"]
+          },
+          "requiresEvidence": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["sequence", "label", "responseType"]
+      },
+      "CreateChecklistTemplateDto": {
+        "type": "object",
+        "properties": {
+          "templateCode": {
+            "type": "string",
+            "example": "delivery-completion"
+          },
+          "name": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string",
+            "enum": ["material_delivery", "dump_trailer_rental"]
+          },
+          "required": {
+            "type": "boolean",
+            "default": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateChecklistTemplateItemDto"
+            }
+          }
+        },
+        "required": ["templateCode", "name", "items"]
+      },
+      "AssignUserRoleDto": {
+        "type": "object",
+        "properties": {
+          "roleId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["roleId"]
+      },
+      "CreateSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["name"]
+      },
+      "CreateSupplierFacilityDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "addressSummary": {
+            "type": "string"
+          }
+        },
+        "required": ["label"]
+      },
       "LiveHealthDto": {
         "type": "object",
         "properties": {
@@ -8286,6 +9290,10 @@
       "CreateChecklistDto": {
         "type": "object",
         "properties": {
+          "checklistTemplateId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "templateCode": {
             "type": "string",
             "maxLength": 100
@@ -8300,8 +9308,7 @@
               "$ref": "#/components/schemas/ChecklistItemInputDto"
             }
           }
-        },
-        "required": ["templateCode", "name", "items"]
+        }
       },
       "CompleteChecklistItemDto": {
         "type": "object",
@@ -12577,6 +13584,11 @@
           "paymentMethod": {
             "type": "string"
           },
+          "companyPaymentAccountId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "receivingAccountReference": {
             "type": "string"
           },
@@ -12685,6 +13697,10 @@
               "check"
             ]
           },
+          "companyPaymentAccountId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "receivingAccountReference": {
             "type": "string",
             "maxLength": 160
@@ -12718,7 +13734,7 @@
             "format": "date-time"
           }
         },
-        "required": ["amountCents", "paymentMethod", "receivingAccountReference", "payerName"]
+        "required": ["amountCents", "paymentMethod", "payerName"]
       },
       "FinancialReversalDto": {
         "type": "object",

@@ -65,6 +65,14 @@ Supported configurable methods:
 All receiving accounts must be company-controlled. Employee personal accounts and personal funds are
 prohibited.
 
+Sprint 1.10.0 adds `company_payment_accounts` as the controlled source for safe receiving-account
+references. The record contains a business code, display name, supported method, safe reference,
+optional staff instructions, default flag, and Active/Inactive status. It never stores provider
+credentials, access tokens, raw card data, or employee personal-account details. New Payment
+commands can select an active same-method account; the server copies its reference into the
+immutable Payment receipt snapshot and retains the tenant-aware account ID. Historical Payments
+without that ID remain valid.
+
 ### Statuses
 
 ```text

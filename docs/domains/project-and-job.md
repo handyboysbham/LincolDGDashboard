@@ -129,3 +129,11 @@ incomplete closed Job is reopened to Planning with Job Event, Audit Event, and o
 The database also rejects ordinary edits to closed Jobs and their schedule, reservation, assignment,
 route, checklist, and hold records. Reopening requires an explicit reason and returns the Job to
 Planning with a preserved reopen timestamp and Job Event.
+
+Sprint 1.10.0 adds reusable, versioned Checklist Templates. A draft owns ordered Items and may be
+published only when it has at least one Item. Publication locks the draft, retires the prior
+published version for the same code, writes Audit and outbox evidence, and makes the version and its
+Items immutable. Creating a Job Checklist from a published Template verifies service-type
+compatibility, retains the Template ID, and snapshots the code, name, required flag, and labels so
+later versions never rewrite operational history. The existing explicit checklist input remains a
+compatibility path for historical workflows.

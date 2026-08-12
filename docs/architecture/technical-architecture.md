@@ -155,6 +155,14 @@ Duplicate lookup is advisory. The API compares normalized names, email addresses
 complete service addresses inside the authenticated tenant, returns stable candidate IDs, and never
 merges or silently replaces a record.
 
+The Administration module follows the same boundary. Its read model composes tenant-filtered Users,
+Roles, assets, suppliers and facility locations, controlled Payment Accounts, versioned Checklist
+Templates, operational counts, and recent Audit Events. Cross-domain search executes only in a
+tenant transaction and returns stable staff paths for Customers, Projects, Jobs, Invoices, and
+Payments. Administration commands require `administration:manage`, use idempotency keys and row
+locks where state changes or version publication can race, and commit Audit Events plus outbox
+events atomically. The Next.js `/settings` route uses only the generated REST client.
+
 ## Tenant isolation
 
 Every tenant-owned table includes `tenant_id`.

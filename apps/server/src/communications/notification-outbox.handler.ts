@@ -59,6 +59,19 @@ interface PreparedDelivery {
 }
 
 const informationalEventTypes = [
+  "administration.checklist_template_created",
+  "administration.checklist_template_published",
+  "administration.checklist_template_retired",
+  "administration.payment_account_activated",
+  "administration.payment_account_created",
+  "administration.payment_account_deactivated",
+  "administration.payment_account_default_replaced",
+  "administration.supplier_created",
+  "administration.supplier_facility_created",
+  "administration.user_activated",
+  "administration.user_deactivated",
+  "administration.user_role_assigned",
+  "administration.user_role_revoked",
   "notification.template_created",
   "notification.template_published",
   "notification.preference_changed",

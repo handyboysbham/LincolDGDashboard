@@ -23,6 +23,16 @@
   box-sizing: border-box;
 }
 
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 html {
   background: var(--canvas);
   color: var(--ink);
@@ -6252,5 +6262,394 @@ a.lead-row:hover {
   .customer-project-facts > div + div {
     border-left: 0;
     border-top: 1px solid var(--line);
+  }
+}
+
+/* Sprint 1.10 administration */
+.administration-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 32px clamp(20px, 4vw, 52px) 64px;
+}
+
+.administration-heading,
+.administration-panel-heading {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.administration-heading h1,
+.administration-panel h2,
+.administration-state h1 {
+  margin: 4px 0 0;
+}
+
+.administration-heading p,
+.administration-note,
+.administration-state p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 7px 0 0;
+}
+
+.administration-links,
+.administration-badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.administration-search {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 9px 10px 9px 16px;
+}
+
+.administration-search > svg {
+  color: var(--forest);
+}
+
+.administration-search input,
+.administration-panel input,
+.administration-panel select,
+.administration-panel textarea {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  min-width: 0;
+  padding: 10px 11px;
+  width: 100%;
+}
+
+.administration-search input {
+  border: 0;
+  outline-offset: 6px;
+}
+
+.administration-search-results {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  margin-top: -14px;
+  overflow: hidden;
+}
+
+.administration-search-results a {
+  align-items: center;
+  color: inherit;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(150px, 0.8fr) minmax(180px, 1fr) auto;
+  padding: 13px 16px;
+  text-decoration: none;
+}
+
+.administration-search-results a + a {
+  border-top: 1px solid var(--line);
+}
+
+.administration-search-results a:hover {
+  background: var(--surface-soft);
+}
+
+.administration-search-results small,
+.administration-search-results a > span:last-child {
+  color: var(--muted);
+}
+
+.administration-tabs {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.administration-tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  padding: 11px 14px;
+  white-space: nowrap;
+}
+
+.administration-tabs button.is-active {
+  border-color: var(--forest);
+  color: var(--forest-deep);
+}
+
+.administration-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.administration-split {
+  align-items: start;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.8fr);
+}
+
+.administration-panel {
+  min-width: 0;
+  padding: 22px;
+}
+
+.administration-metrics {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.administration-metrics article {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: auto 1fr;
+  padding: 17px;
+}
+
+.administration-metrics article > svg {
+  color: var(--forest);
+}
+
+.administration-metrics article > strong {
+  font-size: 1.8rem;
+  grid-column: 1 / -1;
+}
+
+.administration-metrics article > small {
+  color: var(--muted);
+  grid-column: 1 / -1;
+}
+
+.administration-callouts {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.administration-callouts article {
+  align-items: flex-start;
+  background: var(--forest-deep);
+  border-radius: 14px;
+  color: #fff;
+  display: flex;
+  gap: 14px;
+  padding: 22px;
+}
+
+.administration-callouts strong {
+  display: block;
+  font-size: 2rem;
+  margin-top: 4px;
+}
+
+.administration-callouts p {
+  color: #d7e1d4;
+  margin: 3px 0 0;
+}
+
+.administration-list,
+.administration-timeline {
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+}
+
+.administration-list article,
+.administration-timeline article {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 14px 0;
+}
+
+.administration-list article + article,
+.administration-timeline article + article {
+  border-top: 1px solid var(--line);
+}
+
+.administration-list article > svg {
+  color: var(--forest);
+}
+
+.administration-list.compact article,
+.checklist-list article {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.checklist-list article > button {
+  grid-column: 3;
+}
+
+.administration-list article > div:first-of-type,
+.administration-timeline article > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.administration-list small,
+.administration-timeline small,
+.administration-timeline time,
+.administration-empty,
+.muted {
+  color: var(--muted);
+}
+
+.administration-panel .compact-form {
+  margin-top: 16px;
+}
+
+.administration-panel .compact-form label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.administration-reference-form {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+}
+
+.checkbox-row {
+  align-items: center;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 9px;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
+.administration-note {
+  font-size: 0.9rem;
+}
+
+.administration-timeline article {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.administration-timeline > article > svg {
+  color: var(--forest);
+}
+
+.administration-timeline time {
+  font-size: 0.82rem;
+}
+
+.administration-empty,
+.administration-state {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.administration-empty {
+  gap: 8px;
+  min-height: 140px;
+}
+
+.administration-state {
+  min-height: 65vh;
+  padding: 32px;
+}
+
+.administration-state > svg,
+.administration-empty > svg {
+  color: var(--forest);
+}
+
+.global-search {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (max-width: 1100px) {
+  .administration-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .administration-heading {
+    flex-direction: column;
+  }
+  .administration-split,
+  .administration-callouts {
+    grid-template-columns: 1fr;
+  }
+  .administration-search-results a {
+    grid-template-columns: auto 1fr auto;
+  }
+  .administration-search-results small {
+    grid-column: 2 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .administration-workspace {
+    gap: 18px;
+    padding: 24px 16px 92px;
+  }
+  .administration-links {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+  .administration-search {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .administration-search button {
+    grid-column: 1 / -1;
+  }
+  .administration-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .administration-list article,
+  .administration-list.compact article,
+  .checklist-list article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .administration-list article > .administration-badges,
+  .administration-list article > button,
+  .checklist-list article > button {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+  .administration-timeline article {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .administration-timeline time {
+    grid-column: 2;
+  }
+  .administration-reference-form {
+    grid-template-columns: 1fr;
   }
 }

@@ -358,6 +358,8 @@ Harden V1 for production operation and complete the release candidate.
    runbooks, security, accessibility, reliability, performance, clean-environment acceptance, and
    final artifact verification.
 
+[Sprint 1.10.0 implementation plan](plans/2026-08-11-sprint-1-10-0-administration-launch-readiness.md).
+
 ## Release policy
 
 Sprint identifiers are planned increments, not automatic releases. Tagging or publishing a version

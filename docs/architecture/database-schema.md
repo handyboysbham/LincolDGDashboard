@@ -146,6 +146,13 @@ Version and delivery attempt, stores only a token hash, expires, can be revoked,
 evidence. The table is tenant-owned, forced through Row-Level Security, protected from hard
 deletion, and never stores a plaintext customer token.
 
+Sprint 1.10.0 migration `0016` adds company-controlled Payment Accounts and versioned Checklist
+Templates with ordered Template Items. Payments may retain a tenant-aware link to the controlled
+account while preserving the receiving-account snapshot used at receipt time. Checklist Instances
+may retain the published Template identity while snapshotting the code, name, required flag, and
+items used for execution. Published and retired checklist content is immutable; all three new tables
+use forced RLS, explicit restricted-runtime grants, and no-delete history protection.
+
 Sprint 1.8.0 migration `0010` owns the Dump Trailer Rental data foundation: one Rental Detail per
 rental Job, attributable Debris Reviews, reservation-aware Extensions, durable Pickup Attempts,
 Disposal Loads, and Rental Inspections. Shared Schedule Blocks and Asset Reservations remain the
@@ -195,6 +202,8 @@ context setup, and keeps migration history inaccessible to the runtime role.
 - job_assignments
 - asset_assignments
 - route_stops
+- checklist_templates
+- checklist_template_items
 - checklist_instances
 - checklist_items
 - job_events
@@ -203,6 +212,7 @@ context setup, and keeps migration history inaccessible to the runtime role.
 
 ### Finance
 
+- company_payment_accounts
 - expenses
 - expense_allocations
 - job_charges

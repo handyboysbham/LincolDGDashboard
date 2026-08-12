@@ -65,6 +65,7 @@ describe("BOOT-E2E-001 web startup", () => {
     ["/customer/invoices/not-a-token", "Checking your Invoice"],
     ["/customer/projects/not-a-token", "Loading your Project"],
     ["/communications", "Loading communications"],
+    ["/settings", "Loading administration"],
   ])("serves %s", async (path, expected) => {
     const response = await fetch(`${origin}${path}`);
     expect(response.status).toBe(200);

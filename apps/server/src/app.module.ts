@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 
+import { AdministrationModule } from "./administration/administration.module.js";
 import { AuthModule } from "./auth/auth.module.js";
 import { DevelopmentAuthGuard } from "./auth/development-auth.guard.js";
 import { PermissionsGuard } from "./auth/permissions.guard.js";
@@ -25,6 +26,7 @@ import { OperationsModule } from "./operations/operations.module.js";
     ContextModule,
     DatabaseModule,
     AuthModule,
+    AdministrationModule,
     HealthModule,
     IdentityModule,
     IdempotencyModule,

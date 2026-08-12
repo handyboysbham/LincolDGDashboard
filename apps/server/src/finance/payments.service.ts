@@ -2,6 +2,7 @@ import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import {
   allocateBusinessNumber,
   auditEvents,
+  companyPaymentAccounts,
   customerAccounts,
   customerCreditApplications,
   customerCredits,
@@ -164,7 +165,36 @@ export class PaymentsService {
             "Provider name and transaction id must be provided together",
           );
         }
-        const receivingAccountReference = input.receivingAccountReference.trim();
+        let receivingAccountReference = input.receivingAccountReference?.trim() ?? "";
+        if (input.companyPaymentAccountId) {
+          const [companyAccount] = await transaction
+            .select()
+            .from(companyPaymentAccounts)
+            .where(
+              and(
+                eq(companyPaymentAccounts.tenantId, actor.tenantId),
+                eq(companyPaymentAccounts.id, input.companyPaymentAccountId),
+              ),
+            )
+            .limit(1)
+            .for("update");
+          if (!companyAccount) {
+            throw notFound("PAYMENT_ACCOUNT_NOT_FOUND", "Company Payment Account was not found");
+          }
+          if (companyAccount.status !== "active") {
+            throw conflict(
+              "PAYMENT_ACCOUNT_INACTIVE",
+              "Company Payment Account must be active before recording a Payment",
+            );
+          }
+          if (companyAccount.paymentMethod !== input.paymentMethod) {
+            throw badRequest(
+              "PAYMENT_ACCOUNT_METHOD_MISMATCH",
+              "Payment method must match the Company Payment Account",
+            );
+          }
+          receivingAccountReference = companyAccount.accountReference;
+        }
         const payerName = input.payerName.trim();
         if (!receivingAccountReference || !payerName) {
           throw badRequest(
@@ -215,6 +245,7 @@ export class PaymentsService {
           .insert(payments)
           .values({
             amountCents: input.amountCents,
+            companyPaymentAccountId: input.companyPaymentAccountId,
             createdBy: actor.userId,
             currency: input.currency ?? "USD",
             customerAccountId,
@@ -1539,6 +1570,7 @@ export class PaymentsService {
       ),
       amountCents: record.payment.amountCents,
       availableCents: availability.availableCents,
+      companyPaymentAccountId: record.payment.companyPaymentAccountId,
       currency: record.payment.currency,
       customerAccountId: record.payment.customerAccountId,
       customerCreditCents: availability.creditedCents,

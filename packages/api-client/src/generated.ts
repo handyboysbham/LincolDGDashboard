@@ -4,6 +4,182 @@
  */
 
 export interface paths {
+  "/api/v1/administration": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAdministrationWorkspace"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/search": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["searchAdministrationRecords"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/audit-events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAdministrationAuditEvents"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/payment-accounts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createCompanyPaymentAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/payment-accounts/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionCompanyPaymentAccount"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/checklist-templates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createChecklistTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/checklist-templates/{id}/actions/publish": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["publishChecklistTemplate"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/users/{id}/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transitionAdministrationUser"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/users/{id}/roles/actions/{action}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["changeAdministrationUserRole"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/suppliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createAdministrationSupplier"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/administration/suppliers/{id}/facilities": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createAdministrationSupplierFacility"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/health/live": {
     parameters: {
       query?: never;
@@ -2424,6 +2600,174 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    AdministrationMetricDto: {
+      total: number;
+      attention: number;
+    };
+    AdministrationOverviewDto: {
+      users: components["schemas"]["AdministrationMetricDto"];
+      assets: components["schemas"]["AdministrationMetricDto"];
+      suppliers: components["schemas"]["AdministrationMetricDto"];
+      paymentAccounts: components["schemas"]["AdministrationMetricDto"];
+      checklistTemplates: components["schemas"]["AdministrationMetricDto"];
+      openJobs: number;
+      pastDueInvoices: number;
+    };
+    AdministrationRoleDto: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      name: string;
+      permissions: string[];
+      status: string;
+    };
+    AdministrationUserDto: {
+      /** Format: uuid */
+      id: string;
+      displayName: string;
+      email: string;
+      status: string;
+      roles: components["schemas"]["AdministrationRoleDto"][];
+    };
+    AdministrationAssetDto: {
+      /** Format: uuid */
+      id: string;
+      assetNumber: string;
+      name: string;
+      assetType: string;
+      status: string;
+    };
+    AdministrationFacilityDto: {
+      /** Format: uuid */
+      id: string;
+      label: string;
+      addressSummary: string | null;
+      status: string;
+    };
+    AdministrationSupplierDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      status: string;
+      facilities: components["schemas"]["AdministrationFacilityDto"][];
+    };
+    CompanyPaymentAccountDto: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      name: string;
+      /** @enum {string} */
+      paymentMethod:
+        "cash" | "zelle" | "venmo" | "cash_app" | "paypal" | "card" | "bank_transfer" | "check";
+      accountReference: string;
+      instructions: string | null;
+      isDefault: boolean;
+      status: string;
+    };
+    ChecklistTemplateItemDto: {
+      /** Format: uuid */
+      id: string;
+      sequence: number;
+      label: string;
+      instructions: string | null;
+      /** @enum {string} */
+      responseType: "confirmation" | "text" | "number" | "photo";
+      requiresEvidence: boolean;
+    };
+    ChecklistTemplateDto: {
+      /** Format: uuid */
+      id: string;
+      templateCode: string;
+      version: number;
+      name: string;
+      serviceType: string | null;
+      required: boolean;
+      status: string;
+      publishedAt: string | null;
+      items: components["schemas"]["ChecklistTemplateItemDto"][];
+    };
+    AdministrationAuditEventDto: {
+      /** Format: uuid */
+      id: string;
+      occurredAt: string;
+      eventType: string;
+      entityType: string;
+      /** Format: uuid */
+      entityId: string;
+      commandName: string;
+      actorDisplayName: string | null;
+    };
+    AdministrationWorkspaceDto: {
+      overview: components["schemas"]["AdministrationOverviewDto"];
+      users: components["schemas"]["AdministrationUserDto"][];
+      roles: components["schemas"]["AdministrationRoleDto"][];
+      assets: components["schemas"]["AdministrationAssetDto"][];
+      suppliers: components["schemas"]["AdministrationSupplierDto"][];
+      paymentAccounts: components["schemas"]["CompanyPaymentAccountDto"][];
+      checklistTemplates: components["schemas"]["ChecklistTemplateDto"][];
+      recentAuditEvents: components["schemas"]["AdministrationAuditEventDto"][];
+    };
+    AdministrationSearchResultDto: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      type: "customer" | "project" | "job" | "invoice" | "payment";
+      primaryLabel: string;
+      secondaryLabel: string;
+      status: string;
+      path: string;
+    };
+    AdministrationSearchDto: {
+      query: string;
+      items: components["schemas"]["AdministrationSearchResultDto"][];
+    };
+    AdministrationAuditEventListDto: {
+      items: components["schemas"]["AdministrationAuditEventDto"][];
+    };
+    CreateCompanyPaymentAccountDto: {
+      /** @example operating-zelle */
+      code: string;
+      /** @example Lincoln DG Zelle */
+      name: string;
+      /** @enum {string} */
+      paymentMethod:
+        "cash" | "zelle" | "venmo" | "cash_app" | "paypal" | "card" | "bank_transfer" | "check";
+      /** @example billing@lincolndg.example */
+      accountReference: string;
+      instructions?: string;
+      /** @default false */
+      isDefault: boolean;
+    };
+    CreateChecklistTemplateItemDto: {
+      sequence: number;
+      label: string;
+      instructions?: string;
+      /** @enum {string} */
+      responseType: "confirmation" | "text" | "number" | "photo";
+      /** @default false */
+      requiresEvidence: boolean;
+    };
+    CreateChecklistTemplateDto: {
+      /** @example delivery-completion */
+      templateCode: string;
+      name: string;
+      /** @enum {string} */
+      serviceType?: "material_delivery" | "dump_trailer_rental";
+      /** @default true */
+      required: boolean;
+      items: components["schemas"]["CreateChecklistTemplateItemDto"][];
+    };
+    AssignUserRoleDto: {
+      /** Format: uuid */
+      roleId: string;
+    };
+    CreateSupplierDto: {
+      name: string;
+    };
+    CreateSupplierFacilityDto: {
+      label: string;
+      addressSummary?: string;
+    };
     LiveHealthDto: {
       /** @example ok */
       status: string;
@@ -2977,9 +3321,11 @@ export interface components {
       label: string;
     };
     CreateChecklistDto: {
-      templateCode: string;
-      name: string;
-      items: components["schemas"]["ChecklistItemInputDto"][];
+      /** Format: uuid */
+      checklistTemplateId?: string;
+      templateCode?: string;
+      name?: string;
+      items?: components["schemas"]["ChecklistItemInputDto"][];
     };
     CompleteChecklistItemDto: {
       response?: string;
@@ -4339,6 +4685,8 @@ export interface components {
       availableCents: number;
       currency: string;
       paymentMethod: string;
+      /** Format: uuid */
+      companyPaymentAccountId?: string | null;
       receivingAccountReference: string;
       providerName?: string | null;
       providerTransactionId?: string | null;
@@ -4368,7 +4716,9 @@ export interface components {
       /** @enum {string} */
       paymentMethod:
         "cash" | "zelle" | "venmo" | "cash_app" | "paypal" | "card" | "bank_transfer" | "check";
-      receivingAccountReference: string;
+      /** Format: uuid */
+      companyPaymentAccountId?: string;
+      receivingAccountReference?: string;
       payerName: string;
       payerEmail?: string;
       providerName?: string;
@@ -4792,6 +5142,270 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  getAdministrationWorkspace: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationWorkspaceDto"];
+        };
+      };
+    };
+  };
+  searchAdministrationRecords: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationSearchDto"];
+        };
+      };
+    };
+  };
+  listAdministrationAuditEvents: {
+    parameters: {
+      query?: {
+        limit?: number;
+        eventType?: string;
+        entityType?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationAuditEventListDto"];
+        };
+      };
+    };
+  };
+  createCompanyPaymentAccount: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateCompanyPaymentAccountDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CompanyPaymentAccountDto"];
+        };
+      };
+    };
+  };
+  transitionCompanyPaymentAccount: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        action: "activate" | "deactivate";
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CompanyPaymentAccountDto"];
+        };
+      };
+    };
+  };
+  createChecklistTemplate: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateChecklistTemplateDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChecklistTemplateDto"];
+        };
+      };
+    };
+  };
+  publishChecklistTemplate: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChecklistTemplateDto"];
+        };
+      };
+    };
+  };
+  transitionAdministrationUser: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        action: "activate" | "deactivate";
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationUserDto"];
+        };
+      };
+    };
+  };
+  changeAdministrationUserRole: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        action: "assign" | "revoke";
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssignUserRoleDto"];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationUserDto"];
+        };
+      };
+    };
+  };
+  createAdministrationSupplier: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateSupplierDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationSupplierDto"];
+        };
+      };
+    };
+  };
+  createAdministrationSupplierFacility: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateSupplierFacilityDto"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationSupplierDto"];
+        };
+      };
+    };
+  };
   getLiveHealth: {
     parameters: {
       query?: never;

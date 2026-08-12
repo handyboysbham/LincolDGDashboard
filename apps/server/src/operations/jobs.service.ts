@@ -6,6 +6,8 @@ import {
   auditEvents,
   checklistInstances,
   checklistItems,
+  checklistTemplateItems,
+  checklistTemplates,
   customerAccounts,
   dumpTrailerRentalDetails,
   jobAssignments,
@@ -763,14 +765,76 @@ export class JobsService {
     const result = await this.idempotency.execute(
       { key, payload: { input, jobId }, scope: "checklists.create" },
       async (transaction) => {
-        await this.assertMutableJob(transaction, actor.tenantId, jobId);
+        const job = await this.assertMutableJob(transaction, actor.tenantId, jobId);
+        let checklistTemplateId: string | null = null;
+        let templateCode = input.templateCode?.trim() ?? "";
+        let name = input.name?.trim() ?? "";
+        let required = true;
+        let itemInputs = input.items?.map((item) => ({ label: item.label.trim() })) ?? [];
+        if (input.checklistTemplateId) {
+          const [template] = await transaction
+            .select()
+            .from(checklistTemplates)
+            .where(
+              and(
+                eq(checklistTemplates.tenantId, actor.tenantId),
+                eq(checklistTemplates.id, input.checklistTemplateId),
+              ),
+            )
+            .for("update");
+          if (!template) {
+            throw notFound("CHECKLIST_TEMPLATE_NOT_FOUND", "Checklist Template was not found");
+          }
+          if (template.status !== "published") {
+            throw invalidState(
+              "CHECKLIST_TEMPLATE_NOT_PUBLISHED",
+              "Only a published Checklist Template can create a Job checklist",
+            );
+          }
+          if (template.serviceType && template.serviceType !== job.serviceType) {
+            throw invalidState(
+              "CHECKLIST_TEMPLATE_SERVICE_MISMATCH",
+              "Checklist Template does not apply to this Job service type",
+            );
+          }
+          const templateItems = await transaction
+            .select()
+            .from(checklistTemplateItems)
+            .where(
+              and(
+                eq(checklistTemplateItems.tenantId, actor.tenantId),
+                eq(checklistTemplateItems.checklistTemplateId, template.id),
+              ),
+            )
+            .orderBy(checklistTemplateItems.sequence);
+          if (templateItems.length === 0) {
+            throw invalidState(
+              "CHECKLIST_TEMPLATE_EMPTY",
+              "Published Checklist Template does not contain any items",
+            );
+          }
+          checklistTemplateId = template.id;
+          templateCode = template.templateCode;
+          name = template.name;
+          required = template.required;
+          itemInputs = templateItems.map((item) => ({ label: item.label }));
+        }
+        if (!templateCode || !name || itemInputs.length === 0) {
+          throw new ApiException(
+            HttpStatus.BAD_REQUEST,
+            "CHECKLIST_DEFINITION_REQUIRED",
+            "Choose a published Checklist Template or provide code, name, and items",
+          );
+        }
         const [checklist] = await transaction
           .insert(checklistInstances)
           .values({
+            checklistTemplateId,
             createdBy: actor.userId,
             jobId,
-            name: input.name.trim(),
-            templateCode: input.templateCode.trim(),
+            name,
+            required,
+            templateCode,
             tenantId: actor.tenantId,
             updatedBy: actor.userId,
           })
@@ -779,7 +843,7 @@ export class JobsService {
         const items = await transaction
           .insert(checklistItems)
           .values(
-            input.items.map((item, index) => ({
+            itemInputs.map((item, index) => ({
               checklistInstanceId: checklist.id,
               createdBy: actor.userId,
               label: item.label.trim(),
@@ -1329,14 +1393,11 @@ export class JobsService {
     return job;
   }
 
-  private async assertMutableJob(
-    transaction: TenantTransaction,
-    tenantId: string,
-    jobId: string,
-  ): Promise<void> {
+  private async assertMutableJob(transaction: TenantTransaction, tenantId: string, jobId: string) {
     const job = await this.lockJob(transaction, tenantId, jobId);
     if (["closed", "cancelled"].includes(job.status))
       throw invalidState("JOB_LOCKED", "Closed or cancelled Jobs cannot be changed");
+    return job;
   }
 
   private async emitJobEvent(

@@ -905,23 +905,30 @@ export class ChecklistItemInputDto {
 }
 
 export class CreateChecklistDto {
-  @ApiProperty({ maxLength: 100, type: String })
+  @ApiPropertyOptional({ format: "uuid", type: String })
+  @IsOptional()
+  @IsUUID("4")
+  public checklistTemplateId?: string;
+  @ApiPropertyOptional({ maxLength: 100, type: String })
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  public templateCode!: string;
-  @ApiProperty({ maxLength: 200, type: String })
+  public templateCode?: string;
+  @ApiPropertyOptional({ maxLength: 200, type: String })
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(200)
-  public name!: string;
-  @ApiProperty({ isArray: true, type: ChecklistItemInputDto })
+  public name?: string;
+  @ApiPropertyOptional({ isArray: true, type: ChecklistItemInputDto })
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(50)
   @ValidateNested({ each: true })
   @Type(() => ChecklistItemInputDto)
-  public items!: ChecklistItemInputDto[];
+  public items?: ChecklistItemInputDto[];
 }
 
 export class CompleteChecklistItemDto {

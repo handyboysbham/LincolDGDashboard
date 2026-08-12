@@ -179,6 +179,45 @@ export const auditEvents = pgTable(
   ],
 );
 
+export const companyPaymentAccounts = pgTable(
+  "company_payment_accounts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    code: varchar("code", { length: 80 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    paymentMethod: varchar("payment_method", { length: 30 }).notNull(),
+    accountReference: varchar("account_reference", { length: 160 }).notNull(),
+    instructions: text("instructions"),
+    isDefault: boolean("is_default").notNull().default(false),
+    status: varchar("status", { length: 30 }).notNull().default("active"),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("company_payment_accounts_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("company_payment_accounts_tenant_code_unique").on(table.tenantId, table.code),
+    check(
+      "company_payment_accounts_method_check",
+      sql`${table.paymentMethod} in ('cash', 'zelle', 'venmo', 'cash_app', 'paypal', 'card', 'bank_transfer', 'check')`,
+    ),
+    check(
+      "company_payment_accounts_reference_check",
+      sql`length(trim(${table.accountReference})) > 0`,
+    ),
+    check("company_payment_accounts_status_check", sql`${table.status} in ('active', 'inactive')`),
+    uniqueIndex("company_payment_accounts_one_default_method_idx")
+      .on(table.tenantId, table.paymentMethod)
+      .where(sql`${table.isDefault} = true and ${table.status} = 'active'`),
+    index("company_payment_accounts_tenant_status_idx").on(
+      table.tenantId,
+      table.status,
+      table.paymentMethod,
+    ),
+  ],
+);
+
 export const outboxEvents = pgTable(
   "outbox_events",
   {
@@ -2191,6 +2230,94 @@ export const routeStops = pgTable(
   ],
 );
 
+export const checklistTemplates = pgTable(
+  "checklist_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    templateCode: varchar("template_code", { length: 100 }).notNull(),
+    version: integer("version").notNull(),
+    name: varchar("name", { length: 200 }).notNull(),
+    serviceType: varchar("service_type", { length: 40 }),
+    required: boolean("required").notNull().default(true),
+    status: varchar("status", { length: 30 }).notNull().default("draft"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    retiredAt: timestamp("retired_at", { withTimezone: true }),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("checklist_templates_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("checklist_templates_tenant_code_version_unique").on(
+      table.tenantId,
+      table.templateCode,
+      table.version,
+    ),
+    check("checklist_templates_version_check", sql`${table.version} > 0`),
+    check(
+      "checklist_templates_service_check",
+      sql`${table.serviceType} is null or ${table.serviceType} in ('material_delivery', 'dump_trailer_rental')`,
+    ),
+    check(
+      "checklist_templates_status_check",
+      sql`${table.status} in ('draft', 'published', 'retired')`,
+    ),
+    check(
+      "checklist_templates_publication_check",
+      sql`(${table.status} = 'draft' and ${table.publishedAt} is null and ${table.retiredAt} is null) or (${table.status} = 'published' and ${table.publishedAt} is not null and ${table.retiredAt} is null) or (${table.status} = 'retired' and ${table.publishedAt} is not null and ${table.retiredAt} is not null)`,
+    ),
+    uniqueIndex("checklist_templates_one_published_idx")
+      .on(table.tenantId, table.templateCode)
+      .where(sql`${table.status} = 'published'`),
+    index("checklist_templates_tenant_status_idx").on(
+      table.tenantId,
+      table.status,
+      table.templateCode,
+    ),
+  ],
+);
+
+export const checklistTemplateItems = pgTable(
+  "checklist_template_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    checklistTemplateId: uuid("checklist_template_id").notNull(),
+    sequence: integer("sequence").notNull(),
+    label: varchar("label", { length: 240 }).notNull(),
+    instructions: text("instructions"),
+    responseType: varchar("response_type", { length: 30 }).notNull().default("confirmation"),
+    requiresEvidence: boolean("requires_evidence").notNull().default(false),
+    ...auditColumns,
+  },
+  (table) => [
+    unique("checklist_template_items_tenant_id_id_unique").on(table.tenantId, table.id),
+    unique("checklist_template_items_tenant_template_sequence_unique").on(
+      table.tenantId,
+      table.checklistTemplateId,
+      table.sequence,
+    ),
+    foreignKey({
+      columns: [table.tenantId, table.checklistTemplateId],
+      foreignColumns: [checklistTemplates.tenantId, checklistTemplates.id],
+      name: "checklist_template_items_tenant_template_fk",
+    }).onDelete("restrict"),
+    check("checklist_template_items_sequence_check", sql`${table.sequence} > 0`),
+    check(
+      "checklist_template_items_response_check",
+      sql`${table.responseType} in ('confirmation', 'text', 'number', 'photo')`,
+    ),
+    index("checklist_template_items_tenant_template_idx").on(
+      table.tenantId,
+      table.checklistTemplateId,
+      table.sequence,
+    ),
+  ],
+);
+
 export const checklistInstances = pgTable(
   "checklist_instances",
   {
@@ -2200,6 +2327,7 @@ export const checklistInstances = pgTable(
       .references(() => organizations.id, { onDelete: "restrict" }),
     jobId: uuid("job_id").notNull(),
     scheduleBlockId: uuid("schedule_block_id"),
+    checklistTemplateId: uuid("checklist_template_id"),
     templateCode: varchar("template_code", { length: 100 }).notNull(),
     name: varchar("name", { length: 200 }).notNull(),
     required: boolean("required").notNull().default(true),
@@ -2223,6 +2351,11 @@ export const checklistInstances = pgTable(
       columns: [table.tenantId, table.scheduleBlockId],
       foreignColumns: [scheduleBlocks.tenantId, scheduleBlocks.id],
       name: "checklist_instances_tenant_block_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.checklistTemplateId],
+      foreignColumns: [checklistTemplates.tenantId, checklistTemplates.id],
+      name: "checklist_instances_tenant_template_fk",
     }).onDelete("restrict"),
     check(
       "checklist_instances_status_check",
@@ -4339,6 +4472,7 @@ export const payments = pgTable(
     amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
     currency: varchar("currency", { length: 3 }).notNull().default("USD"),
     paymentMethod: varchar("payment_method", { length: 30 }).notNull(),
+    companyPaymentAccountId: uuid("company_payment_account_id"),
     receivingAccountReference: varchar("receiving_account_reference", { length: 160 }).notNull(),
     providerName: varchar("provider_name", { length: 80 }),
     providerTransactionId: varchar("provider_transaction_id", { length: 200 }),
@@ -4372,6 +4506,11 @@ export const payments = pgTable(
       columns: [table.tenantId, table.projectId, table.customerAccountId],
       foreignColumns: [projects.tenantId, projects.id, projects.customerAccountId],
       name: "payments_tenant_project_customer_fk",
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.tenantId, table.companyPaymentAccountId],
+      foreignColumns: [companyPaymentAccounts.tenantId, companyPaymentAccounts.id],
+      name: "payments_tenant_company_account_fk",
     }).onDelete("restrict"),
     foreignKey({
       columns: [table.tenantId, table.evidenceDocumentId],

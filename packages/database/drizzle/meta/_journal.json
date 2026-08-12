@@ -113,6 +113,13 @@
       "when": 1786486602836,
       "tag": "0015_supabase_runtime_role_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786493489600,
+      "tag": "0016_administration_foundation",
+      "breakpoints": true
     }
   ]
 }

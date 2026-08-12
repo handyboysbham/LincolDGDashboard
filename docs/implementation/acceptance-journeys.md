@@ -1,5 +1,44 @@
 # End-to-End Acceptance Journeys
 
+## ADMIN-E2E-001 — Tenant Administration and Operational Visibility
+
+Implementation status: Sprint 1.10.0 Phase 1 implements the PostgreSQL, API, generated-client, and
+responsive staff-workspace journey. The focused clean-database suite covers idempotency, forced RLS,
+cross-tenant rejection, Checklist publication and immutability, User Role assignment, supplier
+facilities, search, Audit filtering, and transactional Audit/outbox evidence.
+
+### Journey
+
+1. Load one tenant's Users, Roles, assets, suppliers and facilities, company Payment Accounts,
+   Checklist Templates, operational counts, and recent Audit Events.
+2. Add a company-controlled receiving account and replay the command without creating a duplicate.
+3. Create an ordered delivery Checklist draft, publish it, then publish a new version and retire the
+   prior published version.
+4. Create a Job Checklist from the published version and retain both Template identity and the
+   execution snapshot.
+5. Assign an active Role to a User through an explicit idempotent command.
+6. Add a supplier and facility location without creating a second facility ownership model.
+7. Search authoritative Customers, Projects, Jobs, Invoices, and Payments and follow stable staff
+   detail paths.
+8. Filter Audit Events and confirm every command wrote one Audit Event and one outbox event in the
+   same transaction.
+9. Load `/settings` from a production build and use its loading, error, empty, success, keyboard,
+   and narrow-viewport states.
+
+### Negative tests
+
+- a foreign tenant cannot read or mutate administration configuration
+- a user without `administration:read` cannot load the workspace
+- a read-only administrator cannot run commands
+- an inactive Role cannot be assigned and a user cannot deactivate their own session
+- a Checklist cannot publish without Items or for an invalid source state
+- published or retired Checklist versions and Items cannot be rewritten or deleted
+- a Payment cannot use an inactive, foreign-tenant, or wrong-method company account
+- Payment Account records cannot contain provider credentials, tokens, raw card data, or employee
+  personal-payment information
+
+---
+
 ## COMMS-E2E-001 — Outbox-Driven Customer Communication
 
 Implementation status: complete and rerun from a clean local PostgreSQL database on 2026-08-11.

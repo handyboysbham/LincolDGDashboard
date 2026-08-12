@@ -60,11 +60,17 @@ export class CreatePaymentDto {
   @IsIn(paymentMethods)
   public paymentMethod!: (typeof paymentMethods)[number];
 
-  @ApiProperty({ maxLength: 160, type: String })
+  @ApiPropertyOptional({ format: "uuid", type: String })
+  @IsOptional()
+  @IsUUID("4")
+  public companyPaymentAccountId?: string;
+
+  @ApiPropertyOptional({ maxLength: 160, type: String })
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(160)
-  public receivingAccountReference!: string;
+  public receivingAccountReference?: string;
 
   @ApiProperty({ maxLength: 200, type: String })
   @IsString()
@@ -248,6 +254,8 @@ export class PaymentDto {
   @ApiProperty({ type: Number }) public availableCents!: number;
   @ApiProperty({ type: String }) public currency!: string;
   @ApiProperty({ type: String }) public paymentMethod!: string;
+  @ApiPropertyOptional({ format: "uuid", nullable: true, type: String })
+  public companyPaymentAccountId!: string | null;
   @ApiProperty({ type: String }) public receivingAccountReference!: string;
   @ApiPropertyOptional({ nullable: true, type: String }) public providerName!: string | null;
   @ApiPropertyOptional({ nullable: true, type: String })
