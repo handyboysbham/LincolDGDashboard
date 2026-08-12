@@ -106,7 +106,7 @@ function healthPool(
         return Promise.resolve({
           rows: [
             {
-              release: "databaseRelease" in overrides ? overrides.databaseRelease : "1.10.0-rc.1",
+              release: "databaseRelease" in overrides ? overrides.databaseRelease : "1.10.0-rc.2",
             },
           ],
         });

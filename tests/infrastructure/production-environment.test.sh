@@ -23,7 +23,7 @@ api_environment=(
   AUTH_JWT_AUDIENCE=authenticated
   DATABASE_URL='postgresql://ldg_app:strong-runtime-password@pooler.supabase.co:5432/postgres?sslmode=require'
   DATABASE_POOL_MAX=10
-  EXPECTED_DATABASE_RELEASE=1.10.0-rc.1
+  EXPECTED_DATABASE_RELEASE=1.10.0-rc.2
   WORKER_TENANT_IDS=11111111-1111-4111-8111-111111111111
   DOCUMENT_PUBLIC_LINK_SIGNING_KEY=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ab
   MINIO_ENDPOINT=https://storage.ldg.test

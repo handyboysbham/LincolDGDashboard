@@ -35,12 +35,12 @@ refuses to overwrite an existing database and drops only that validated target u
 
 ```bash
 export RECOVERY_ADMIN_URL='postgresql://.../postgres?sslmode=require'
-export RESTORE_DATABASE_NAME='ldg_restore_20260811rc1'
+export RESTORE_DATABASE_NAME='ldg_restore_20260811rc2'
 export RESTORE_DATABASE_OWNER='ldg_migrator'
-export RESTORE_MIGRATION_URL='postgresql://ldg_migrator:.../ldg_restore_20260811rc1?sslmode=require'
-export RESTORE_RUNTIME_URL='postgresql://ldg_app:.../ldg_restore_20260811rc1?sslmode=require'
+export RESTORE_MIGRATION_URL='postgresql://ldg_migrator:.../ldg_restore_20260811rc2?sslmode=require'
+export RESTORE_RUNTIME_URL='postgresql://ldg_app:.../ldg_restore_20260811rc2?sslmode=require'
 export RECOVERY_TENANT_ID='<tenant UUID>'
-export EXPECTED_DATABASE_RELEASE='1.10.0-rc.1'
+export EXPECTED_DATABASE_RELEASE='1.10.0-rc.2'
 pnpm recovery:rehearse -- /secure/ldg-backups/ldg-YYYYMMDDTHHMMSSZ.dump
 ```
 

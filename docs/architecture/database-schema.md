@@ -158,6 +158,12 @@ function search paths, restricts global migration and worker-heartbeat tables to
 roles, revokes public execution from the Supabase RLS helper when present, and relocates
 `btree_gist` out of the exposed `public` schema when the migration role owns the extension.
 
+Migration `0018` reconciles the single reviewed `0017` artifact-hash variance without rewriting
+history. It accepts only the committed or verified hosted hash, reasserts and validates extension
+placement when the migration role owns the extension, global-table privileges, RLS posture, function
+search paths, and restricted release-marker access, then publishes the `1.10.0-rc.2` schema release
+marker.
+
 Sprint 1.8.0 migration `0010` owns the Dump Trailer Rental data foundation: one Rental Detail per
 rental Job, attributable Debris Reviews, reservation-aware Extensions, durable Pickup Attempts,
 Disposal Loads, and Rental Inspections. Shared Schedule Blocks and Asset Reservations remain the

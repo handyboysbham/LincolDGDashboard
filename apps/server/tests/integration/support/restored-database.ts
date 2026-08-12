@@ -61,7 +61,7 @@ export async function withRestoredDatabase(
       const release = await migrationPool.query<{ release: string }>(
         "select public.current_schema_release() as release",
       );
-      if (release.rows[0]?.release !== "1.10.0-rc.1") {
+      if (release.rows[0]?.release !== "1.10.0-rc.2") {
         throw new Error("Restored database does not match the release-candidate schema");
       }
       const database = createDatabase(runtimePool);

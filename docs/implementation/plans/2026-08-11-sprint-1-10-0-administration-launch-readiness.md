@@ -98,7 +98,7 @@ pnpm check
 
 ## Phase 2 closeout evidence
 
-- `pnpm test:integration` passes all 18 database and 38 server integration tests from isolated
+- `pnpm test:integration` passes all 19 database and 38 server integration tests from isolated
   PostgreSQL databases.
 - `pnpm test:recovery` passes both canonical restored-database journeys: two files and five tests,
   including exact release and cross-tenant RLS verification.
@@ -108,6 +108,13 @@ pnpm check
   all production builds.
 - Browser acceptance verifies the Supabase sign-in boundary, semantic form controls, security
   headers, protected-route redirect, and a 390-pixel viewport without horizontal overflow.
-- The candidate remains a production no-go until migration `0017` is applied remotely, Supabase
-  security advisors are clear, production environment validation passes with deployed values, and
-  backup/PITR, object versioning, first-owner bootstrap, and release approval are recorded.
+- The verified `0017` hosted artifact differs from the committed hash, so forward-only migration
+  `0018` reasserts the full release posture and promotes the candidate to `1.10.0-rc.2` without
+  rewriting history.
+- Hosted migration `0018` is recorded in Drizzle history with the reviewed hash
+  `2359933123236fe83e54e95086a02da7d0b50dad53a48c980ed6dc506a6851d5`; the release marker, extension
+  placement, operational privileges, RLS posture, function search paths, and runtime marker access
+  pass post-apply verification, and Supabase security advisors return no findings.
+- The candidate remains a production no-go until production environment validation passes with
+  deployed values and backup/PITR, object versioning, first-owner bootstrap, and release approval
+  are recorded.

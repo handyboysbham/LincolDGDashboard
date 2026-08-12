@@ -133,7 +133,7 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
     databasePoolMax: integer("DATABASE_POOL_MAX", environment.DATABASE_POOL_MAX ?? "20", 1, 100),
     expectedDatabaseRelease: required(
       "EXPECTED_DATABASE_RELEASE",
-      environment.EXPECTED_DATABASE_RELEASE ?? "1.10.0-rc.1",
+      environment.EXPECTED_DATABASE_RELEASE ?? "1.10.0-rc.2",
     ),
     notifications: {
       emailApiKey:

@@ -1411,6 +1411,92 @@ describe("Sprint 1.0.0 platform data foundation", () => {
     expect(ownerResult.rows[0]?.runtime_owned_tables).toBe("0");
   });
 
+  it("publishes the reconciled release posture from canonical migration history", async () => {
+    const releaseResult = await migratorPool().query<{
+      btree_gist_schema: string;
+      migration_hash: string;
+      release: string;
+    }>(`
+      select
+        public.current_schema_release() as release,
+        (
+          select namespace.nspname
+          from pg_extension as extension
+          join pg_namespace as namespace on namespace.oid = extension.extnamespace
+          where extension.extname = 'btree_gist'
+        ) as btree_gist_schema,
+        (
+          select hash
+          from public.__drizzle_migrations
+          where created_at = 1786500000000
+          order by id desc
+          limit 1
+        ) as migration_hash
+    `);
+    expect(releaseResult.rows[0]?.btree_gist_schema).toMatch(/^(extensions|public)$/);
+    expect(releaseResult.rows[0]?.migration_hash).toBe(
+      "2bd2c2029f9264b864bbda855b99f9113b84cbda9da1042ce639f70ed11229fe",
+    );
+    expect(releaseResult.rows[0]?.release).toBe("1.10.0-rc.2");
+
+    const postureResult = await migratorPool().query<{
+      exposed_operational_privileges: string;
+      mutable_public_functions: string;
+      rls_enabled_global_tables: string;
+      runtime_can_read_release: boolean;
+    }>(
+      `
+        select
+          (
+            select count(*)::text
+            from pg_class as relation
+            join pg_namespace as namespace on namespace.oid = relation.relnamespace
+            where namespace.nspname = 'public'
+              and relation.relname in ('__drizzle_migrations', 'worker_heartbeats')
+              and relation.relrowsecurity
+          ) as rls_enabled_global_tables,
+          (
+            select count(*)::text
+            from pg_class as relation
+            join pg_namespace as namespace on namespace.oid = relation.relnamespace
+            cross join lateral aclexplode(coalesce(relation.relacl, '{}'::aclitem[]))
+              as access_grant
+            left join pg_roles as grantee on grantee.oid = access_grant.grantee
+            where namespace.nspname = 'public'
+              and relation.relname in ('__drizzle_migrations', 'worker_heartbeats')
+              and (access_grant.grantee = 0 or grantee.rolname in ('anon', 'authenticated'))
+          ) as exposed_operational_privileges,
+          (
+            select count(*)::text
+            from pg_proc as procedure
+            join pg_namespace as namespace on namespace.oid = procedure.pronamespace
+            where namespace.nspname = 'public'
+              and not exists (
+                select 1
+                from pg_depend as dependency
+                where dependency.classid = 'pg_proc'::regclass
+                  and dependency.objid = procedure.oid
+                  and dependency.deptype = 'e'
+              )
+              and not exists (
+                select 1
+                from unnest(coalesce(procedure.proconfig, '{}'::text[])) as setting
+                where setting like 'search_path=%'
+              )
+          ) as mutable_public_functions,
+          has_function_privilege($1, 'public.current_schema_release()', 'EXECUTE')
+            as runtime_can_read_release
+      `,
+      [environment("POSTGRES_RUNTIME_USER")],
+    );
+    expect(postureResult.rows[0]).toEqual({
+      exposed_operational_privileges: "0",
+      mutable_public_functions: "0",
+      rls_enabled_global_tables: "0",
+      runtime_can_read_release: true,
+    });
+  });
+
   it("reconciles least-privilege runtime access without exposing migration history", async () => {
     const privilegeResult = await migratorPool().query<{
       can_delete_finance: boolean;
