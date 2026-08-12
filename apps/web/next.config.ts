@@ -3,9 +3,12 @@ import { fileURLToPath } from "node:url";
 
 import type { NextConfig } from "next";
 
+import { assertProductionWebEnvironment } from "./lib/production-environment";
+
 const rootEnvironment = fileURLToPath(new URL("../../.env", import.meta.url));
 if (existsSync(rootEnvironment)) process.loadEnvFile(rootEnvironment);
 process.env.NEXT_TELEMETRY_DISABLED ??= "1";
+assertProductionWebEnvironment(process.env);
 
 const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },

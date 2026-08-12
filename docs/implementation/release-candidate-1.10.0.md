@@ -45,6 +45,59 @@
 - [ ] first owner Auth identity bootstrap is approved and recorded
 - [ ] release approver records go/no-go decision
 
+## Production-configuration audit
+
+The 2026-08-12 provider-neutral audit confirmed:
+
+- the hosted Supabase project is active and healthy in `us-east-1` on PostgreSQL 17
+- the restricted `ldg_app` runtime connection and migration connection use distinct roles through
+  the TLS-verified Supabase pooler
+- one worker tenant is configured, and Supabase exposes an active modern publishable key
+- Vercel is selected as the production web host
+- the checked-in production example and four fail-closed runtime validators cover the required API,
+  worker, web, and isolated release-job environments
+
+The live Vercel audit identified project `lincol-dg-dashboard-web` as the Next.js web deployment for
+`handyboysbham/LincolDGDashboard`. Its `apps/web` monorepo build discovers both `@ldg/web` and the
+generated API client, and the latest Sprint 1.10 preview for commit `5efd133` is ready, returns HTTP
+200, includes the expected security headers, and has no grouped runtime errors in the preceding
+seven days. Six current sprint-branch deployments are healthy previews, but the production alias
+`lincol-dg-dashboard-web.vercel.app` still targets the older Sprint 1.7 `main` deployment. That
+production deployment exposes the development-authenticated staff shell and must not be treated as
+an approved operational system. The build also reports Node.js `24.15.0`, below the repository's
+reviewed `>=24.18.0 <25` requirement; align the Vercel runtime with that baseline before production
+approval rather than silently weakening the application requirement.
+
+Vercel production builds now fail closed unless the production web process and all four public web
+variables are present and valid. Configure the following in the Vercel Production environment, then
+merge the approved release candidate to the production branch and verify the staff sign-in redirect
+before promoting or assigning a custom domain:
+
+- `APP_ENV=production`
+- `LDG_PROCESS=web`
+- `NEXT_PUBLIC_AUTH_MODE=supabase`
+- `NEXT_PUBLIC_API_BASE_URL=https://<approved-api-origin>`
+- `NEXT_PUBLIC_SUPABASE_URL=https://dvobqdmjjmakacmqotqd.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<active-publishable-key>`
+
+The local development environment is not a production deployment manifest and intentionally fails
+the four production validators. Launch remains blocked until an operator supplies, through the
+chosen platform's secret manager:
+
+- production web and API HTTPS origins
+- Supabase Auth issuer, JWKS URL, public project URL, and publishable key
+- an isolated direct backup connection
+- versioned private S3-compatible object storage and production credentials
+- a production public-link signing key and Resend credentials
+- production readiness thresholds and logging/worker settings
+
+The Supabase organization is currently on the Free plan. That does not satisfy the managed-backup or
+PITR release gate: choose a paid backup/PITR posture or approve and automate an off-platform logical
+backup posture that meets the documented 24-hour recovery-point and four-hour recovery-time targets.
+The Vercel project and provisional web domain are now recorded. The persistent API/worker host and
+API domain, object-storage provider, and backup posture must still be recorded before deployment
+configuration can be completed.
+
 ## Performance-advisor disposition
 
 The hosted advisor reported 135 informational unindexed-foreign-key candidates and 119 informational
