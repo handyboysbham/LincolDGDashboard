@@ -55,6 +55,7 @@ export class AdministrationUserDto {
   @ApiProperty({ type: String }) public displayName!: string;
   @ApiProperty({ type: String }) public email!: string;
   @ApiProperty({ type: String }) public status!: string;
+  @ApiProperty({ type: Boolean }) public identityLinked!: boolean;
   @ApiProperty({ type: [AdministrationRoleDto] }) public roles!: AdministrationRoleDto[];
 }
 
@@ -250,6 +251,12 @@ export class AssignUserRoleDto {
   @ApiProperty({ format: "uuid", type: String })
   @IsUUID("4")
   public roleId!: string;
+}
+
+export class LinkUserIdentityDto {
+  @ApiProperty({ description: "Supabase Auth user identifier", format: "uuid", type: String })
+  @IsUUID("4")
+  public externalSubject!: string;
 }
 
 export class CreateSupplierDto {

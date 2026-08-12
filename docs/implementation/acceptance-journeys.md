@@ -16,7 +16,8 @@ facilities, search, Audit filtering, and transactional Audit/outbox evidence.
    prior published version.
 4. Create a Job Checklist from the published version and retain both Template identity and the
    execution snapshot.
-5. Assign an active Role to a User through an explicit idempotent command.
+5. Link a Supabase Auth identity and assign an active Role to a User through explicit idempotent
+   commands.
 6. Add a supplier and facility location without creating a second facility ownership model.
 7. Search authoritative Customers, Projects, Jobs, Invoices, and Payments and follow stable staff
    detail paths.

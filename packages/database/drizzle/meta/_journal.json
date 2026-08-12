@@ -120,6 +120,13 @@
       "when": 1786493489600,
       "tag": "0016_administration_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786500000000,
+      "tag": "0017_release_readiness",
+      "breakpoints": true
     }
   ]
 }

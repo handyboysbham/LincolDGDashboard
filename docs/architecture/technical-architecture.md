@@ -266,7 +266,11 @@ revocation, and Document availability before issuing a new short-lived download 
 
 ## Authentication
 
-Staff use a managed OIDC or JWT-compatible provider.
+Staff use Supabase Auth. Next.js maintains the SSR cookie session and forwards the bearer token to
+the API. The API verifies the JWT against the configured JWKS, issuer, audience, expiry, and
+subject; tenant identity comes only from signed `app_metadata.tenant_id`. The subject maps to
+`users.external_subject`, after which the API reloads active Role permissions from PostgreSQL. A
+browser cannot select tenant context, and `user_metadata` is never an authorization source.
 
 Customers use purpose-limited secure links for:
 

@@ -37,6 +37,7 @@ import {
   CreateCompanyPaymentAccountDto,
   CreateSupplierDto,
   CreateSupplierFacilityDto,
+  LinkUserIdentityDto,
 } from "./administration.dto.js";
 import { AdministrationService } from "./administration.service.js";
 
@@ -161,6 +162,22 @@ export class AdministrationController {
   ): Promise<AdministrationUserDto> {
     const action = requireAction(rawAction, ["activate", "deactivate"] as const);
     return this.administration.transitionUser(userId, action, requireIdempotencyKey(key));
+  }
+
+  @Post("users/:id/identity")
+  @HttpCode(HttpStatus.OK)
+  @RequirePermissions("administration:manage")
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiParam({ format: "uuid", name: "id" })
+  @ApiBody({ type: LinkUserIdentityDto })
+  @ApiOperation({ operationId: "linkAdministrationUserIdentity" })
+  @ApiOkResponse({ type: AdministrationUserDto })
+  public linkUserIdentity(
+    @Param("id", uuidPipe) userId: string,
+    @Body() body: LinkUserIdentityDto,
+    @Headers("idempotency-key") key: string | undefined,
+  ): Promise<AdministrationUserDto> {
+    return this.administration.linkUserIdentity(userId, body, requireIdempotencyKey(key));
   }
 
   @Post("users/:id/roles/actions/:action")

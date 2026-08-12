@@ -36,10 +36,15 @@
     "infra:up": "bash infra/scripts/start-local-infrastructure.sh",
     "infra:verify": "bash infra/scripts/verify-local-infrastructure.sh",
     "infra:verify-env": "bash infra/scripts/verify-environment.sh",
+    "production:validate": "node infra/production/validate-environment.mjs",
+    "recovery:backup": "bash infra/recovery/create-backup.sh",
+    "recovery:verify": "bash infra/recovery/verify-backup.sh",
+    "recovery:rehearse": "bash infra/recovery/rehearse-restore.sh",
     "lint": "turbo run lint && eslint .",
-    "test": "turbo run test && bash tests/infrastructure/local-infrastructure.test.sh",
+    "test": "turbo run test && bash tests/infrastructure/local-infrastructure.test.sh && bash tests/infrastructure/production-environment.test.sh",
     "test:e2e": "turbo run test:e2e",
-    "test:integration": "turbo run test:integration",
+    "test:integration": "pnpm --filter @ldg/database test:integration && pnpm --filter @ldg/server test:integration",
+    "test:recovery": "pnpm --filter @ldg/server test:recovery",
     "typecheck": "turbo run typecheck && tsc --noEmit"
   },
   "devDependencies": {

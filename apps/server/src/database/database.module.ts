@@ -21,7 +21,9 @@ class DatabaseShutdown implements OnApplicationShutdown {
       inject: [ServerConfigService],
       provide: DATABASE_POOL,
       useFactory: (configuration: ServerConfigService): Pool =>
-        createDatabasePool(configuration.value.databaseUrl, { max: 20 }),
+        createDatabasePool(configuration.value.databaseUrl, {
+          max: configuration.value.databasePoolMax,
+        }),
     },
     {
       inject: [DATABASE_POOL],

@@ -13,6 +13,7 @@ describe("administration controller authorization", () => {
     ["createChecklistTemplate", ["administration:manage"]],
     ["publishChecklistTemplate", ["administration:manage"]],
     ["transitionUser", ["administration:manage"]],
+    ["linkUserIdentity", ["administration:manage"]],
     ["changeUserRole", ["administration:manage"]],
     ["createSupplier", ["administration:manage"]],
     ["createSupplierFacility", ["administration:manage"]],

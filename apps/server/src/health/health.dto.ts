@@ -18,6 +18,9 @@ export class ReadinessChecksDto {
   @ApiProperty({ enum: ["ready"], type: String })
   public objectStorage!: "ready";
 
+  @ApiProperty({ enum: ["ready"], type: String })
+  public queue!: "ready";
+
   @ApiProperty({ enum: ["ready", "skipped"], type: String })
   public worker!: "ready" | "skipped";
 }

@@ -8,13 +8,22 @@ export interface ServerConfig {
     port: number;
   };
   appEnvironment: AppEnvironment;
-  auth: {
-    developmentPermissions: string[];
-    developmentTenantId: string;
-    developmentUserId: string;
-    mode: "development";
-  };
+  auth:
+    | {
+        developmentPermissions: string[];
+        developmentTenantId: string;
+        developmentUserId: string;
+        mode: "development";
+      }
+    | {
+        audience: string;
+        issuer: string;
+        jwksUrl: string;
+        mode: "jwt";
+      };
   databaseUrl: string;
+  databasePoolMax: number;
+  expectedDatabaseRelease: string;
   notifications: {
     emailApiKey: string | null;
     emailApiUrl: string;
@@ -27,6 +36,9 @@ export interface ServerConfig {
     smsProvider: "capture" | "disabled" | "twilio";
     timeoutMs: number;
     twilioApiBaseUrl: string;
+  };
+  observability: {
+    requestLoggingEnabled: boolean;
   };
   objectStorage: {
     accessKeyId: string;
@@ -52,6 +64,8 @@ export interface ServerConfig {
     maxAttempts: number;
     pollIntervalMs: number;
     readyRequiresHeartbeat: boolean;
+    readyMaxDeadLetterEvents: number;
+    readyMaxOutboxAgeSeconds: number;
     tenantIds: string[];
   };
 }
@@ -65,18 +79,33 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
     "staging",
     "production",
   ] as const);
-  const authMode = enumValue("AUTH_MODE", environment.AUTH_MODE, ["development"] as const);
+  const authMode = enumValue("AUTH_MODE", environment.AUTH_MODE, ["development", "jwt"] as const);
 
-  if (appEnvironment !== "local") {
+  if (authMode === "development" && appEnvironment !== "local") {
     throw new Error("AUTH_MODE=development is allowed only when APP_ENV=local");
   }
 
-  const developmentTenantId = requiredUuid(
-    "DEVELOPMENT_TENANT_ID",
-    environment.DEVELOPMENT_TENANT_ID,
+  const auth =
+    authMode === "development"
+      ? {
+          developmentPermissions: csv(environment.DEVELOPMENT_PERMISSIONS ?? "*"),
+          developmentTenantId: requiredUuid(
+            "DEVELOPMENT_TENANT_ID",
+            environment.DEVELOPMENT_TENANT_ID,
+          ),
+          developmentUserId: requiredUuid("DEVELOPMENT_USER_ID", environment.DEVELOPMENT_USER_ID),
+          mode: authMode,
+        }
+      : {
+          audience: required("AUTH_JWT_AUDIENCE", environment.AUTH_JWT_AUDIENCE),
+          issuer: requiredUrl("AUTH_JWT_ISSUER", environment.AUTH_JWT_ISSUER).replace(/\/$/, ""),
+          jwksUrl: requiredUrl("AUTH_JWKS_URL", environment.AUTH_JWKS_URL),
+          mode: authMode,
+        };
+  const defaultWorkerTenantIds = auth.mode === "development" ? auth.developmentTenantId : undefined;
+  const workerTenantIds = csv(
+    required("WORKER_TENANT_IDS", environment.WORKER_TENANT_IDS ?? defaultWorkerTenantIds),
   );
-  const developmentUserId = requiredUuid("DEVELOPMENT_USER_ID", environment.DEVELOPMENT_USER_ID);
-  const workerTenantIds = csv(environment.WORKER_TENANT_IDS ?? developmentTenantId);
   for (const tenantId of workerTenantIds) {
     requiredUuid("WORKER_TENANT_IDS", tenantId);
   }
@@ -99,13 +128,13 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
       port: integer("API_PORT", environment.API_PORT ?? "3001", 1, 65_535),
     },
     appEnvironment,
-    auth: {
-      developmentPermissions: csv(environment.DEVELOPMENT_PERMISSIONS ?? "*"),
-      developmentTenantId,
-      developmentUserId,
-      mode: authMode,
-    },
+    auth,
     databaseUrl: required("DATABASE_URL", environment.DATABASE_URL),
+    databasePoolMax: integer("DATABASE_POOL_MAX", environment.DATABASE_POOL_MAX ?? "20", 1, 100),
+    expectedDatabaseRelease: required(
+      "EXPECTED_DATABASE_RELEASE",
+      environment.EXPECTED_DATABASE_RELEASE ?? "1.10.0-rc.1",
+    ),
     notifications: {
       emailApiKey:
         emailProvider === "resend"
@@ -145,6 +174,13 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
       twilioApiBaseUrl: (
         environment.NOTIFICATION_TWILIO_API_BASE_URL ?? "https://api.twilio.com"
       ).replace(/\/$/, ""),
+    },
+    observability: {
+      requestLoggingEnabled: booleanValue(
+        "LOG_REQUESTS",
+        environment.LOG_REQUESTS ??
+          (appEnvironment === "production" || appEnvironment === "staging" ? "true" : "false"),
+      ),
     },
     objectStorage: {
       accessKeyId: required("MINIO_APP_USER", environment.MINIO_APP_USER),
@@ -215,6 +251,18 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
         "READY_REQUIRE_WORKER",
         environment.READY_REQUIRE_WORKER ?? "false",
       ),
+      readyMaxDeadLetterEvents: integer(
+        "READY_MAX_DEAD_LETTER_EVENTS",
+        environment.READY_MAX_DEAD_LETTER_EVENTS ?? "100000",
+        0,
+        100_000,
+      ),
+      readyMaxOutboxAgeSeconds: integer(
+        "READY_MAX_OUTBOX_AGE_SECONDS",
+        environment.READY_MAX_OUTBOX_AGE_SECONDS ?? "86400",
+        30,
+        86_400,
+      ),
       tenantIds: workerTenantIds,
     },
   };
@@ -241,6 +289,20 @@ function minimumLength(name: string, value: string | undefined, length: number):
     throw new Error(`${name} must contain at least ${length.toString()} characters`);
   }
   return parsed;
+}
+
+function requiredUrl(name: string, value: string | undefined): string {
+  const parsed = required(name, value);
+  let url: URL;
+  try {
+    url = new URL(parsed);
+  } catch {
+    throw new Error(`${name} must be a valid URL`);
+  }
+  if (url.protocol !== "https:" && url.hostname !== "127.0.0.1" && url.hostname !== "localhost") {
+    throw new Error(`${name} must use HTTPS outside local development`);
+  }
+  return url.toString();
 }
 
 function enumValue<const T extends readonly string[]>(

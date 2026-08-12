@@ -15,8 +15,9 @@ import { WorkerHeartbeatService } from "./worker-heartbeat.service.js";
 export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(WorkerRunnerService.name);
   private heartbeatTimer?: NodeJS.Timeout;
+  private activePoll: Promise<void> | undefined;
   private pollTimer?: NodeJS.Timeout;
-  private polling = false;
+  private shuttingDown = false;
 
   public constructor(
     @Inject(ServerConfigService) private readonly configuration: ServerConfigService,
@@ -28,7 +29,7 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
 
   public async onApplicationBootstrap(): Promise<void> {
     await this.heartbeat.beat();
-    await this.poll();
+    await this.startPoll();
 
     this.heartbeatTimer = setInterval(() => {
       void this.heartbeat.beat().catch(() => {
@@ -38,18 +39,26 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
     this.heartbeatTimer.unref();
 
     this.pollTimer = setInterval(() => {
-      void this.poll();
+      void this.startPoll();
     }, this.configuration.value.worker.pollIntervalMs);
   }
 
-  public onApplicationShutdown(): void {
+  public async onApplicationShutdown(): Promise<void> {
+    this.shuttingDown = true;
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     if (this.pollTimer) clearInterval(this.pollTimer);
+    await this.activePoll;
+  }
+
+  private startPoll(): Promise<void> {
+    if (this.shuttingDown) return Promise.resolve();
+    this.activePoll ??= this.poll().finally(() => {
+      this.activePoll = undefined;
+    });
+    return this.activePoll;
   }
 
   private async poll(): Promise<void> {
-    if (this.polling) return;
-    this.polling = true;
     try {
       for (const tenantId of this.configuration.value.worker.tenantIds) {
         await this.scheduledJobs.processOnce(tenantId);
@@ -57,8 +66,6 @@ export class WorkerRunnerService implements OnApplicationBootstrap, OnApplicatio
       }
     } catch {
       this.logger.error("Outbox polling cycle failed");
-    } finally {
-      this.polling = false;
     }
   }
 }

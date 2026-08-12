@@ -39,6 +39,40 @@ describe("loadServerConfig", () => {
     );
   });
 
+  it("loads production JWT verification without development identities", () => {
+    const configuration = loadServerConfig({
+      ...baseEnvironment,
+      APP_ENV: "production",
+      AUTH_JWT_AUDIENCE: "authenticated",
+      AUTH_JWT_ISSUER: "https://example.supabase.co/auth/v1",
+      AUTH_JWKS_URL: "https://example.supabase.co/auth/v1/.well-known/jwks.json",
+      AUTH_MODE: "jwt",
+      DEVELOPMENT_TENANT_ID: undefined,
+      DEVELOPMENT_USER_ID: undefined,
+      WORKER_TENANT_IDS: "00000000-0000-4000-8000-000000000001",
+    });
+
+    expect(configuration.auth).toEqual({
+      audience: "authenticated",
+      issuer: "https://example.supabase.co/auth/v1",
+      jwksUrl: "https://example.supabase.co/auth/v1/.well-known/jwks.json",
+      mode: "jwt",
+    });
+  });
+
+  it("requires explicit worker tenants and JWT endpoints in JWT mode", () => {
+    expect(() =>
+      loadServerConfig({
+        ...baseEnvironment,
+        APP_ENV: "production",
+        AUTH_MODE: "jwt",
+        DEVELOPMENT_TENANT_ID: undefined,
+        DEVELOPMENT_USER_ID: undefined,
+        WORKER_TENANT_IDS: undefined,
+      }),
+    ).toThrow("AUTH_JWT_AUDIENCE is required");
+  });
+
   it("rejects invalid worker tenant identifiers", () => {
     expect(() => loadServerConfig({ ...baseEnvironment, WORKER_TENANT_IDS: "not-a-uuid" })).toThrow(
       "WORKER_TENANT_IDS must be a valid UUID",

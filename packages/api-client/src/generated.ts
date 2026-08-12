@@ -132,6 +132,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/administration/users/{id}/identity": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["linkAdministrationUserIdentity"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/administration/users/{id}/roles/actions/{action}": {
     parameters: {
       query?: never;
@@ -2627,6 +2643,7 @@ export interface components {
       displayName: string;
       email: string;
       status: string;
+      identityLinked: boolean;
       roles: components["schemas"]["AdministrationRoleDto"][];
     };
     AdministrationAssetDto: {
@@ -2757,6 +2774,13 @@ export interface components {
       required: boolean;
       items: components["schemas"]["CreateChecklistTemplateItemDto"][];
     };
+    LinkUserIdentityDto: {
+      /**
+       * Format: uuid
+       * @description Supabase Auth user identifier
+       */
+      externalSubject: string;
+    };
     AssignUserRoleDto: {
       /** Format: uuid */
       roleId: string;
@@ -2781,6 +2805,8 @@ export interface components {
       migrations: "ready";
       /** @enum {string} */
       objectStorage: "ready";
+      /** @enum {string} */
+      queue: "ready";
       /** @enum {string} */
       worker: "ready" | "skipped";
     };
@@ -5315,6 +5341,33 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdministrationUserDto"];
+        };
+      };
+    };
+  };
+  linkAdministrationUserIdentity: {
+    parameters: {
+      query?: never;
+      header: {
+        "Idempotency-Key": string;
+      };
+      path: {
+        id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LinkUserIdentityDto"];
+      };
+    };
     responses: {
       200: {
         headers: {

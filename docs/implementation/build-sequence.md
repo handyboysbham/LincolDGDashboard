@@ -195,13 +195,15 @@ Build:
 
 ## Stage 8 — Administration and launch hardening
 
-Status: Sprint 1.10.0 Phase 1 implements the administration and operational-visibility foundation.
-The tenant-safe Administration module and `/settings` workspace cover Users and Roles, assets,
-suppliers and their facility locations, company payment accounts, versioned Checklist Templates,
-Audit Events, operational counts, and authoritative cross-domain search. Existing Pricing and
-Notification publication remain owned by their domain modules and are linked from Settings. Phase 2
-remains the deployment, restore, security, accessibility, reliability, performance, and release-
-candidate hardening stage.
+Status: Sprint 1.10.0 implements the administration and operational-visibility foundation and Phase
+2 launch-hardening candidate. The tenant-safe Administration module and `/settings` workspace cover
+Users and Roles, assets, suppliers and their facility locations, company payment accounts, versioned
+Checklist Templates, Audit Events, operational counts, and authoritative cross-domain search.
+Existing Pricing and Notification publication remain owned by their domain modules and are linked
+from Settings. Phase 2 adds production Supabase Auth, deployable process packaging, environment
+gates, exact readiness, safe operational logging, recovery scripts, restored canonical journeys,
+Supabase security hardening, and release-candidate evidence. Production go-live remains gated by the
+candidate checklist.
 
 Build:
 

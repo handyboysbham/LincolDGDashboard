@@ -46,6 +46,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createApiApplication, type ApiApplication } from "../../src/create-api-application.js";
 import { loadRootEnvironment } from "../../src/environment.js";
+import { recoveryAcceptanceEnabled, withRestoredDatabase } from "./support/restored-database.js";
 
 loadRootEnvironment();
 
@@ -2673,6 +2674,58 @@ describe(
         (transaction) => transaction.select().from(quoteAcceptances),
       );
       expect(foreignVisible).toEqual([]);
+
+      if (recoveryAcceptanceEnabled()) {
+        await withRestoredDatabase(
+          {
+            adminDatabaseUrl: connectionString(
+              environment("POSTGRES_ADMIN_USER"),
+              environment("POSTGRES_ADMIN_PASSWORD"),
+              "postgres",
+            ),
+            migrationDatabaseOwner: environment("POSTGRES_MIGRATION_USER"),
+            migrationUrl: (name) =>
+              connectionString(
+                environment("POSTGRES_MIGRATION_USER"),
+                environment("POSTGRES_MIGRATION_PASSWORD"),
+                name,
+              ),
+            runtimeUrl: (name) =>
+              connectionString(
+                environment("POSTGRES_RUNTIME_USER"),
+                environment("POSTGRES_RUNTIME_PASSWORD"),
+                name,
+              ),
+            sourceBackupUrl: connectionString(
+              environment("POSTGRES_ADMIN_USER"),
+              environment("POSTGRES_ADMIN_PASSWORD"),
+              databaseName,
+            ),
+            tenantId,
+          },
+          async (restored) => {
+            const state = await withTenantTransaction(restored, tenantId, async (transaction) => ({
+              acceptances: await transaction.select({ value: count() }).from(quoteAcceptances),
+              delivery: await transaction.select({ value: count() }).from(materialDeliveryDetails),
+              invoices: await transaction.select({ value: count() }).from(invoices),
+              loads: await transaction.select({ value: count() }).from(materialLoads),
+              payments: await transaction.select({ value: count() }).from(payments),
+            }));
+            expect(state).toMatchObject({
+              acceptances: [{ value: 1 }],
+              delivery: [{ value: 1 }],
+              invoices: [{ value: 4 }],
+              loads: [{ value: 1 }],
+              payments: [{ value: 3 }],
+            });
+            expect(
+              await withTenantTransaction(restored, foreignTenantId, (transaction) =>
+                transaction.select().from(quoteAcceptances),
+              ),
+            ).toEqual([]);
+          },
+        );
+      }
     });
 
     it("supersedes sent versions, rejects old acceptance, and preserves a declined terminal response", async () => {

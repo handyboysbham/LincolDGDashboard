@@ -31,12 +31,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("HealthService readiness", () => {
   it("reports a missing migration without exposing connection details", async () => {
-    const pool = {
-      query: vi
-        .fn()
-        .mockResolvedValueOnce({ rows: [{ "?column?": 1 }] })
-        .mockResolvedValueOnce({ rows: [{ current_tenant: null, organizations: null }] }),
-    } as unknown as Pool;
+    const pool = healthPool({ databaseRelease: null });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
 
     await expect(new HealthService(pool, configuration()).ready()).rejects.toMatchObject({
@@ -46,14 +41,7 @@ describe("HealthService readiness", () => {
   });
 
   it("reports object-storage failure", async () => {
-    const pool = {
-      query: vi
-        .fn()
-        .mockResolvedValueOnce({ rows: [{ "?column?": 1 }] })
-        .mockResolvedValueOnce({
-          rows: [{ current_tenant: "current_tenant_id()", organizations: "organizations" }],
-        }),
-    } as unknown as Pool;
+    const pool = healthPool();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
 
     await expect(new HealthService(pool, configuration()).ready()).rejects.toMatchObject({
@@ -63,15 +51,7 @@ describe("HealthService readiness", () => {
   });
 
   it("reports a missing required worker heartbeat", async () => {
-    const pool = {
-      query: vi
-        .fn()
-        .mockResolvedValueOnce({ rows: [{ "?column?": 1 }] })
-        .mockResolvedValueOnce({
-          rows: [{ current_tenant: "current_tenant_id()", organizations: "organizations" }],
-        })
-        .mockResolvedValueOnce({ rows: [{ ready: false }] }),
-    } as unknown as Pool;
+    const pool = healthPool({ workerReady: false });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
 
     await expect(
@@ -81,4 +61,60 @@ describe("HealthService readiness", () => {
       details: { failed: ["worker"] },
     });
   });
+
+  it("reports a tenant queue whose dead letters exceed the threshold", async () => {
+    const pool = healthPool({ deadLetters: 1 });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+
+    await expect(
+      new HealthService(pool, configuration({ readyMaxDeadLetterEvents: 0 })).ready(),
+    ).rejects.toMatchObject({
+      code: "SERVICE_NOT_READY",
+      details: { failed: ["queue"] },
+    });
+  });
 });
+
+function healthPool(
+  overrides: {
+    databaseRelease?: string | null;
+    deadLetters?: number;
+    oldestAgeSeconds?: number;
+    workerReady?: boolean;
+  } = {},
+): Pool {
+  const client = {
+    query: vi.fn((query: string) => {
+      if (query.includes("with queue as")) {
+        return Promise.resolve({
+          rows: [
+            {
+              deadLetters: overrides.deadLetters ?? 0,
+              oldestAgeSeconds: overrides.oldestAgeSeconds ?? 0,
+            },
+          ],
+        });
+      }
+      return Promise.resolve({ rows: [] });
+    }),
+    release: vi.fn(),
+  };
+  return {
+    connect: vi.fn().mockResolvedValue(client),
+    query: vi.fn((query: string) => {
+      if (query.includes("current_schema_release")) {
+        return Promise.resolve({
+          rows: [
+            {
+              release: "databaseRelease" in overrides ? overrides.databaseRelease : "1.10.0-rc.1",
+            },
+          ],
+        });
+      }
+      if (query.includes("worker_heartbeats")) {
+        return Promise.resolve({ rows: [{ ready: overrides.workerReady ?? true }] });
+      }
+      return Promise.resolve({ rows: [{ "?column?": 1 }] });
+    }),
+  } as unknown as Pool;
+}

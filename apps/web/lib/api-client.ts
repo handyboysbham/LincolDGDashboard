@@ -1,10 +1,25 @@
 import { createApiClient } from "@ldg/api-client";
 
+import { webAuthMode } from "./auth-mode";
+import { createBrowserSupabaseClient } from "./supabase/client";
+
 export function getApiClient() {
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!baseUrl) throw new Error("NEXT_PUBLIC_API_BASE_URL is required");
-  return createApiClient({ baseUrl });
+  return createApiClient({ baseUrl, fetch: authenticatedFetch });
 }
+
+const authenticatedFetch: typeof fetch = async (input, init) => {
+  const headers = new Headers(init?.headers);
+  if (webAuthMode() === "supabase" && !headers.has("authorization")) {
+    const { data, error } = await createBrowserSupabaseClient().auth.getSession();
+    if (error) throw error;
+    if (data.session?.access_token) {
+      headers.set("authorization", `Bearer ${data.session.access_token}`);
+    }
+  }
+  return fetch(input, { ...init, headers });
+};
 
 export function apiErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && "error" in error) {

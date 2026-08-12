@@ -8,6 +8,7 @@ import { AppModule } from "./app.module.js";
 import { ServerConfigService } from "./config/server-config.service.js";
 import { registerRequestContext } from "./context/register-request-context.js";
 import { RequestContextService } from "./context/request-context.service.js";
+import { registerRequestLogging } from "./observability/request-logging.js";
 
 export interface ApiApplication {
   application: NestFastifyApplication;
@@ -31,7 +32,7 @@ export async function createApiApplication(): Promise<ApiApplication> {
   );
   const configuration = application.get(ServerConfigService);
   application.enableCors({
-    allowedHeaders: ["content-type", "idempotency-key", "x-request-id"],
+    allowedHeaders: ["authorization", "content-type", "idempotency-key", "x-request-id"],
     exposedHeaders: ["x-request-id"],
     methods: ["GET", "POST", "OPTIONS"],
     origin: configuration.value.web.origin,
@@ -40,12 +41,15 @@ export async function createApiApplication(): Promise<ApiApplication> {
     application.getHttpAdapter().getInstance(),
     application.get(RequestContextService),
   );
+  if (configuration.value.observability.requestLoggingEnabled) {
+    registerRequestLogging(application.getHttpAdapter().getInstance());
+  }
   await application.register(helmet);
 
   const swaggerConfiguration = new DocumentBuilder()
     .setTitle("Lincoln Dirt and Gravel API")
     .setDescription("Lincoln Dirt and Gravel operating system API")
-    .setVersion("1.9.0")
+    .setVersion("1.10.0")
     .build();
   const document = SwaggerModule.createDocument(application, swaggerConfiguration);
   SwaggerModule.setup("api/docs", application, document, {

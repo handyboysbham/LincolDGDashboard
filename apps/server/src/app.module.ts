@@ -3,7 +3,7 @@ import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 
 import { AdministrationModule } from "./administration/administration.module.js";
 import { AuthModule } from "./auth/auth.module.js";
-import { DevelopmentAuthGuard } from "./auth/development-auth.guard.js";
+import { AuthenticationGuard } from "./auth/authentication.guard.js";
 import { PermissionsGuard } from "./auth/permissions.guard.js";
 import { CommercialModule } from "./commercial/commercial.module.js";
 import { CommunicationsModule } from "./communications/communications.module.js";
@@ -40,7 +40,7 @@ import { OperationsModule } from "./operations/operations.module.js";
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
-    { provide: APP_GUARD, useExisting: DevelopmentAuthGuard },
+    { provide: APP_GUARD, useExisting: AuthenticationGuard },
     { provide: APP_GUARD, useExisting: PermissionsGuard },
   ],
 })

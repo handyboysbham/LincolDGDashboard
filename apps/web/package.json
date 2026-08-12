@@ -7,14 +7,16 @@
     "build": "next build",
     "clean": "rimraf .next coverage",
     "dev": "next dev --hostname 127.0.0.1 --port 3000",
-    "lint": "eslint app components lib next.config.ts vitest.config.ts vitest.e2e.config.ts",
+    "lint": "eslint app components lib next.config.ts proxy.ts vitest.config.ts vitest.e2e.config.ts",
     "start": "next start --hostname 127.0.0.1 --port 3000",
     "test": "vitest run --config vitest.config.ts",
-    "test:e2e": "next build && vitest run --config vitest.e2e.config.ts",
+    "test:e2e": "next build && vitest run --config vitest.e2e.config.ts tests/e2e/bootstrap-web.test.ts && bash tests/e2e/run-production-auth.sh",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@ldg/api-client": "workspace:*",
+    "@supabase/ssr": "0.12.4",
+    "@supabase/supabase-js": "2.112.3",
     "lucide-react": "^1.28.0",
     "next": "^16.2.12",
     "react": "^19.2.8",

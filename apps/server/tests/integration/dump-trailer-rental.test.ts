@@ -42,6 +42,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createApiApplication, type ApiApplication } from "../../src/create-api-application.js";
 import { loadRootEnvironment } from "../../src/environment.js";
+import { recoveryAcceptanceEnabled, withRestoredDatabase } from "./support/restored-database.js";
 
 loadRootEnvironment();
 
@@ -947,6 +948,55 @@ describe("Sprint 1.8.0 Dump Trailer Rental", { concurrent: false }, () => {
       { amountCents: 10_000, expenseType: "disposal", status: "reconciled" },
     ]);
     expect(phaseFourPersistence.loads).toHaveLength(2);
+
+    if (recoveryAcceptanceEnabled()) {
+      await withRestoredDatabase(
+        {
+          adminDatabaseUrl: connectionString(
+            environment("POSTGRES_ADMIN_USER"),
+            environment("POSTGRES_ADMIN_PASSWORD"),
+            "postgres",
+          ),
+          migrationDatabaseOwner: environment("POSTGRES_MIGRATION_USER"),
+          migrationUrl: (name) =>
+            connectionString(
+              environment("POSTGRES_MIGRATION_USER"),
+              environment("POSTGRES_MIGRATION_PASSWORD"),
+              name,
+            ),
+          runtimeUrl: (name) =>
+            connectionString(
+              environment("POSTGRES_RUNTIME_USER"),
+              environment("POSTGRES_RUNTIME_PASSWORD"),
+              name,
+            ),
+          sourceBackupUrl: connectionString(
+            environment("POSTGRES_ADMIN_USER"),
+            environment("POSTGRES_ADMIN_PASSWORD"),
+            databaseName,
+          ),
+          tenantId,
+        },
+        async (restored) => {
+          const state = await withTenantTransaction(restored, tenantId, async (transaction) => ({
+            charges: await transaction.select().from(jobCharges),
+            jobs: await transaction.select().from(jobs).where(eq(jobs.id, fixture.jobId)),
+            rentals: await transaction
+              .select()
+              .from(dumpTrailerRentalDetails)
+              .where(eq(dumpTrailerRentalDetails.jobId, fixture.jobId)),
+          }));
+          expect(state.jobs).toMatchObject([{ status: "operationally_complete" }]);
+          expect(state.rentals).toMatchObject([{ status: "operationally_complete" }]);
+          expect(state.charges).toHaveLength(2);
+          expect(
+            await withTenantTransaction(restored, foreignTenantId, (transaction) =>
+              transaction.select().from(jobs).where(eq(jobs.id, fixture.jobId)),
+            ),
+          ).toEqual([]);
+        },
+      );
+    }
   });
 
   it("does not expose another tenant's Rental Job", async () => {

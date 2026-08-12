@@ -1,22 +1,61 @@
+import { createDatabase, createDatabasePool, runMigrations, type Pool } from "@ldg/database";
 import type { FastifyInstance } from "fastify";
+import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createApiApplication, type ApiApplication } from "../../src/create-api-application.js";
-import { loadLocalDatabaseEnvironment } from "./local-database-environment.js";
+import { loadRootEnvironment } from "../../src/environment.js";
 
-loadLocalDatabaseEnvironment();
+loadRootEnvironment();
 
 describe("API foundation", () => {
+  const databaseName = `ldg_api_foundation_${randomUUID().replaceAll("-", "")}`;
   let api: ApiApplication | undefined;
   let fastify: FastifyInstance;
+  let adminPool: Pool | undefined;
+  let migrationPool: Pool | undefined;
+  let databaseCreated = false;
 
   beforeAll(async () => {
+    adminPool = createDatabasePool(
+      connectionString(
+        environment("POSTGRES_ADMIN_USER"),
+        environment("POSTGRES_ADMIN_PASSWORD"),
+        "postgres",
+      ),
+    );
+    await adminPool.query(
+      `create database "${databaseName}" owner "${environment("POSTGRES_MIGRATION_USER")}"`,
+    );
+    databaseCreated = true;
+    migrationPool = createDatabasePool(
+      connectionString(
+        environment("POSTGRES_MIGRATION_USER"),
+        environment("POSTGRES_MIGRATION_PASSWORD"),
+        databaseName,
+      ),
+    );
+    await runMigrations(createDatabase(migrationPool));
+    process.env.DATABASE_URL = connectionString(
+      environment("POSTGRES_RUNTIME_USER"),
+      environment("POSTGRES_RUNTIME_PASSWORD"),
+      databaseName,
+    );
     api = await createApiApplication();
     fastify = api.application.getHttpAdapter().getInstance();
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await api?.application.close();
+    await migrationPool?.end();
+    if (adminPool && databaseCreated) {
+      await adminPool.query(
+        "select pg_terminate_backend(pid) from pg_stat_activity where datname = $1",
+        [databaseName],
+      );
+      await adminPool.query(`drop database if exists "${databaseName}"`);
+    }
+    await adminPool?.end();
   });
 
   it("reports process liveness with request correlation", async () => {
@@ -26,7 +65,7 @@ describe("API foundation", () => {
       url: "/health/live",
     });
 
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode, response.body).toBe(200);
     expect(response.headers["x-request-id"]).toBe("test-correlation-1");
     expect(response.json()).toMatchObject({ status: "ok" });
   });
@@ -34,7 +73,7 @@ describe("API foundation", () => {
   it("reports database, migration, and object-storage readiness", async () => {
     const response = await fastify.inject({ method: "GET", url: "/health/ready" });
 
-    expect(response.statusCode).toBe(200);
+    expect(response.statusCode, response.body).toBe(200);
     expect(response.json()).toMatchObject({
       checks: {
         database: "ready",
@@ -96,7 +135,7 @@ describe("API foundation", () => {
     const response = await fastify.inject({ method: "GET", url: "/api/docs/openapi.json" });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({ info: { version: "1.9.0" }, openapi: "3.0.0" });
+    expect(response.json()).toMatchObject({ info: { version: "1.10.0" }, openapi: "3.0.0" });
   });
 
   it("allows the configured web origin without exposing tenant headers", async () => {
@@ -116,3 +155,19 @@ describe("API foundation", () => {
     expect(response.headers["access-control-allow-headers"]).not.toContain("x-tenant-id");
   });
 });
+
+function environment(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} is required for API integration tests`);
+  return value;
+}
+
+function connectionString(user: string, password: string, database: string): string {
+  const url = new URL("postgresql://localhost");
+  url.username = user;
+  url.password = password;
+  url.hostname = environment("POSTGRES_HOST");
+  url.port = environment("POSTGRES_PORT");
+  url.pathname = `/${database}`;
+  return url.toString();
+}

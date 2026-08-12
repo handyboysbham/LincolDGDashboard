@@ -1,10 +1,12 @@
 import { Module } from "@nestjs/common";
 
-import { DevelopmentAuthGuard } from "./development-auth.guard.js";
+import { AuthenticationGuard } from "./authentication.guard.js";
+import { AuthenticatedActorService } from "./authenticated-actor.service.js";
+import { JwtVerifierService } from "./jwt-verifier.service.js";
 import { PermissionsGuard } from "./permissions.guard.js";
 
 @Module({
-  exports: [DevelopmentAuthGuard, PermissionsGuard],
-  providers: [DevelopmentAuthGuard, PermissionsGuard],
+  exports: [AuthenticationGuard, PermissionsGuard],
+  providers: [AuthenticatedActorService, AuthenticationGuard, JwtVerifierService, PermissionsGuard],
 })
 export class AuthModule {}

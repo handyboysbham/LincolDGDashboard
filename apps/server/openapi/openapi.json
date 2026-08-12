@@ -304,6 +304,53 @@
         "tags": ["Administration"]
       }
     },
+    "/api/v1/administration/users/{id}/identity": {
+      "post": {
+        "operationId": "linkAdministrationUserIdentity",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkUserIdentityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdministrationUserDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": ["Administration"]
+      }
+    },
     "/api/v1/administration/users/{id}/roles/actions/{action}": {
       "post": {
         "operationId": "changeAdministrationUserRole",
@@ -7069,7 +7116,7 @@
   "info": {
     "title": "Lincoln Dirt and Gravel API",
     "description": "Lincoln Dirt and Gravel operating system API",
-    "version": "1.9.0",
+    "version": "1.10.0",
     "contact": {}
   },
   "tags": [],
@@ -7164,6 +7211,9 @@
           "status": {
             "type": "string"
           },
+          "identityLinked": {
+            "type": "boolean"
+          },
           "roles": {
             "type": "array",
             "items": {
@@ -7171,7 +7221,7 @@
             }
           }
         },
-        "required": ["id", "displayName", "email", "status", "roles"]
+        "required": ["id", "displayName", "email", "status", "identityLinked", "roles"]
       },
       "AdministrationAssetDto": {
         "type": "object",
@@ -7604,6 +7654,17 @@
         },
         "required": ["templateCode", "name", "items"]
       },
+      "LinkUserIdentityDto": {
+        "type": "object",
+        "properties": {
+          "externalSubject": {
+            "type": "string",
+            "description": "Supabase Auth user identifier",
+            "format": "uuid"
+          }
+        },
+        "required": ["externalSubject"]
+      },
       "AssignUserRoleDto": {
         "type": "object",
         "properties": {
@@ -7664,12 +7725,16 @@
             "type": "string",
             "enum": ["ready"]
           },
+          "queue": {
+            "type": "string",
+            "enum": ["ready"]
+          },
           "worker": {
             "type": "string",
             "enum": ["ready", "skipped"]
           }
         },
-        "required": ["database", "migrations", "objectStorage", "worker"]
+        "required": ["database", "migrations", "objectStorage", "queue", "worker"]
       },
       "ReadyHealthDto": {
         "type": "object",

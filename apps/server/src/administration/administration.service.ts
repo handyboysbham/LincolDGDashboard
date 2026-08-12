@@ -43,6 +43,7 @@ import type {
   CreateCompanyPaymentAccountDto,
   CreateSupplierDto,
   CreateSupplierFacilityDto,
+  LinkUserIdentityDto,
 } from "./administration.dto.js";
 
 interface Actor {
@@ -167,6 +168,7 @@ export class AdministrationService {
         displayName: user.displayName,
         email: user.email,
         id: user.id,
+        identityLinked: user.externalSubject !== null,
         roles: (rolesByUser.get(user.id) ?? []).toSorted((left, right) =>
           left.name.localeCompare(right.name),
         ),
@@ -905,6 +907,87 @@ export class AdministrationService {
     return result.body;
   }
 
+  public async linkUserIdentity(
+    userId: string,
+    input: LinkUserIdentityDto,
+    key: string,
+  ): Promise<AdministrationUserDto> {
+    const actor = this.context.actor();
+    const result = await this.idempotency.execute(
+      {
+        key,
+        payload: { externalSubject: input.externalSubject, userId },
+        scope: "administration.users.identity.link",
+      },
+      async (transaction) => {
+        const [user] = await transaction
+          .select()
+          .from(users)
+          .where(and(eq(users.tenantId, actor.tenantId), eq(users.id, userId)))
+          .for("update");
+        if (!user) throw notFound("USER_NOT_FOUND", "User was not found");
+        if (user.externalSubject && user.externalSubject !== input.externalSubject) {
+          throw conflict(
+            "USER_IDENTITY_ALREADY_LINKED",
+            "The User is already linked to a different authentication identity",
+          );
+        }
+        const [subjectOwner] = await transaction
+          .select({ id: users.id })
+          .from(users)
+          .where(
+            and(
+              eq(users.tenantId, actor.tenantId),
+              eq(users.externalSubject, input.externalSubject),
+            ),
+          )
+          .limit(1);
+        if (subjectOwner && subjectOwner.id !== user.id) {
+          throw conflict(
+            "AUTHENTICATION_IDENTITY_ALREADY_LINKED",
+            "The authentication identity is already linked to another User",
+          );
+        }
+        const updated =
+          user.externalSubject === input.externalSubject
+            ? user
+            : (
+                await transaction
+                  .update(users)
+                  .set({ externalSubject: input.externalSubject, updatedBy: actor.userId })
+                  .where(
+                    and(
+                      eq(users.tenantId, actor.tenantId),
+                      eq(users.id, user.id),
+                      sql`${users.externalSubject} is null`,
+                    ),
+                  )
+                  .returning()
+              )[0];
+        if (!updated)
+          throw conflict("USER_CHANGED", "User changed before identity linking completed");
+        if (!user.externalSubject) {
+          await this.recordChange(transaction, actor, {
+            after: { identityLinked: true },
+            before: { identityLinked: false },
+            commandName: "LinkUserIdentity",
+            entityId: user.id,
+            entityType: "User",
+            eventType: "administration.user_identity_linked",
+          });
+        }
+        return {
+          body: {
+            ...userBaseDto(updated),
+            roles: await this.rolesForUser(transaction, actor, userId),
+          },
+          status: HttpStatus.OK,
+        };
+      },
+    );
+    return result.body;
+  }
+
   public async createSupplier(
     input: CreateSupplierDto,
     key: string,
@@ -1093,6 +1176,7 @@ function userBaseDto(record: typeof users.$inferSelect) {
     displayName: record.displayName,
     email: record.email,
     id: record.id,
+    identityLinked: record.externalSubject !== null,
     status: record.status,
   };
 }

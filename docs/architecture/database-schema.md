@@ -153,6 +153,11 @@ may retain the published Template identity while snapshotting the code, name, re
 items used for execution. Published and retired checklist content is immutable; all three new tables
 use forced RLS, explicit restricted-runtime grants, and no-delete history protection.
 
+Sprint 1.10.0 migration `0017` publishes the `1.10.0-rc.1` schema release marker, fixes mutable
+function search paths, restricts global migration and worker-heartbeat tables to explicit database
+roles, revokes public execution from the Supabase RLS helper when present, and relocates
+`btree_gist` out of the exposed `public` schema when the migration role owns the extension.
+
 Sprint 1.8.0 migration `0010` owns the Dump Trailer Rental data foundation: one Rental Detail per
 rental Job, attributable Debris Reviews, reservation-aware Extensions, durable Pickup Attempts,
 Disposal Loads, and Rental Inspections. Shared Schedule Blocks and Asset Reservations remain the

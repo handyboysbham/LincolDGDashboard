@@ -25,6 +25,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { Brand } from "./brand";
+import { SignOutButton } from "./sign-out-button";
 
 const primaryNavigation = [
   { href: "/", icon: LayoutDashboard, label: "Overview" },
@@ -150,12 +151,12 @@ export function StaffShell({
             <span>Settings</span>
           </Link>
           <div className="staff-profile">
-            <span className="profile-avatar">KD</span>
+            <span className="profile-avatar">LDG</span>
             <span>
-              <strong>Kaleb Duncan</strong>
-              <small>Owner</small>
+              <strong>Staff account</strong>
+              <small>Secure session</small>
             </span>
-            <ChevronDown aria-hidden="true" size={15} />
+            <SignOutButton />
           </div>
         </div>
       </aside>

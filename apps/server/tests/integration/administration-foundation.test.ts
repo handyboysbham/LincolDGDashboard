@@ -231,6 +231,33 @@ describe("Sprint 1.10.0 administration foundation", { concurrent: false }, () =>
   });
 
   it("manages Users, supplier facilities, search, and filtered Audit Events", async () => {
+    const externalSubject = randomUUID();
+    const identityLinked = await fastify.inject({
+      headers: { "idempotency-key": "administration-user-identity-1" },
+      method: "POST",
+      payload: { externalSubject },
+      url: `/api/v1/administration/users/${managedUserId}/identity`,
+    });
+    expect(identityLinked.statusCode).toBe(200);
+    expect(identityLinked.json()).toMatchObject({ identityLinked: true });
+    const identityReplay = await fastify.inject({
+      headers: { "idempotency-key": "administration-user-identity-1" },
+      method: "POST",
+      payload: { externalSubject },
+      url: `/api/v1/administration/users/${managedUserId}/identity`,
+    });
+    expect(identityReplay.json()).toEqual(identityLinked.json());
+    const duplicateIdentity = await fastify.inject({
+      headers: { "idempotency-key": "administration-user-identity-duplicate" },
+      method: "POST",
+      payload: { externalSubject },
+      url: `/api/v1/administration/users/${userId}/identity`,
+    });
+    expect(duplicateIdentity.statusCode).toBe(409);
+    expect(duplicateIdentity.json()).toMatchObject({
+      error: { code: "AUTHENTICATION_IDENTITY_ALREADY_LINKED" },
+    });
+
     const assigned = await fastify.inject({
       headers: { "idempotency-key": "administration-user-role-1" },
       method: "POST",

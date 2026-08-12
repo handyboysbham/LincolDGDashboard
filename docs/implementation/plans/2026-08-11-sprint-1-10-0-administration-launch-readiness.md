@@ -42,16 +42,17 @@ Status: complete.
 
 ## Phase 2 — Launch hardening and release candidate
 
-Status: planned.
+Status: implementation complete; production approval pending.
 
-- [ ] package production deployment configuration and environment validation
-- [ ] implement backup creation, verification, restore rehearsal, and recovery runbooks
-- [ ] run security, tenant-isolation, authorization, accessibility, reliability, and performance
+- [x] package production deployment configuration and environment validation
+- [x] implement backup creation, verification, restore rehearsal, and recovery runbooks
+- [x] run security, tenant-isolation, authorization, accessibility, reliability, and performance
       hardening
-- [ ] close remaining operational logging, health, queue, and failure-recovery gaps
-- [ ] execute both canonical V1 journeys from a clean database and from a restored backup
-- [ ] reconcile migrations, OpenAPI, generated client, domain documentation, and operator guidance
-- [ ] record release-candidate evidence with no unresolved critical defects
+- [x] close remaining operational logging, health, queue, and failure-recovery gaps
+- [x] execute both canonical V1 journeys from a clean database and from a restored backup
+- [x] reconcile migrations, OpenAPI, generated client, domain documentation, and operator guidance
+- [x] record local release-candidate evidence with no unresolved critical defects and explicit
+      remote go/no-go gates
 
 ## Phase 1 acceptance
 
@@ -94,3 +95,19 @@ pnpm check
 - Browser acceptance verifies the administration search, payment-account safety workflow, checklist
   workspace, keyboard-closeable mobile navigation, and a 390-pixel viewport without horizontal
   overflow.
+
+## Phase 2 closeout evidence
+
+- `pnpm test:integration` passes all 18 database and 38 server integration tests from isolated
+  PostgreSQL databases.
+- `pnpm test:recovery` passes both canonical restored-database journeys: two files and five tests,
+  including exact release and cross-tenant RLS verification.
+- `pnpm api:check` confirms the OpenAPI `1.10.0` document and generated client are current.
+- `pnpm test:e2e` passes 31 production route journeys and three production-auth boundary journeys.
+- `pnpm check` passes formatting, lint, type checking, 224 unit tests, infrastructure checks, and
+  all production builds.
+- Browser acceptance verifies the Supabase sign-in boundary, semantic form controls, security
+  headers, protected-route redirect, and a 390-pixel viewport without horizontal overflow.
+- The candidate remains a production no-go until migration `0017` is applied remotely, Supabase
+  security advisors are clear, production environment validation passes with deployed values, and
+  backup/PITR, object versioning, first-owner bootstrap, and release approval are recorded.
