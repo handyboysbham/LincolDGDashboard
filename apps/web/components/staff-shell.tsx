@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CalendarDays,
   Calculator,
@@ -17,8 +19,10 @@ import {
   Settings,
   Truck,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 import { Brand } from "./brand";
 
@@ -45,10 +49,47 @@ export function StaffShell({
   active = "/",
   children,
 }: Readonly<{ active?: string; children: React.ReactNode }>) {
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!mobileNavigationOpen) return;
+    sidebar.current?.querySelector<HTMLAnchorElement>("a[href]")?.focus();
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setMobileNavigationOpen(false);
+      menuButton.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileNavigationOpen]);
+
+  const closeMobileNavigation = () => {
+    setMobileNavigationOpen(false);
+    menuButton.current?.focus();
+  };
+
   return (
     <div className="staff-shell">
-      <aside className="staff-sidebar">
+      <aside
+        aria-label="Staff workspace navigation"
+        className={`staff-sidebar${mobileNavigationOpen ? " is-mobile-open" : ""}`}
+        id="staff-navigation-drawer"
+        ref={sidebar}
+      >
         <Brand />
+        <button
+          aria-label="Close navigation"
+          className="icon-button mobile-navigation-close"
+          onClick={closeMobileNavigation}
+          type="button"
+        >
+          <X aria-hidden="true" size={20} />
+        </button>
         <button className="workspace-switcher" type="button">
           <span className="workspace-avatar">L</span>
           <span>
@@ -61,7 +102,14 @@ export function StaffShell({
         <nav aria-label="Staff navigation" className="staff-navigation">
           <span className="nav-eyebrow">Workspace</span>
           {primaryNavigation.map(({ badge, href, icon: Icon, label }) => (
-            <Link className={navigationClass(active, href)} href={href} key={href}>
+            <Link
+              className={navigationClass(active, href)}
+              href={href}
+              key={href}
+              onClick={() => {
+                setMobileNavigationOpen(false);
+              }}
+            >
               <Icon aria-hidden="true" size={18} strokeWidth={1.8} />
               <span>{label}</span>
               {badge && <span className="nav-badge">{badge}</span>}
@@ -69,7 +117,14 @@ export function StaffShell({
           ))}
           <span className="nav-eyebrow nav-eyebrow-spaced">Business</span>
           {businessNavigation.map(({ href, icon: Icon, label }) => (
-            <Link className={navigationClass(active, href)} href={href} key={href}>
+            <Link
+              className={navigationClass(active, href)}
+              href={href}
+              key={href}
+              onClick={() => {
+                setMobileNavigationOpen(false);
+              }}
+            >
               <Icon aria-hidden="true" size={18} strokeWidth={1.8} />
               <span>{label}</span>
             </Link>
@@ -84,7 +139,13 @@ export function StaffShell({
               <span>Open the operations guide</span>
             </div>
           </div>
-          <Link className={navigationClass(active, "/settings")} href="/settings">
+          <Link
+            className={navigationClass(active, "/settings")}
+            href="/settings"
+            onClick={() => {
+              setMobileNavigationOpen(false);
+            }}
+          >
             <Settings aria-hidden="true" size={18} strokeWidth={1.8} />
             <span>Settings</span>
           </Link>
@@ -99,9 +160,28 @@ export function StaffShell({
         </div>
       </aside>
 
+      {mobileNavigationOpen && (
+        <button
+          aria-label="Close navigation"
+          className="mobile-navigation-backdrop"
+          onClick={closeMobileNavigation}
+          type="button"
+        />
+      )}
+
       <div className="staff-content">
         <header className="staff-topbar">
-          <button aria-label="Open navigation" className="icon-button mobile-only" type="button">
+          <button
+            aria-controls="staff-navigation-drawer"
+            aria-expanded={mobileNavigationOpen}
+            aria-label="Open navigation"
+            className="icon-button mobile-only"
+            onClick={() => {
+              setMobileNavigationOpen(true);
+            }}
+            ref={menuButton}
+            type="button"
+          >
             <Menu aria-hidden="true" size={20} />
           </button>
           <div className="global-search">

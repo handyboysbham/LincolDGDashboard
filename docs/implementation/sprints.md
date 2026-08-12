@@ -297,12 +297,12 @@ inspection, final billing, security-deposit resolution, and financial closure.
 
 ## Sprint 1.9.0 — Communications and Customer Experience
 
-Implementation status: implementation complete as of 2026-08-09; final interactive and
-clean-database acceptance reruns are pending. The tenant-isolated notification model, immutable
-Template publication, customer preferences, idempotent delivery, automatic lifecycle policies and
-reminders, configured email and optional SMS adapters, operational retry visibility, hashed Project
-capabilities, staff Communications workspace, and responsive customer Project experience are
-implemented. See the
+Implementation status: complete as of 2026-08-11, including clean-database communications coverage
+and production-build mobile and keyboard acceptance. The tenant-isolated notification model,
+immutable Template publication, customer preferences, idempotent delivery, automatic lifecycle
+policies and reminders, configured email and optional SMS adapters, operational retry visibility,
+hashed Project capabilities, staff Communications workspace, and responsive customer Project
+experience are implemented and verified. See the
 [Sprint 1.9.0 implementation plan](plans/2026-08-09-sprint-1-9-0-communications-customer-experience.md).
 
 ### Goal

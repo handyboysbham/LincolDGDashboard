@@ -2,11 +2,13 @@
 
 ## COMMS-E2E-001 — Outbox-Driven Customer Communication
 
-Implementation status: implemented in Sprint 1.9.0; the expanded clean-database and interactive
-production-build reruns remain pending. Coverage includes Template publication, preference
-evaluation, explicit and lifecycle-event queueing, scheduled reminders, configured providers, outbox
-and scheduled-work processing, idempotent delivery, suppression, retry and dead-letter operations,
-tenant isolation, staff Communications workflows, and the secure customer Project experience.
+Implementation status: complete and rerun from a clean local PostgreSQL database on 2026-08-11.
+Production-build mobile and keyboard acceptance also passed for the staff Communications workflow
+and the secure customer Project loading, success, expired, revoked, invalid, and unavailable states.
+Coverage includes Template publication, preference evaluation, explicit and lifecycle-event
+queueing, scheduled reminders, configured providers, outbox and scheduled-work processing,
+idempotent delivery, suppression, retry and dead-letter operations, tenant isolation, staff
+Communications workflows, and the secure customer Project experience.
 
 ### Journey
 

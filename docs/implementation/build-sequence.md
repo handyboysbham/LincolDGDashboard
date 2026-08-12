@@ -180,12 +180,12 @@ Exit:
 
 ## Stage 7 — Communications and customer experience
 
-Status: Sprint 1.9.0 implementation is complete; final interactive and clean-database acceptance
-reruns are pending. Versioned Notification Templates, per-Contact preferences, deduplicated delivery
-history, configured provider adapters, automatic business-event policies, scheduled reminders, and
-outbox-driven worker processing establish the communications backend. Hashed Project capabilities,
-the customer-safe Project experience, staff workflows, and redacted operational retry controls
-complete the implementation stage.
+Status: Sprint 1.9.0 implementation and acceptance are complete as of 2026-08-11. Versioned
+Notification Templates, per-Contact preferences, deduplicated delivery history, configured provider
+adapters, automatic business-event policies, scheduled reminders, and outbox-driven worker
+processing establish the communications backend. Hashed Project capabilities, the customer-safe
+Project experience, staff workflows, redacted operational retry controls, clean-database coverage,
+and production-build mobile and keyboard verification complete the implementation stage.
 
 Build:
 

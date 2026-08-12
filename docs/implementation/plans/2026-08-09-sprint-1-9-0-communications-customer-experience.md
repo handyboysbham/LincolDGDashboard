@@ -17,9 +17,9 @@ a secure customer Project experience that never exposes internal operational or 
 
 ## Phase 1 — Notification foundation
 
-Status: implementation complete in the current Sprint 1.9 change set. Final interactive and
-clean-database acceptance reruns remain pending because the current execution environment denied
-localhost browser and PostgreSQL acceptance-test access.
+Status: implementation and clean-database acceptance complete. The final rerun on 2026-08-11 used a
+randomly named disposable local PostgreSQL database, applied every reviewed migration, exercised the
+full communications integration journey, and dropped the database afterward.
 
 - [x] Notification Template, Preference, Delivery, and Delivery Attempt schema
 - [x] reviewed migration with tenant-aware foreign keys, forced RLS, grants, and transition guards
@@ -36,7 +36,7 @@ localhost browser and PostgreSQL acceptance-test access.
 
 ## Phase 2 — Event-driven customer experience backend
 
-Status: complete in the current Sprint 1.9 change set.
+Status: implementation complete.
 
 - [x] define a typed event-to-notification policy registry
 - [x] derive safe recipient and presentation variables from authoritative records
@@ -52,18 +52,18 @@ Status: complete in the current Sprint 1.9 change set.
 
 ## Phase 3 — Production workflows and acceptance
 
-Status: complete in the current Sprint 1.9 change set.
+Status: implementation and final production-build acceptance complete as of 2026-08-11.
 
 - [x] add Communications queue, Template status, delivery history, and retry visibility
 - [x] add Customer preference editing with accessible channel controls
 - [x] add customer Project summary route with loading, empty, success, expired, and revoked states
 - [x] link customer-visible Documents, Invoices, receipts, and Refund status
-- [ ] verify mobile and keyboard workflows from production builds
+- [x] verify mobile and keyboard workflows from production builds
 - [x] add configured email provider adapter and optional SMS adapter
 - [x] add scheduled reminders and retry/dead-letter operations
 - [x] verify provider idempotency, timeouts, error classification, and dead-letter visibility
 - [x] ensure credentials, tokens, destinations, and message bodies are absent from logs
-- [ ] execute `COMMS-E2E-001` from a clean database
+- [x] execute `COMMS-E2E-001` from a clean database
 - [x] run migrations, API generation checks, and `pnpm check`
 
 ## Phase 1 acceptance
@@ -105,6 +105,24 @@ Status: complete in the current Sprint 1.9 change set.
 6. Edit Contact preferences through accessible email and SMS controls.
 7. Load the Communications and customer Project routes from a production build and exercise their
    loading, empty, success, expired, revoked, and error presentation.
+
+## Closeout evidence
+
+- The focused communications integration suite passed all 6 scenarios against a migrated, randomly
+  named local PostgreSQL database.
+- The repository-wide integration gate passed all 52 PostgreSQL and object-storage scenarios: 18
+  database tests and 34 server tests.
+- `pnpm test:e2e` built the production Next.js application and passed all 30 production-route
+  checks.
+- `pnpm api:check` and the aggregate `pnpm check` format, lint, type, unit-test, and build gate
+  passed.
+- The production Communications route was verified at a 390 × 844 mobile viewport for loading,
+  empty, error, retry-recovery, labeled Template controls, and complete navigation access.
+- The mobile navigation drawer now opens from the top-bar button, moves focus into the drawer,
+  exposes Communications, closes with Escape, and restores focus to the trigger. The seven-item
+  bottom navigation remains on one row instead of wrapping into page content.
+- The production customer Project route was verified for loading, success, expired, revoked,
+  invalid, and temporarily unavailable capability states at the same mobile viewport.
 
 ## Required validation
 
