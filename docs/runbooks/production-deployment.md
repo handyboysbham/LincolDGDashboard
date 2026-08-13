@@ -75,24 +75,99 @@ After the initial owner is authenticated, owners link subsequent identities thro
 `POST /api/v1/administration/users/:id/identity`. The idempotent command permits only an unlinked
 User, prevents one Auth identity from being reused, and writes Audit and outbox evidence.
 
-The first owner is a controlled bootstrap exception because no authenticated owner exists yet. Use a
-reviewed transaction through the migration connection that sets tenant context, locks the exact
-User, sets `external_subject` only when null, and inserts matching
-`administration.user_identity_linked` Audit and outbox rows. Record the change ticket and remove
-migration credentials immediately after the bootstrap. Do not use dashboard table editing.
+The first owner is a controlled bootstrap exception because no authenticated owner exists yet. Use
+reviewed release jobs through the migration connection. On an empty production database, first
+generate separate tenant and application-User UUIDs and provision the Organization, unlinked owner
+User, owner assignment, standard Roles, Audit Event, and outbox event atomically:
+
+```bash
+APP_ENV=production \
+LDG_PROCESS=release \
+BOOTSTRAP_CONFIRM=PROVISION_TENANT_FOUNDATION \
+BOOTSTRAP_TENANT_ID=<tenant-uuid> \
+BOOTSTRAP_USER_ID=<application-user-uuid> \
+BOOTSTRAP_ORGANIZATION_DISPLAY_NAME='Lincoln Dirt and Gravel' \
+BOOTSTRAP_ORGANIZATION_LEGAL_NAME='<legal-business-name>' \
+BOOTSTRAP_OWNER_DISPLAY_NAME='<owner-display-name>' \
+BOOTSTRAP_OWNER_EMAIL='<owner-email>' \
+BOOTSTRAP_TIMEZONE=America/Chicago \
+BOOTSTRAP_APPROVED_BY=<approver-name-or-id> \
+BOOTSTRAP_CHANGE_TICKET=<change-ticket> \
+DATABASE_MIGRATION_URL=<direct-migration-connection> \
+pnpm production:bootstrap-tenant
+```
+
+The command is tenant-serialized and idempotent for identical approved input. It refuses a partial
+or changed replay, requires the privileged release connection to read the Supabase Auth schema, and
+prints the tenant, owner User, and Audit Event identifiers without printing credentials.
+
+Next create the Supabase Auth user through the Auth admin surface and set signed
+`app_metadata.tenant_id` to the exact application tenant UUID. The Auth email must match the
+application User, which must be active and have an active `owner` Role. Never put the tenant
+identifier in user-editable `user_metadata`.
+
+Run the bootstrap only in an isolated release environment. The command verifies the Auth record and
+tenant metadata, sets tenant context, serializes bootstrap attempts for the tenant, locks the exact
+User, rejects an existing authenticated owner, sets `external_subject` only when null, and
+atomically inserts matching `administration.user_identity_linked` Audit and outbox rows. It is safe
+to retry with the same identity because committed bootstrap evidence is detected without writing
+duplicate events.
+
+```bash
+APP_ENV=production \
+LDG_PROCESS=release \
+BOOTSTRAP_CONFIRM=LINK_FIRST_OWNER \
+BOOTSTRAP_TENANT_ID=<tenant-uuid> \
+BOOTSTRAP_USER_ID=<application-user-uuid> \
+BOOTSTRAP_AUTH_USER_ID=<supabase-auth-user-uuid> \
+BOOTSTRAP_APPROVED_BY=<approver-name-or-id> \
+BOOTSTRAP_CHANGE_TICKET=<change-ticket> \
+DATABASE_MIGRATION_URL=<direct-migration-connection> \
+pnpm production:bootstrap-owner
+```
+
+Store populated values only in the release job's secret manager, record the Audit Event ID printed
+by the command in the release record, and remove migration credentials immediately afterward. Once
+the first owner can authenticate, link every subsequent identity through the administration API. Do
+not use SQL or dashboard table editing to change `public.users.external_subject`.
+
+## Object-storage verification
+
+The document bucket must be private and retain noncurrent object versions. Supabase Storage and
+Railway Buckets do not currently implement S3 object versioning, so they do not satisfy this release
+gate. Use a provider that supports the required S3 versioning operations, such as AWS S3, keep Block
+Public Access enabled, and grant the application only its document-prefix permissions.
+
+After the operator confirms the bucket policy, encryption, lifecycle retention, and Block Public
+Access settings, run the live probe from an isolated release job:
+
+```bash
+APP_ENV=production \
+LDG_PROCESS=release \
+OBJECT_STORAGE_VERIFY_CONFIRM=VERIFY_PRIVATE_VERSIONED_BUCKET \
+pnpm production:verify-storage
+```
+
+The probe checks bucket access and `Enabled` versioning, writes two versions of one unique
+`release-verification/` object, confirms both version IDs are retained, and removes only those exact
+test versions. Record its successful output in the release candidate. Never run the probe against a
+bucket whose identity has not been independently confirmed.
 
 ## Release order
 
-1. Confirm Supabase managed backups and object-storage versioning are healthy.
+1. Confirm Supabase managed backups and private object-storage policy are healthy, then pass the
+   object-versioning probe.
 2. Create and verify a logical backup with `pnpm recovery:backup` and `pnpm recovery:verify`.
 3. Run `pnpm db:migrate` through the direct migration connection. Applied migrations are
    forward-only.
 4. Run the Supabase security and performance advisors. Resolve every security warning; review
    performance information against real query paths.
-5. Deploy the worker and wait for a current heartbeat.
-6. Deploy the API and require `/health/live` and `/health/ready` to pass.
-7. Deploy the web process, verify staff sign-in, and verify one revocable customer capability.
-8. Execute the smoke checklist in the release-candidate record.
+5. Provision the initial tenant foundation and first Auth owner when the production database is
+   empty; record both Audit Event IDs.
+6. Deploy the worker and wait for a current heartbeat.
+7. Deploy the API and require `/health/live` and `/health/ready` to pass.
+8. Deploy the web process, verify staff sign-in, and verify one revocable customer capability.
+9. Execute the smoke checklist in the release-candidate record.
 
 Readiness fails when the database release marker differs, object storage is unavailable, a required
 worker heartbeat is stale, a tenant queue exceeds backlog age, or dead letters exceed the configured

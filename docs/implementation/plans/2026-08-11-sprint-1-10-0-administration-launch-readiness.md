@@ -98,13 +98,15 @@ pnpm check
 
 ## Phase 2 closeout evidence
 
-- `pnpm test:integration` passes all 19 database and 38 server integration tests from isolated
-  PostgreSQL databases.
+- The database integration suite passes all 26 tests from an isolated PostgreSQL database, including
+  the controlled tenant-foundation and first-owner bootstraps, exact replay, release-role
+  enforcement, and competing-candidate serialization. After local storage capacity was restored, the
+  server integration suite passes all 38 tests, including the three document-storage journeys.
 - `pnpm test:recovery` passes both canonical restored-database journeys: two files and five tests,
   including exact release and cross-tenant RLS verification.
 - `pnpm api:check` confirms the OpenAPI `1.10.0` document and generated client are current.
 - `pnpm test:e2e` passes 31 production route journeys and three production-auth boundary journeys.
-- `pnpm check` passes formatting, lint, type checking, 224 unit tests, infrastructure checks, and
+- `pnpm check` passes formatting, lint, type checking, 228 unit tests, infrastructure checks, and
   all production builds.
 - Browser acceptance verifies the Supabase sign-in boundary, semantic form controls, security
   headers, protected-route redirect, and a 390-pixel viewport without horizontal overflow.
@@ -118,3 +120,11 @@ pnpm check
 - The candidate remains a production no-go until production environment validation passes with
   deployed values and backup/PITR, object versioning, first-owner bootstrap, and release approval
   are recorded.
+- The production closeout follow-up adds a privileged, idempotent tenant-foundation bootstrap so an
+  empty hosted database can be initialized without ad-hoc SQL. The database suite now passes 26
+  tests, covering atomic foundation creation, exact replay, changed-input rejection, and
+  release-role enforcement. A live object-storage probe now verifies two retained object versions
+  before cleaning up only its uniquely named test versions.
+- The hosted release remains an automatic no-go: the database is at `1.10.0-rc.2` but has no tenant
+  or Auth user, the Vercel production web variables await an API origin, and the API/worker host,
+  backup plan, and private versioned document bucket still require owner-approved provider choices.

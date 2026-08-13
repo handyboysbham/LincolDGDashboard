@@ -12,6 +12,8 @@ import {
   assetReservations,
   assets,
   auditEvents,
+  bootstrapFirstOwnerIdentity,
+  bootstrapTenantFoundation,
   claimOutboxEvents,
   claimScheduledJobs,
   contacts,
@@ -141,7 +143,15 @@ describe("Sprint 1.0.0 platform data foundation", () => {
   const tenantB = randomUUID();
   const userA = randomUUID();
   const userB = randomUUID();
+  const alternateUserB = randomUUID();
   const roleA = randomUUID();
+  const ownerRoleA = randomUUID();
+  const ownerRoleB = randomUUID();
+  const authUserA = randomUUID();
+  const authUserB = randomUUID();
+  const alternateAuthUserB = randomUUID();
+  const bootstrapTenant = randomUUID();
+  const bootstrapOwner = randomUUID();
   const materialFixture = createMaterialFixtureIds();
   let adminPool: Pool | undefined;
   let migrationPool: Pool | undefined;
@@ -192,8 +202,45 @@ describe("Sprint 1.0.0 platform data foundation", () => {
 
     await runMigrations(migratorDatabase());
 
+    await migratorPool().query(`
+      create schema auth;
+      create table auth.users (
+        id uuid primary key,
+        email text,
+        raw_app_meta_data jsonb not null default '{}'::jsonb
+      )
+    `);
+
     await createTenant(migratorDatabase(), tenantA, "Tenant A", userA, roleA);
     await createTenant(migratorDatabase(), tenantB, "Tenant B", userB);
+    await assignOwnerRole(migratorDatabase(), tenantA, userA, ownerRoleA);
+    await assignOwnerRole(migratorDatabase(), tenantB, userB, ownerRoleB);
+    await withTenantTransaction(migratorDatabase(), tenantB, async (transaction) => {
+      await transaction.insert(users).values({
+        displayName: "Alternate Tenant B Owner",
+        email: `${alternateUserB}@example.test`,
+        id: alternateUserB,
+        tenantId: tenantB,
+      });
+      await transaction
+        .insert(userRoles)
+        .values({ roleId: ownerRoleB, tenantId: tenantB, userId: alternateUserB });
+    });
+    await migratorPool().query(
+      `insert into auth.users (id, email, raw_app_meta_data)
+       values ($1, $2, $3), ($4, $5, $6), ($7, $8, $9)`,
+      [
+        authUserA,
+        `${userA}@example.test`,
+        JSON.stringify({ tenant_id: tenantA }),
+        authUserB,
+        `${userB}@example.test`,
+        JSON.stringify({ tenant_id: tenantB }),
+        alternateAuthUserB,
+        `${alternateUserB}@example.test`,
+        JSON.stringify({ tenant_id: tenantB }),
+      ],
+    );
     await createMaterialDeliveryFixture(migratorDatabase(), tenantA, userA, materialFixture);
   });
 
@@ -316,6 +363,267 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         "users",
         "worker_heartbeats",
       ]),
+    );
+  });
+
+  it("provisions the production tenant foundation with Audit and outbox evidence", async () => {
+    const input = {
+      approvedBy: "release-approver",
+      changeTicket: "LDG-RELEASE-FOUNDATION-001",
+      legalName: "Bootstrap Test Organization LLC",
+      organizationDisplayName: "Bootstrap Test Organization",
+      ownerDisplayName: "Bootstrap Owner",
+      ownerEmail: "bootstrap.owner@example.test",
+      ownerUserId: bootstrapOwner,
+      tenantId: bootstrapTenant,
+      timezone: "America/Chicago",
+    };
+    const first = await bootstrapTenantFoundation(migratorDatabase(), input);
+    const replay = await bootstrapTenantFoundation(migratorDatabase(), input);
+
+    expect(first).toMatchObject({
+      ownerUserId: bootstrapOwner,
+      provisioned: true,
+      replayed: false,
+      tenantId: bootstrapTenant,
+    });
+    expect(replay).toEqual({ ...first, replayed: true });
+
+    const evidence = await withTenantTransaction(
+      migratorDatabase(),
+      bootstrapTenant,
+      async (transaction) => ({
+        assignments: await transaction
+          .select({ value: count() })
+          .from(userRoles)
+          .innerJoin(
+            roles,
+            and(eq(roles.tenantId, userRoles.tenantId), eq(roles.id, userRoles.roleId)),
+          )
+          .where(
+            and(
+              eq(userRoles.tenantId, bootstrapTenant),
+              eq(userRoles.userId, bootstrapOwner),
+              eq(roles.code, "owner"),
+            ),
+          ),
+        audits: await transaction
+          .select({ value: count() })
+          .from(auditEvents)
+          .where(
+            and(
+              eq(auditEvents.tenantId, bootstrapTenant),
+              eq(auditEvents.commandName, "BootstrapTenantFoundation"),
+            ),
+          ),
+        organizations: await transaction
+          .select({ displayName: organizations.displayName })
+          .from(organizations)
+          .where(eq(organizations.id, bootstrapTenant)),
+        outbox: await transaction
+          .select({ value: count() })
+          .from(outboxEvents)
+          .where(
+            and(
+              eq(outboxEvents.tenantId, bootstrapTenant),
+              eq(outboxEvents.eventType, "administration.tenant_foundation_provisioned"),
+            ),
+          ),
+        roles: await transaction
+          .select({ code: roles.code })
+          .from(roles)
+          .where(eq(roles.tenantId, bootstrapTenant)),
+        users: await transaction
+          .select({ email: users.email, externalSubject: users.externalSubject })
+          .from(users)
+          .where(and(eq(users.tenantId, bootstrapTenant), eq(users.id, bootstrapOwner))),
+      }),
+    );
+
+    expect(evidence.organizations).toEqual([{ displayName: "Bootstrap Test Organization" }]);
+    expect(evidence.users).toEqual([
+      { email: "bootstrap.owner@example.test", externalSubject: null },
+    ]);
+    expect(evidence.roles.map((role) => role.code).sort()).toEqual([
+      "dispatcher",
+      "driver",
+      "financial",
+      "owner",
+    ]);
+    expect(evidence.assignments[0]?.value).toBe(1);
+    expect(evidence.audits[0]?.value).toBe(1);
+    expect(evidence.outbox[0]?.value).toBe(1);
+    await markBootstrapOutboxProcessed(
+      migratorDatabase(),
+      bootstrapTenant,
+      bootstrapTenant,
+      "administration.tenant_foundation_provisioned",
+    );
+  });
+
+  it("rejects conflicting or unprivileged tenant foundation bootstraps", async () => {
+    const input = {
+      approvedBy: "release-approver",
+      changeTicket: "LDG-RELEASE-FOUNDATION-001",
+      legalName: "Bootstrap Test Organization LLC",
+      organizationDisplayName: "Changed Organization",
+      ownerDisplayName: "Bootstrap Owner",
+      ownerEmail: "bootstrap.owner@example.test",
+      ownerUserId: bootstrapOwner,
+      tenantId: bootstrapTenant,
+      timezone: "America/Chicago",
+    };
+
+    await expect(bootstrapTenantFoundation(migratorDatabase(), input)).rejects.toMatchObject({
+      code: "FOUNDATION_CONFLICT",
+    });
+    await expectDatabaseFailure(
+      bootstrapTenantFoundation(runtime(), {
+        ...input,
+        organizationDisplayName: "Bootstrap Test Organization",
+      }),
+      "permission denied for schema auth",
+    );
+  });
+
+  it("bootstraps the first owner identity with one Audit and outbox event", async () => {
+    const first = await bootstrapFirstOwnerIdentity(migratorDatabase(), {
+      approvedBy: "release-approver",
+      authUserId: authUserA,
+      changeTicket: "LDG-RELEASE-001",
+      tenantId: tenantA,
+      userId: userA,
+    });
+    const replay = await bootstrapFirstOwnerIdentity(migratorDatabase(), {
+      approvedBy: "release-approver",
+      authUserId: authUserA,
+      changeTicket: "LDG-RELEASE-001",
+      tenantId: tenantA,
+      userId: userA,
+    });
+
+    expect(first).toMatchObject({
+      linked: true,
+      replayed: false,
+      tenantId: tenantA,
+      userId: userA,
+    });
+    expect(replay).toEqual({ ...first, replayed: true });
+
+    const evidence = await withTenantTransaction(
+      migratorDatabase(),
+      tenantA,
+      async (transaction) => ({
+        audits: await transaction
+          .select({ value: count() })
+          .from(auditEvents)
+          .where(
+            and(
+              eq(auditEvents.tenantId, tenantA),
+              eq(auditEvents.entityId, userA),
+              eq(auditEvents.commandName, "BootstrapFirstOwnerIdentity"),
+            ),
+          ),
+        outbox: await transaction
+          .select({ value: count() })
+          .from(outboxEvents)
+          .where(
+            and(
+              eq(outboxEvents.tenantId, tenantA),
+              eq(outboxEvents.aggregateId, userA),
+              eq(outboxEvents.eventType, "administration.user_identity_linked"),
+            ),
+          ),
+        users: await transaction
+          .select({ externalSubject: users.externalSubject, rowVersion: users.rowVersion })
+          .from(users)
+          .where(and(eq(users.tenantId, tenantA), eq(users.id, userA))),
+      }),
+    );
+
+    expect(evidence.users[0]).toEqual({ externalSubject: authUserA, rowVersion: 2 });
+    expect(evidence.audits[0]?.value).toBe(1);
+    expect(evidence.outbox[0]?.value).toBe(1);
+    await markBootstrapOutboxProcessed(migratorDatabase(), tenantA, userA);
+  });
+
+  it("serializes concurrent first-owner candidates for one tenant", async () => {
+    const results = await Promise.allSettled([
+      bootstrapFirstOwnerIdentity(migratorDatabase(), {
+        approvedBy: "release-approver",
+        authUserId: authUserB,
+        changeTicket: "LDG-RELEASE-002-A",
+        tenantId: tenantB,
+        userId: userB,
+      }),
+      bootstrapFirstOwnerIdentity(migratorDatabase(), {
+        approvedBy: "release-approver",
+        authUserId: alternateAuthUserB,
+        changeTicket: "LDG-RELEASE-002-B",
+        tenantId: tenantB,
+        userId: alternateUserB,
+      }),
+    ]);
+
+    const fulfilled = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter((result) => result.status === "rejected");
+    expect(fulfilled).toHaveLength(1);
+    expect(fulfilled[0]?.value).toMatchObject({ linked: true, replayed: false });
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]?.reason).toMatchObject({ code: "EXISTING_LINKED_OWNER" });
+    await markBootstrapOutboxProcessed(migratorDatabase(), tenantB, userB);
+    await markBootstrapOutboxProcessed(migratorDatabase(), tenantB, alternateUserB);
+  });
+
+  it("rejects bootstrap for a User without an active owner Role", async () => {
+    const nonOwnerUserId = randomUUID();
+    const nonOwnerAuthId = randomUUID();
+    await withTenantTransaction(migratorDatabase(), tenantA, (transaction) =>
+      transaction.insert(users).values({
+        displayName: "Non-owner",
+        email: `${nonOwnerUserId}@example.test`,
+        id: nonOwnerUserId,
+        tenantId: tenantA,
+      }),
+    );
+    await migratorPool().query(
+      `insert into auth.users (id, email, raw_app_meta_data) values ($1, $2, $3)`,
+      [nonOwnerAuthId, `${nonOwnerUserId}@example.test`, JSON.stringify({ tenant_id: tenantA })],
+    );
+
+    await expect(
+      bootstrapFirstOwnerIdentity(migratorDatabase(), {
+        approvedBy: "release-approver",
+        authUserId: nonOwnerAuthId,
+        changeTicket: "LDG-RELEASE-003",
+        tenantId: tenantA,
+        userId: nonOwnerUserId,
+      }),
+    ).rejects.toMatchObject({ code: "OWNER_ROLE_REQUIRED" });
+  });
+
+  it("does not resolve a bootstrap User through another tenant", async () => {
+    await expect(
+      bootstrapFirstOwnerIdentity(migratorDatabase(), {
+        approvedBy: "release-approver",
+        authUserId: authUserB,
+        changeTicket: "LDG-RELEASE-004",
+        tenantId: tenantA,
+        userId: userB,
+      }),
+    ).rejects.toMatchObject({ code: "USER_NOT_FOUND" });
+  });
+
+  it("cannot execute the bootstrap through the restricted runtime role", async () => {
+    await expectDatabaseFailure(
+      bootstrapFirstOwnerIdentity(runtime(), {
+        approvedBy: "release-approver",
+        authUserId: authUserA,
+        changeTicket: "LDG-RELEASE-005",
+        tenantId: tenantA,
+        userId: userA,
+      }),
+      "permission denied for schema auth",
     );
   });
 
@@ -2019,6 +2327,44 @@ async function createTenant(
         .values({ id: roleId, tenantId, code: "test-role", name: "Test Role" });
     }
   });
+}
+
+async function assignOwnerRole(
+  database: Database,
+  tenantId: string,
+  userId: string,
+  roleId: string,
+): Promise<void> {
+  await withTenantTransaction(database, tenantId, async (transaction) => {
+    await transaction.insert(roles).values({
+      code: "owner",
+      id: roleId,
+      name: "Owner",
+      permissions: ["*"],
+      tenantId,
+    });
+    await transaction.insert(userRoles).values({ roleId, tenantId, userId });
+  });
+}
+
+async function markBootstrapOutboxProcessed(
+  database: Database,
+  tenantId: string,
+  userId: string,
+  eventType = "administration.user_identity_linked",
+): Promise<void> {
+  await withTenantTransaction(database, tenantId, (transaction) =>
+    transaction
+      .update(outboxEvents)
+      .set({ processedAt: new Date(), status: "processed" })
+      .where(
+        and(
+          eq(outboxEvents.tenantId, tenantId),
+          eq(outboxEvents.aggregateId, userId),
+          eq(outboxEvents.eventType, eventType),
+        ),
+      ),
+  );
 }
 
 function createMaterialFixtureIds() {

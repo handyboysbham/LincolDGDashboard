@@ -22,6 +22,8 @@
     "db:seed": "tsx scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint src scripts tests drizzle.config.ts vitest.integration.config.ts",
+    "production:bootstrap-owner": "tsx scripts/bootstrap-owner.ts",
+    "production:bootstrap-tenant": "tsx scripts/bootstrap-tenant.ts",
     "test": "vitest run --exclude 'tests/integration/**' --passWithNoTests",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"

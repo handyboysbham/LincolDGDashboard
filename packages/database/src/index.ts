@@ -1,4 +1,6 @@
 export * from "./client.js";
+export * from "./bootstrap-owner.js";
+export * from "./bootstrap-tenant.js";
 export * from "./idempotency.js";
 export * from "./migrations.js";
 export * from "./numbering.js";

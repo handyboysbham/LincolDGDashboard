@@ -14,6 +14,8 @@
 - database-backed active User and Role permission resolution
 - protected Next.js staff and driver routes with Supabase SSR cookies
 - idempotent, audited Auth identity linking for subsequent staff Users
+- tenant-serialized, idempotent first-owner bootstrap with Auth tenant/email verification and atomic
+  Audit/outbox evidence
 - one immutable production image with API, worker, and web process modes
 - fail-closed, secret-redacting production environment validation
 - exact database release, tenant queue, object-storage, and worker readiness
@@ -30,9 +32,13 @@
 
 - [x] local forward migration reports current
 - [x] server and web type checking passes
-- [x] 181 server, 42 web, and 1 generated-client unit tests pass
+- [x] 181 server, 46 web, and 1 generated-client unit tests pass
 - [x] restored canonical acceptance passes: 2 files, 5 tests
-- [x] all PostgreSQL integration suites pass: 19 database and 38 server tests
+- [x] database integration suite passes: 26 tests, including tenant-foundation provisioning,
+      first-owner authorization, tenant-isolation, exact replay, release-role enforcement, and
+      competing-candidate concurrency coverage
+- [x] current server integration suite passes: 38 of 38 tests, including document-storage upload,
+      completion, download, and public-link journeys
 - [x] OpenAPI and generated client are current
 - [x] production route acceptance passes: 31 application routes and 3 production-auth boundaries
 - [x] complete `pnpm check` passes
@@ -42,7 +48,7 @@
 - [x] performance-advisor information findings have a documented release disposition
 - [ ] deployed production environment values pass API, worker, web, and release-job validation
 - [ ] managed backup/PITR plan and private object-storage versioning are operator-confirmed
-- [ ] first owner Auth identity bootstrap is approved and recorded
+- [ ] initial tenant foundation and first owner Auth identity bootstraps are approved and recorded
 - [ ] release approver records go/no-go decision
 
 ## Production-configuration audit
@@ -59,14 +65,12 @@ The 2026-08-12 provider-neutral audit confirmed:
 
 The live Vercel audit identified project `lincol-dg-dashboard-web` as the Next.js web deployment for
 `handyboysbham/LincolDGDashboard`. Its `apps/web` monorepo build discovers both `@ldg/web` and the
-generated API client, and the latest Sprint 1.10 preview for commit `5efd133` is ready, returns HTTP
-200, includes the expected security headers, and has no grouped runtime errors in the preceding
-seven days. Six current sprint-branch deployments are healthy previews, but the production alias
-`lincol-dg-dashboard-web.vercel.app` still targets the older Sprint 1.7 `main` deployment. That
-production deployment exposes the development-authenticated staff shell and must not be treated as
-an approved operational system. The build also reports Node.js `24.15.0`, below the repository's
-reviewed `>=24.18.0 <25` requirement; align the Vercel runtime with that baseline before production
-approval rather than silently weakening the application requirement.
+generated API client, and its latest audited preview for commit `2484837` is ready. The production
+alias `lincol-dg-dashboard-web.vercel.app` still targets the older Sprint 1.7 `main` deployment.
+That production deployment exposes the development-authenticated staff shell and must not be treated
+as an approved operational system. The Vercel project is configured for the Node.js 24 runtime;
+verify the actual release build reports the repository's reviewed `>=24.18.0 <25` baseline before
+production approval rather than silently weakening the application requirement.
 
 Vercel production builds now fail closed unless the production web process and all four public web
 variables are present and valid. Configure the following in the Vercel Production environment, then
@@ -97,6 +101,39 @@ backup posture that meets the documented 24-hour recovery-point and four-hour re
 The Vercel project and provisional web domain are now recorded. The persistent API/worker host and
 API domain, object-storage provider, and backup posture must still be recorded before deployment
 configuration can be completed.
+
+The live closeout audit on 2026-08-12 also confirmed that the hosted database reports release
+`1.10.0-rc.2` but contains zero Organizations, application Users, Supabase Auth users, and Storage
+buckets. This is a valid empty pre-launch state. The release now includes an audited,
+tenant-serialized `production:bootstrap-tenant` command for creating the initial Organization,
+unlinked owner User, four standard Roles, owner assignment, Audit Event, and outbox event before the
+existing first-owner identity-link command runs. Database integration passes 26 of 26 tests,
+including successful replay, conflicting-input rejection, and restricted-runtime rejection.
+
+The recommended closeout posture is:
+
+- two persistent services on Railway Pro using the reviewed production Dockerfile: one API and one
+  PostgreSQL-backed worker; Railway currently identifies Pro as its production plan with a $20
+  monthly minimum usage commitment
+- a private AWS S3 document bucket with versioning, Block Public Access, encryption, and lifecycle
+  retention; Supabase Storage and Railway Buckets cannot pass the versioning probe
+- Supabase Pro daily backups with seven-day retention for the V1 24-hour RPO; PITR is optional for a
+  stricter RPO and currently starts near $100 per month for seven-day retention, in addition to the
+  paid plan and required compute
+
+These are recommendations, not approved purchases. Until the owner approves the recurring-cost
+posture and authenticates the required provider dashboards, no infrastructure is provisioned and the
+candidate remains an automatic no-go.
+
+## Current go/no-go decision
+
+- decision: **NO-GO**
+- decided at: 2026-08-12 production closeout audit
+- automatic reasons: API/worker host absent; Vercel production variables incomplete; managed backup
+  posture absent; private versioned object storage absent; production tenant/Auth owner absent;
+  production acceptance journey not yet executable
+- release approver: pending
+- approval evidence: pending
 
 ## Performance-advisor disposition
 
