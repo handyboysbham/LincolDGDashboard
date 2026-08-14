@@ -1,0 +1,41 @@
+name: Production database backup
+
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-backup
+  cancel-in-progress: false
+
+jobs:
+  encrypted-supabase-backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_BACKUP_URL: ${{ secrets.DATABASE_BACKUP_URL }}
+      DATABASE_BACKUP_ENCRYPTION_KEY_BASE64: ${{ secrets.DATABASE_BACKUP_ENCRYPTION_KEY_BASE64 }}
+      GOOGLE_DRIVE_BACKUP_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_BACKUP_FOLDER_ID }}
+      GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_EMAIL:
+        ${{ secrets.GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_EMAIL }}
+      GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64:
+        ${{ secrets.GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64 }}
+      GOOGLE_DRIVE_BACKUP_SHARED_DRIVE_ID: ${{ secrets.GOOGLE_DRIVE_BACKUP_SHARED_DRIVE_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          cache: pnpm
+          node-version: 24.18.0
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ldg/google-drive build
+      - uses: supabase/setup-cli@v2.1.1
+        with:
+          version: 2.106.0
+      - name: Create, encrypt, upload, and retain backup
+        run: bash infra/recovery/create-supabase-drive-backup.sh

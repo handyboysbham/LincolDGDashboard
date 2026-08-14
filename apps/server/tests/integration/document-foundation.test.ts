@@ -16,7 +16,7 @@ import {
 } from "@ldg/database";
 import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, generateKeyPairSync, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { ApiApplication } from "../../src/create-api-application.js";
@@ -102,6 +102,7 @@ describe("document foundation", { concurrent: false }, () => {
           id: foreignDocumentId,
           mediaType: "text/plain",
           objectKey: `tenants/${foreignTenantId}/documents/${foreignDocumentId}`,
+          storageLocator: `tenants/${foreignTenantId}/documents/${foreignDocumentId}`,
           originalFilename: "foreign-document.txt",
           sha256: createHash("sha256").update("foreign").digest("hex"),
           sizeBytes: 7,
@@ -350,7 +351,200 @@ describe("document foundation", { concurrent: false }, () => {
     expect(logged.join(" ")).not.toContain(environment("MINIO_APP_PASSWORD"));
     errorSpy.mockRestore();
   });
+
+  it("proxies private Google Drive uploads and downloads with scoped transfer capabilities", async () => {
+    const originalEnvironment = {
+      apiPublicOrigin: process.env.API_PUBLIC_ORIGIN,
+      documentStorageProvider: process.env.DOCUMENT_STORAGE_PROVIDER,
+      folderId: process.env.GOOGLE_DRIVE_DOCUMENT_FOLDER_ID,
+      privateKey: process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64,
+      serviceAccountEmail: process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL,
+      sharedDriveId: process.env.GOOGLE_DRIVE_SHARED_DRIVE_ID,
+    };
+    const privateKey = generateKeyPairSync("rsa", { modulusLength: 2048 }).privateKey.export({
+      format: "pem",
+      type: "pkcs8",
+    });
+    const driveFileId = "drive-file-id";
+    const sharedDriveId = "shared-drive-id";
+    const bytes = new TextEncoder().encode("private Google Drive ticket\n");
+    let metadata: Record<string, unknown> | undefined;
+    let storedBytes: Uint8Array | undefined;
+    const driveFetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (url === "https://oauth2.googleapis.com/token") {
+        return jsonResponse({ access_token: "test-access-token", expires_in: 3600 });
+      }
+      if (url.includes("/drive/v3/files/generateIds")) {
+        return jsonResponse({ ids: [driveFileId] });
+      }
+      if (url.includes("/upload/drive/v3/files?")) {
+        if (typeof init?.body !== "string") throw new Error("Drive metadata body is missing");
+        metadata = JSON.parse(init.body) as Record<string, unknown>;
+        return new Response(null, {
+          headers: { location: "https://uploads.example.test/document-session" },
+          status: 200,
+        });
+      }
+      if (url === "https://uploads.example.test/document-session") {
+        storedBytes = new Uint8Array(await new Response(init?.body).arrayBuffer());
+        return jsonResponse(
+          driveFile(metadata, driveFileId, sharedDriveId, storedBytes.byteLength),
+        );
+      }
+      if (url.includes(`/drive/v3/files/${driveFileId}/revisions/revision-1?alt=media`)) {
+        return new Response(storedBytes ? new Uint8Array(storedBytes).buffer : new ArrayBuffer(0), {
+          status: 200,
+        });
+      }
+      if (url.includes(`/drive/v3/files/${driveFileId}/revisions/revision-1`)) {
+        return jsonResponse({ id: "revision-1", keepForever: true });
+      }
+      if (url.includes(`/drive/v3/files/${driveFileId}/revisions?`)) {
+        return jsonResponse({ revisions: [{ id: "revision-1", keepForever: false }] });
+      }
+      if (url.includes(`/drive/v3/files/${driveFileId}?`)) {
+        return jsonResponse(
+          driveFile(metadata, driveFileId, sharedDriveId, storedBytes?.byteLength ?? 0),
+        );
+      }
+      return new Response(null, { status: 404 });
+    });
+
+    await api?.application.close();
+    api = undefined;
+    process.env.API_PUBLIC_ORIGIN = "https://api.example.test";
+    process.env.DOCUMENT_STORAGE_PROVIDER = "google_drive";
+    process.env.GOOGLE_DRIVE_DOCUMENT_FOLDER_ID = "document-folder-id";
+    process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64 =
+      Buffer.from(privateKey).toString("base64");
+    process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL = "documents@example.iam.gserviceaccount.com";
+    process.env.GOOGLE_DRIVE_SHARED_DRIVE_ID = sharedDriveId;
+    vi.stubGlobal("fetch", driveFetch);
+
+    try {
+      api = await createApiApplication();
+      fastify = api.application.getHttpAdapter().getInstance();
+      const created = await fastify.inject({
+        headers: { "idempotency-key": "google-drive-document-upload" },
+        method: "POST",
+        payload: {
+          mediaType: "text/plain",
+          originalFilename: "drive-ticket.txt",
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+          sizeBytes: bytes.byteLength,
+        },
+        url: "/api/v1/documents/uploads",
+      });
+      expect(created.statusCode).toBe(201);
+      const upload = created.json<UploadResponse>();
+      expect(upload.upload.url).toBe(
+        `https://api.example.test/api/v1/public/document-uploads/${upload.document.id}`,
+      );
+
+      const uploaded = await fastify.inject({
+        headers: upload.upload.headers,
+        method: "PUT",
+        payload: Buffer.from(bytes),
+        url: new URL(upload.upload.url).pathname,
+      });
+      expect(uploaded.statusCode).toBe(204);
+
+      const completed = await fastify.inject({
+        method: "POST",
+        url: `/api/v1/documents/${upload.document.id}/actions/complete`,
+      });
+      expect(
+        completed.statusCode,
+        driveFetch.mock.calls
+          .map(([input]) =>
+            typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
+          )
+          .join("\n"),
+      ).toBe(200);
+      const downloadTarget = await fastify.inject({
+        method: "POST",
+        url: `/api/v1/documents/${upload.document.id}/actions/download`,
+      });
+      const downloaded = await fastify.inject({
+        method: "GET",
+        url: new URL(downloadTarget.json<{ url: string }>().url).pathname,
+      });
+      expect(downloaded.statusCode).toBe(200);
+      expect(downloaded.body).toBe("private Google Drive ticket\n");
+      expect(downloaded.headers["content-disposition"]).toContain("drive-ticket.txt");
+      const requestedDriveUrls = driveFetch.mock.calls.map(([input]) =>
+        typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
+      );
+      expect(requestedDriveUrls).toContain(
+        `https://www.googleapis.com/drive/v3/files/${driveFileId}/revisions/revision-1?alt=media`,
+      );
+      expect(requestedDriveUrls).not.toContain(
+        `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media&supportsAllDrives=true`,
+      );
+
+      const persisted = await withTenantTransaction(runtime(), tenantId, (transaction) =>
+        transaction.query.documents.findFirst({
+          where: (table, operators) => operators.eq(table.id, upload.document.id),
+        }),
+      );
+      expect(persisted).toMatchObject({
+        status: "available",
+        storageLocator: driveFileId,
+        storageProvider: "google_drive",
+        storageRevision: "revision-1",
+      });
+      expect(JSON.stringify(driveFetch.mock.calls)).not.toContain(
+        upload.upload.headers["x-document-upload-token"],
+      );
+    } finally {
+      await api?.application.close();
+      api = undefined;
+      vi.unstubAllGlobals();
+      restoreEnvironment("API_PUBLIC_ORIGIN", originalEnvironment.apiPublicOrigin);
+      restoreEnvironment("DOCUMENT_STORAGE_PROVIDER", originalEnvironment.documentStorageProvider);
+      restoreEnvironment("GOOGLE_DRIVE_DOCUMENT_FOLDER_ID", originalEnvironment.folderId);
+      restoreEnvironment(
+        "GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64",
+        originalEnvironment.privateKey,
+      );
+      restoreEnvironment(
+        "GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL",
+        originalEnvironment.serviceAccountEmail,
+      );
+      restoreEnvironment("GOOGLE_DRIVE_SHARED_DRIVE_ID", originalEnvironment.sharedDriveId);
+    }
+  });
 });
+
+function driveFile(
+  metadata: Record<string, unknown> | undefined,
+  id: string,
+  driveId: string,
+  size: number,
+): Record<string, unknown> {
+  return {
+    appProperties: metadata?.appProperties,
+    driveId,
+    id,
+    mimeType: metadata?.mimeType,
+    name: metadata?.name,
+    size: size.toString(),
+    trashed: false,
+  };
+}
+
+function jsonResponse(value: unknown): Response {
+  return new Response(JSON.stringify(value), {
+    headers: { "content-type": "application/json" },
+    status: 200,
+  });
+}
+
+function restoreEnvironment(name: string, value: string | undefined): void {
+  if (value === undefined) Reflect.deleteProperty(process.env, name);
+  else process.env[name] = value;
+}
 
 function environment(name: string): string {
   const value = process.env[name];

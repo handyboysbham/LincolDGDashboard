@@ -164,6 +164,10 @@ placement when the migration role owns the extension, global-table privileges, R
 search paths, and restricted release-marker access, then publishes the `1.10.0-rc.2` schema release
 marker.
 
+Migration `0019` adds provider-neutral ownership metadata to Documents. Existing rows are backfilled
+as S3 objects, new Google Drive rows store a generated file ID and retained revision ID, and the
+provider-plus-locator pair is unique. The migration publishes the `1.10.0-rc.3` release marker.
+
 Sprint 1.8.0 migration `0010` owns the Dump Trailer Rental data foundation: one Rental Detail per
 rental Job, attributable Debris Reviews, reservation-aware Extensions, durable Pickup Attempts,
 Disposal Loads, and Rental Inspections. Shared Schedule Blocks and Asset Reservations remain the

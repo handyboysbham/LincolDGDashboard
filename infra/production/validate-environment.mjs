@@ -41,10 +41,18 @@ if (processType === "web") {
 
   csvUuids("WORKER_TENANT_IDS");
   secret("DOCUMENT_PUBLIC_LINK_SIGNING_KEY", 64);
-  httpsUrl("MINIO_ENDPOINT");
-  required("MINIO_APP_USER");
-  secret("MINIO_APP_PASSWORD", 20);
-  required("MINIO_BUCKET");
+  const apiPublicOrigin = httpsUrl("API_PUBLIC_ORIGIN");
+  if (apiPublicOrigin?.pathname !== "/") {
+    fail("API_PUBLIC_ORIGIN", "must be an origin without a path");
+  }
+  oneOf("DOCUMENT_STORAGE_PROVIDER", ["google_drive"]);
+  const serviceAccountEmail = emailAddress("GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL");
+  if (serviceAccountEmail && !serviceAccountEmail.endsWith(".iam.gserviceaccount.com")) {
+    fail("GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL", "must be a Google service-account email");
+  }
+  base64PemPrivateKey("GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64");
+  required("GOOGLE_DRIVE_SHARED_DRIVE_ID");
+  required("GOOGLE_DRIVE_DOCUMENT_FOLDER_ID");
   emailAddress("MAIL_FROM");
   oneOf("NOTIFICATION_EMAIL_PROVIDER", ["resend"]);
   secret("NOTIFICATION_EMAIL_API_KEY", 20);
@@ -74,6 +82,23 @@ if (processType === "web") {
     if (runtimeDatabase && backupDatabase && runtimeDatabase.username === backupDatabase.username) {
       fail("DATABASE_BACKUP_URL", "must not use the restricted runtime role");
     }
+    required("GOOGLE_DRIVE_BACKUP_FOLDER_ID");
+    required("GOOGLE_DRIVE_BACKUP_SHARED_DRIVE_ID");
+    const backupServiceAccountEmail = emailAddress("GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_EMAIL");
+    if (
+      backupServiceAccountEmail &&
+      !backupServiceAccountEmail.endsWith(".iam.gserviceaccount.com")
+    ) {
+      fail("GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_EMAIL", "must be a Google service-account email");
+    }
+    if (backupServiceAccountEmail && backupServiceAccountEmail === serviceAccountEmail) {
+      fail(
+        "GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_EMAIL",
+        "must differ from GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL",
+      );
+    }
+    base64PemPrivateKey("GOOGLE_DRIVE_BACKUP_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64");
+    base64Key("DATABASE_BACKUP_ENCRYPTION_KEY_BASE64", 32);
   }
 }
 
@@ -177,6 +202,32 @@ function emailAddress(name) {
     fail(name, "must be a valid email address");
   }
   return value;
+}
+
+function base64PemPrivateKey(name) {
+  const value = secret(name, 100);
+  if (!value) return undefined;
+  let decoded;
+  try {
+    decoded = Buffer.from(value, "base64").toString("utf8");
+  } catch {
+    fail(name, "must be valid base64");
+    return undefined;
+  }
+  if (!decoded.includes("-----BEGIN PRIVATE KEY-----")) {
+    fail(name, "must contain a base64-encoded PEM private key");
+  }
+  return decoded;
+}
+
+function base64Key(name, expectedBytes) {
+  const value = secret(name, 40);
+  if (!value) return undefined;
+  const decoded = Buffer.from(value, "base64");
+  if (decoded.byteLength !== expectedBytes) {
+    fail(name, `must decode to exactly ${expectedBytes} bytes`);
+  }
+  return decoded;
 }
 
 function fail(name, message) {

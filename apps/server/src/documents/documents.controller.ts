@@ -10,10 +10,14 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
+  Res,
+  StreamableFile,
 } from "@nestjs/common";
 import {
   ApiBody,
   ApiCreatedResponse,
+  ApiConsumes,
   ApiHeader,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -21,6 +25,7 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
+import type { FastifyReply } from "fastify";
 
 import { PublicRoute } from "../auth/public.decorator.js";
 import { RequirePermissions } from "../auth/require-permissions.decorator.js";
@@ -33,6 +38,7 @@ import {
   DocumentDto,
   DocumentPublicLinkDto,
   PublicDocumentDownloadDto,
+  supportedDocumentMediaTypes,
 } from "./document.dto.js";
 import { DocumentsService } from "./documents.service.js";
 
@@ -127,6 +133,45 @@ export class PublicDocumentsController {
   }
 }
 
+@ApiTags("Public document transfers")
+@PublicRoute()
+@Controller("public")
+export class PublicDocumentTransfersController {
+  public constructor(@Inject(DocumentsService) private readonly documents: DocumentsService) {}
+
+  @Put("document-uploads/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiConsumes(...supportedDocumentMediaTypes)
+  @ApiHeader({ name: "X-Document-Upload-Token", required: true })
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ schema: { format: "binary", type: "string" } })
+  @ApiOperation({ operationId: "uploadDocumentBytes" })
+  @ApiNoContentResponse()
+  public upload(
+    @Param("id", new ParseUUIDPipe({ version: "4" })) documentId: string,
+    @Headers("x-document-upload-token") token: string | undefined,
+    @Body() body: Buffer,
+  ): Promise<void> {
+    return this.documents.uploadTransfer(documentId, requireTransferToken(token), body);
+  }
+
+  @Get("document-downloads/:token")
+  @ApiParam({ name: "token", type: String })
+  @ApiOperation({ operationId: "downloadDocumentBytes" })
+  @ApiOkResponse({ schema: { format: "binary", type: "string" } })
+  @Header("Cache-Control", "private, no-store")
+  public async download(
+    @Param("token") token: string,
+    @Res({ passthrough: true }) response: FastifyReply,
+  ): Promise<StreamableFile> {
+    const result = await this.documents.downloadTransfer(token);
+    response.header("Content-Disposition", contentDisposition(result.filename));
+    response.header("Content-Type", result.mediaType);
+    response.header("X-Content-Type-Options", "nosniff");
+    return new StreamableFile(result.bytes);
+  }
+}
+
 function requireIdempotencyKey(value: string | undefined): string {
   const key = value?.trim();
   if (!key || key.length > 200) {
@@ -137,4 +182,23 @@ function requireIdempotencyKey(value: string | undefined): string {
     );
   }
   return key;
+}
+
+function requireTransferToken(value: string | undefined): string {
+  const token = value?.trim();
+  if (!token || token.length > 256) throw transferTokenInvalid();
+  return token;
+}
+
+function transferTokenInvalid(): ApiException {
+  return new ApiException(
+    HttpStatus.NOT_FOUND,
+    "DOCUMENT_TRANSFER_INVALID",
+    "This document transfer is invalid",
+  );
+}
+
+function contentDisposition(filename: string): string {
+  const encoded = encodeURIComponent(filename).replaceAll("'", "%27");
+  return `attachment; filename*=UTF-8''${encoded}`;
 }

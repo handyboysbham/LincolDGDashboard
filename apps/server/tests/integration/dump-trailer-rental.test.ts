@@ -1345,6 +1345,7 @@ async function seedRentalFixture(
         id,
         mediaType: filename.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
         objectKey: `${tenantId}/${id}`,
+        storageLocator: `${tenantId}/${id}`,
         originalFilename: filename,
         sha256: String(index + 1).repeat(64),
         sizeBytes: 1_024,

@@ -26,6 +26,7 @@ import {
   ObjectStorageService,
   StoredObjectNotFoundError,
   StoredObjectTooLargeError,
+  type StoredObjectReference,
 } from "../object-storage/object-storage.service.js";
 import type {
   CreateDocumentPublicLinkDto,
@@ -37,6 +38,7 @@ import type {
   PublicDocumentDownloadDto,
 } from "./document.dto.js";
 import { DocumentTokenService } from "./document-token.service.js";
+import { DocumentTransferTokenService } from "./document-transfer-token.service.js";
 
 type DocumentRecord = typeof documents.$inferSelect;
 
@@ -48,6 +50,8 @@ export class DocumentsService {
     @Inject(IdempotentCommandService) private readonly idempotency: IdempotentCommandService,
     @Inject(ObjectStorageService) private readonly storage: ObjectStorageService,
     @Inject(DocumentTokenService) private readonly tokens: DocumentTokenService,
+    @Inject(DocumentTransferTokenService)
+    private readonly transferTokens: DocumentTransferTokenService,
     @Inject(ServerConfigService) private readonly configuration: ServerConfigService,
   ) {}
 
@@ -58,7 +62,14 @@ export class DocumentsService {
     this.assertUpload(input);
     const actor = this.context.actor();
     const originalFilename = sanitizeFilename(input.originalFilename);
-    const result = await this.idempotency.execute(
+    const candidateId = randomUUID();
+    const candidateObjectKey = `tenants/${actor.tenantId}/documents/${candidateId}`;
+    const candidateStorage = await this.storage.allocateLocator(candidateObjectKey);
+    const result = await this.idempotency.execute<{
+      document: DocumentDto;
+      objectKey: string;
+      reference?: StoredObjectReference;
+    }>(
       {
         key: idempotencyKey,
         payload: {
@@ -70,18 +81,18 @@ export class DocumentsService {
         scope: "documents.create-upload",
       },
       async (transaction) => {
-        const id = randomUUID();
-        const objectKey = `tenants/${actor.tenantId}/documents/${id}`;
         const [record] = await transaction
           .insert(documents)
           .values({
             createdBy: actor.userId,
-            id,
+            id: candidateId,
             mediaType: input.mediaType,
-            objectKey,
+            objectKey: candidateObjectKey,
             originalFilename,
             sha256: input.sha256.toLowerCase(),
             sizeBytes: input.sizeBytes,
+            storageLocator: candidateStorage.locator,
+            storageProvider: candidateStorage.provider,
             tenantId: actor.tenantId,
             updatedBy: actor.userId,
           })
@@ -91,21 +102,26 @@ export class DocumentsService {
           actorUserId: actor.userId,
           after: { status: "pending" },
           commandName: "CreateDocumentUpload",
-          documentId: id,
+          documentId: candidateId,
           eventType: "document.pending_created",
           tenantId: actor.tenantId,
         });
         return {
-          body: { document: toDocumentDto(record), objectKey },
+          body: {
+            document: toDocumentDto(record),
+            objectKey: record.objectKey,
+            reference: storageReference(record),
+          },
           status: HttpStatus.CREATED,
         };
       },
     );
 
-    const upload = await this.storage.createUploadUrl({
-      mediaType: result.body.document.mediaType,
-      objectKey: result.body.objectKey,
-    });
+    const upload = await this.createUploadTarget(
+      actor.tenantId,
+      result.body.document,
+      result.body.reference ?? { locator: result.body.objectKey, provider: "s3" },
+    );
     return {
       document: result.body.document,
       upload: {
@@ -130,7 +146,7 @@ export class DocumentsService {
 
     let validation;
     try {
-      validation = await this.storage.validateObject(record.objectKey);
+      validation = await this.storage.validateObject(storageReference(record));
     } catch (error) {
       if (error instanceof StoredObjectNotFoundError) {
         throw new ApiException(
@@ -170,6 +186,79 @@ export class DocumentsService {
     const record = await this.findDocument(actor.tenantId, documentId);
     this.assertAvailable(record);
     return this.signDownload(record);
+  }
+
+  public async uploadTransfer(documentId: string, token: string, bytes: Uint8Array): Promise<void> {
+    const parsed = this.transferTokens.parse(token, "upload");
+    if (parsed?.documentId !== documentId) throw transferInvalid();
+    const record = await withTenantTransaction(this.database, parsed.tenantId, (transaction) =>
+      this.findDocumentInTransaction(transaction, parsed.tenantId, documentId),
+    );
+    if (record.status !== "pending" || record.storageProvider !== "google_drive") {
+      throw transferInvalid();
+    }
+    if (
+      bytes.byteLength !== record.sizeBytes ||
+      bytes.byteLength > this.configuration.value.objectStorage.maxUploadBytes
+    ) {
+      throw validationFailed();
+    }
+    let uploaded: { revision: string };
+    try {
+      uploaded = await this.storage.uploadObject({
+        bytes,
+        documentId,
+        filename: record.originalFilename,
+        mediaType: record.mediaType,
+        reference: storageReference(record),
+        tenantId: parsed.tenantId,
+      });
+    } catch (error) {
+      if (error instanceof ObjectStorageOperationError) throw storageUnavailable();
+      throw error;
+    }
+    await withTenantTransaction(this.database, parsed.tenantId, async (transaction) => {
+      const current = await this.findDocumentInTransaction(
+        transaction,
+        parsed.tenantId,
+        documentId,
+      );
+      if (current.status !== "pending") throw transferInvalid();
+      await transaction
+        .update(documents)
+        .set({ storageRevision: uploaded.revision })
+        .where(and(eq(documents.tenantId, parsed.tenantId), eq(documents.id, documentId)));
+    });
+  }
+
+  public async downloadTransfer(token: string): Promise<{
+    bytes: Uint8Array;
+    filename: string;
+    mediaType: string;
+  }> {
+    const parsed = this.transferTokens.parse(token, "download");
+    if (!parsed) throw transferInvalid();
+    const record = await withTenantTransaction(this.database, parsed.tenantId, (transaction) =>
+      this.findDocumentInTransaction(transaction, parsed.tenantId, parsed.documentId),
+    );
+    if (record.status !== "available" || record.storageProvider !== "google_drive") {
+      throw transferInvalid();
+    }
+    try {
+      return {
+        bytes: await this.storage.downloadObject(storageReference(record)),
+        filename: record.originalFilename,
+        mediaType: record.mediaType,
+      };
+    } catch (error) {
+      if (
+        error instanceof ObjectStorageOperationError ||
+        error instanceof StoredObjectNotFoundError
+      ) {
+        throw storageUnavailable();
+      }
+      throw error;
+    }
   }
 
   public async linkAvailableToEntity(
@@ -489,12 +578,56 @@ export class DocumentsService {
   }
 
   private async signDownload(record: DocumentRecord): Promise<DocumentDownloadDto> {
+    if (record.storageProvider === "google_drive") {
+      const expiresAt = this.transferExpiry();
+      const token = this.transferTokens.create({
+        documentId: record.id,
+        expiresAt,
+        purpose: "download",
+        tenantId: record.tenantId,
+      });
+      return {
+        expiresAt: expiresAt.toISOString(),
+        url: `${this.configuration.value.objectStorage.apiPublicOrigin}/api/v1/public/document-downloads/${token}`,
+      };
+    }
     const signed = await this.storage.createDownloadUrl({
       filename: record.originalFilename,
       mediaType: record.mediaType,
-      objectKey: record.objectKey,
+      reference: storageReference(record),
     });
     return { expiresAt: signed.expiresAt.toISOString(), url: signed.url };
+  }
+
+  private async createUploadTarget(
+    tenantId: string,
+    document: DocumentDto,
+    reference: ReturnType<typeof storageReference>,
+  ): Promise<{ expiresAt: Date; headers: Record<string, string>; url: string }> {
+    if (reference.provider === "s3") {
+      return this.storage.createUploadUrl({ mediaType: document.mediaType, reference });
+    }
+    const expiresAt = this.transferExpiry();
+    const token = this.transferTokens.create({
+      documentId: document.id,
+      expiresAt,
+      purpose: "upload",
+      tenantId,
+    });
+    return {
+      expiresAt,
+      headers: {
+        "content-type": document.mediaType,
+        "x-document-upload-token": token,
+      },
+      url: `${this.configuration.value.objectStorage.apiPublicOrigin}/api/v1/public/document-uploads/${document.id}`,
+    };
+  }
+
+  private transferExpiry(): Date {
+    return new Date(
+      Date.now() + this.configuration.value.objectStorage.presignExpiresSeconds * 1_000,
+    );
   }
 
   private async recordChange(
@@ -538,6 +671,21 @@ export class DocumentsService {
       updatedBy: input.actorUserId,
     });
   }
+}
+
+function storageReference(record: DocumentRecord): {
+  locator: string;
+  provider: "google_drive" | "s3";
+  revision?: string;
+} {
+  if (record.storageProvider !== "s3" && record.storageProvider !== "google_drive") {
+    throw new ObjectStorageOperationError();
+  }
+  return {
+    locator: record.storageLocator,
+    provider: record.storageProvider,
+    ...(record.storageRevision ? { revision: record.storageRevision } : {}),
+  };
 }
 
 function toDocumentDto(record: DocumentRecord): DocumentDto {
@@ -601,5 +749,13 @@ function publicLinkInvalid(): ApiException {
     HttpStatus.NOT_FOUND,
     "PUBLIC_LINK_INVALID",
     "This document link is invalid",
+  );
+}
+
+function transferInvalid(): ApiException {
+  return new ApiException(
+    HttpStatus.NOT_FOUND,
+    "DOCUMENT_TRANSFER_INVALID",
+    "This document transfer is invalid",
   );
 }

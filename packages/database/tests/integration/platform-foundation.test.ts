@@ -1719,10 +1719,47 @@ describe("Sprint 1.0.0 platform data foundation", () => {
     expect(ownerResult.rows[0]?.runtime_owned_tables).toBe("0");
   });
 
+  it("records provider-owned Document locators and rejects unsupported providers", async () => {
+    const documentId = randomUUID();
+    await withTenantTransaction(migratorDatabase(), tenantA, (transaction) =>
+      transaction.insert(documents).values({
+        id: documentId,
+        mediaType: "application/pdf",
+        objectKey: `tenants/${tenantA}/documents/${documentId}`,
+        originalFilename: "retained-ticket.pdf",
+        storageLocator: "google-drive-file-id",
+        storageProvider: "google_drive",
+        storageRevision: "revision-1",
+        tenantId: tenantA,
+      }),
+    );
+
+    const record = await withTenantTransaction(runtime(), tenantA, (transaction) =>
+      transaction.query.documents.findFirst({
+        where: (table, operators) => operators.eq(table.id, documentId),
+      }),
+    );
+    expect(record).toMatchObject({
+      storageLocator: "google-drive-file-id",
+      storageProvider: "google_drive",
+      storageRevision: "revision-1",
+    });
+
+    await expect(
+      migratorPool().query(
+        `insert into documents
+           (id, tenant_id, object_key, original_filename, media_type, storage_provider, storage_locator)
+         values ($1, $2, $3, 'invalid.pdf', 'application/pdf', 'public_url', 'invalid-locator')`,
+        [randomUUID(), tenantA, `tenants/${tenantA}/documents/${randomUUID()}`],
+      ),
+    ).rejects.toThrow();
+  });
+
   it("publishes the reconciled release posture from canonical migration history", async () => {
     const releaseResult = await migratorPool().query<{
       btree_gist_schema: string;
       migration_hash: string;
+      storage_migration_hash: string;
       release: string;
     }>(`
       select
@@ -1739,13 +1776,23 @@ describe("Sprint 1.0.0 platform data foundation", () => {
           where created_at = 1786500000000
           order by id desc
           limit 1
-        ) as migration_hash
+        ) as migration_hash,
+        (
+          select hash
+          from public.__drizzle_migrations
+          where created_at = 1786661649000
+          order by id desc
+          limit 1
+        ) as storage_migration_hash
     `);
     expect(releaseResult.rows[0]?.btree_gist_schema).toMatch(/^(extensions|public)$/);
     expect(releaseResult.rows[0]?.migration_hash).toBe(
       "2bd2c2029f9264b864bbda855b99f9113b84cbda9da1042ce639f70ed11229fe",
     );
-    expect(releaseResult.rows[0]?.release).toBe("1.10.0-rc.2");
+    expect(releaseResult.rows[0]?.storage_migration_hash).toBe(
+      "8c41f6fc5729b59f4fc2fd58c4970a489618831764f6ddc0489324fc31f4d66d",
+    );
+    expect(releaseResult.rows[0]?.release).toBe("1.10.0-rc.3");
 
     const postureResult = await migratorPool().query<{
       exposed_operational_privileges: string;
@@ -1874,6 +1921,7 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         id: documentA,
         mediaType: "text/plain",
         objectKey: `${tenantA}/${documentA}`,
+        storageLocator: `${tenantA}/${documentA}`,
         originalFilename: "tenant-a.txt",
         tenantId: tenantA,
       });
@@ -1892,6 +1940,7 @@ describe("Sprint 1.0.0 platform data foundation", () => {
         id: documentB,
         mediaType: "text/plain",
         objectKey: `${tenantB}/${documentB}`,
+        storageLocator: `${tenantB}/${documentB}`,
         originalFilename: "tenant-b.txt",
         tenantId: tenantB,
       });
@@ -2140,6 +2189,7 @@ describe("Sprint 1.0.0 platform data foundation", () => {
           id: entityId,
           tenantId: tenantA,
           objectKey: `${tenantA}/${entityId}`,
+          storageLocator: `${tenantA}/${entityId}`,
           originalFilename: "rollback.txt",
           mediaType: "text/plain",
         });
@@ -2738,6 +2788,7 @@ async function createMaterialDeliveryFixture(
       id: fixture.receiptDocumentId,
       mediaType: "application/pdf",
       objectKey: `${tenantId}/${fixture.receiptDocumentId}`,
+      storageLocator: `${tenantId}/${fixture.receiptDocumentId}`,
       originalFilename: "supplier-receipt.pdf",
       sha256: "c".repeat(64),
       status: "available",

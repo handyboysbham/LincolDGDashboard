@@ -1,100 +1,57 @@
-import {
-  DeleteObjectCommand,
-  GetBucketVersioningCommand,
-  HeadBucketCommand,
-  ListObjectVersionsCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { randomUUID } from "node:crypto";
+import { GoogleDriveClient } from "@ldg/google-drive";
 
 if (required("APP_ENV") !== "production") {
-  throw new Error("Production object storage may be verified only when APP_ENV=production");
+  throw new Error("Production document storage may be verified only when APP_ENV=production");
 }
 if (required("LDG_PROCESS") !== "release") {
-  throw new Error("Production object storage may be verified only when LDG_PROCESS=release");
+  throw new Error("Production document storage may be verified only when LDG_PROCESS=release");
 }
-if (required("OBJECT_STORAGE_VERIFY_CONFIRM") !== "VERIFY_PRIVATE_VERSIONED_BUCKET") {
-  throw new Error("OBJECT_STORAGE_VERIFY_CONFIRM must equal VERIFY_PRIVATE_VERSIONED_BUCKET");
+if (required("OBJECT_STORAGE_VERIFY_CONFIRM") !== "VERIFY_PRIVATE_VERSIONED_DRIVE") {
+  throw new Error("OBJECT_STORAGE_VERIFY_CONFIRM must equal VERIFY_PRIVATE_VERSIONED_DRIVE");
+}
+if (required("DOCUMENT_STORAGE_PROVIDER") !== "google_drive") {
+  throw new Error("Production document storage must use google_drive");
 }
 
-const bucket = required("MINIO_BUCKET");
-const client = new S3Client({
-  credentials: {
-    accessKeyId: required("MINIO_APP_USER"),
-    secretAccessKey: required("MINIO_APP_PASSWORD"),
-  },
-  endpoint: requiredHttpsUrl("MINIO_ENDPOINT"),
-  forcePathStyle: requiredBoolean("MINIO_FORCE_PATH_STYLE"),
-  region: required("MINIO_REGION"),
+const sharedDriveId = required("GOOGLE_DRIVE_SHARED_DRIVE_ID");
+const folderId = required("GOOGLE_DRIVE_DOCUMENT_FOLDER_ID");
+const client = new GoogleDriveClient({
+  privateKey: decodePrivateKey(required("GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64")),
+  serviceAccountEmail: required("GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL"),
 });
-const verificationKey = `release-verification/${randomUUID()}.txt`;
-const createdVersionIds: string[] = [];
-let verificationFailure: unknown;
 
-try {
-  await client.send(new HeadBucketCommand({ Bucket: bucket }));
-  const versioning = await client.send(new GetBucketVersioningCommand({ Bucket: bucket }));
-  if (versioning.Status !== "Enabled") {
-    throw new Error("The production object-storage bucket does not have versioning enabled");
-  }
-
-  for (const content of [
-    "lincoln-dg-storage-verification-v1",
-    "lincoln-dg-storage-verification-v2",
-  ]) {
-    const stored = await client.send(
-      new PutObjectCommand({
-        Body: content,
-        Bucket: bucket,
-        ContentType: "text/plain",
-        Key: verificationKey,
-      }),
-    );
-    if (!stored.VersionId) {
-      throw new Error("The storage provider did not return an object VersionId");
-    }
-    createdVersionIds.push(stored.VersionId);
-  }
-  if (new Set(createdVersionIds).size !== 2) {
-    throw new Error("The storage provider did not create two distinct object versions");
-  }
-
-  const listed = await client.send(
-    new ListObjectVersionsCommand({ Bucket: bucket, Prefix: verificationKey }),
-  );
-  const listedVersionIds = new Set(
-    listed.Versions?.filter((version) => version.Key === verificationKey)
-      .map((version) => version.VersionId)
-      .filter((versionId): versionId is string => Boolean(versionId)),
-  );
-  if (!createdVersionIds.every((versionId) => listedVersionIds.has(versionId))) {
-    throw new Error("The production object-storage bucket did not retain both test versions");
-  }
-
-  console.log(
-    `Production object storage is reachable and versioned; bucket ${bucket}; retained test versions 2`,
-  );
-} catch (error) {
-  verificationFailure = error;
-}
-
-const cleanupResults = await Promise.allSettled(
-  createdVersionIds.map((versionId) =>
-    client.send(
-      new DeleteObjectCommand({ Bucket: bucket, Key: verificationKey, VersionId: versionId }),
-    ),
-  ),
+await client.assertWritableFolder(folderId, sharedDriveId);
+const fileId = await client.generateFileId();
+const bytes = new TextEncoder().encode(
+  `Lincoln Dirt and Gravel production storage verification ${new Date().toISOString()}\n`,
 );
-client.destroy();
+const file = await client.uploadFile({
+  appProperties: { purpose: "release-verification" },
+  bytes,
+  fileId,
+  filename: `release-verification-${new Date().toISOString().replaceAll(":", "-")}.txt`,
+  mediaType: "text/plain",
+  parentFolderId: folderId,
+});
+const revision = await client.keepLatestRevision(file.id);
+const retainedBytes = await client.downloadRevision(file.id, revision.id);
+const permissions = await client.listPermissions(file.id);
 
-if (verificationFailure) {
-  if (verificationFailure instanceof Error) throw verificationFailure;
-  throw new Error("Object-storage verification failed with a non-Error value");
+if (file.trashed || file.driveId !== sharedDriveId || Number(file.size) !== bytes.byteLength) {
+  throw new Error(
+    "Google Drive did not persist the verification file in the configured Shared Drive",
+  );
 }
-if (cleanupResults.some((result) => result.status === "rejected")) {
-  throw new Error("Object-storage verification passed, but cleanup of a test version failed");
+if (!revision.keepForever || !Buffer.from(retainedBytes).equals(Buffer.from(bytes))) {
+  throw new Error("Google Drive did not retain the verification revision");
 }
+if (permissions.some((permission) => permission.type === "anyone")) {
+  throw new Error("The Google Drive verification file has a public permission");
+}
+
+console.log(
+  `Production document storage is private, writable, and revision-retained; verification file ${file.id}; revision ${revision.id}`,
+);
 
 function required(name: string): string {
   const value = process.env[name]?.trim();
@@ -102,17 +59,10 @@ function required(name: string): string {
   return value;
 }
 
-function requiredHttpsUrl(name: string): string {
-  const value = required(name);
-  const url = new URL(value);
-  if (url.protocol !== "https:") throw new Error(`${name} must use HTTPS`);
-  if (url.username || url.password) throw new Error(`${name} must not contain credentials`);
-  return url.toString();
-}
-
-function requiredBoolean(name: string): boolean {
-  const value = required(name);
-  if (value === "true") return true;
-  if (value === "false") return false;
-  throw new Error(`${name} must be either true or false`);
+function decodePrivateKey(value: string): string {
+  const decoded = Buffer.from(value, "base64").toString("utf8");
+  if (!decoded.includes("-----BEGIN PRIVATE KEY-----")) {
+    throw new Error("GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64 is not a PEM private key");
+  }
+  return decoded;
 }

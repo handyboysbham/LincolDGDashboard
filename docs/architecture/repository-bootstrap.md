@@ -224,9 +224,11 @@ states plus an Available download state. It never exposes storage credentials or
 ## Document API foundation
 
 The API provides pending upload creation, validation completion, authenticated download,
-customer-link creation and revocation, and public link resolution. Presigned URLs are scoped to one
-object and operation and expire after the configured short interval. The browser origin is explicit
-for API and MinIO CORS; `x-tenant-id` is never allowed.
+customer-link creation and revocation, and public link resolution. Provider upload targets are
+scoped to one object and operation and expire after the configured short interval. Local MinIO uses
+presigned URLs; production Google Drive uses an HMAC-scoped API capability without exposing Google
+credentials or public Drive permissions. The browser origin is explicit for API and MinIO CORS;
+`x-tenant-id` is never allowed.
 
 ## Bootstrap acceptance
 

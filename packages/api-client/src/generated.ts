@@ -340,6 +340,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/public/document-uploads/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["uploadDocumentBytes"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/public/document-downloads/{token}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadDocumentBytes"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/intake/actions/check-duplicates": {
     parameters: {
       query?: never;
@@ -5655,6 +5687,55 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["PublicDocumentDownloadDto"];
+        };
+      };
+    };
+  };
+  uploadDocumentBytes: {
+    parameters: {
+      query?: never;
+      header: {
+        "X-Document-Upload-Token": string;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/pdf": string;
+        "image/jpeg": string;
+        "image/png": string;
+        "text/plain": string;
+      };
+    };
+    responses: {
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  downloadDocumentBytes: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        token: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": string;
         };
       };
     };

@@ -4,6 +4,7 @@ import type { Pool } from "@ldg/database";
 import { ServerConfigService } from "../config/server-config.service.js";
 import { DATABASE_POOL } from "../database/database.tokens.js";
 import { ApiException } from "../errors/api.exception.js";
+import { ObjectStorageService } from "../object-storage/object-storage.service.js";
 import type { LiveHealthDto, ReadyHealthDto } from "./health.dto.js";
 
 @Injectable()
@@ -11,6 +12,7 @@ export class HealthService {
   public constructor(
     @Inject(DATABASE_POOL) private readonly pool: Pool,
     @Inject(ServerConfigService) private readonly configuration: ServerConfigService,
+    @Inject(ObjectStorageService) private readonly objectStorage: ObjectStorageService,
   ) {}
 
   public live(): LiveHealthDto {
@@ -106,12 +108,7 @@ export class HealthService {
   }
 
   private async checkObjectStorage(): Promise<void> {
-    const response = await fetch(this.configuration.value.objectStorage.healthUrl, {
-      signal: AbortSignal.timeout(2_000),
-    });
-    if (!response.ok) {
-      throw new Error("Object storage is unavailable");
-    }
+    await this.objectStorage.checkHealth();
   }
 
   private async checkWorker(): Promise<void> {

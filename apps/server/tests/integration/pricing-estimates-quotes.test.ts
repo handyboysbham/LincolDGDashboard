@@ -1143,6 +1143,7 @@ describe(
             id: documentId,
             mediaType: "application/pdf",
             objectKey: `integration/material-delivery/${documentId}`,
+            storageLocator: `integration/material-delivery/${documentId}`,
             originalFilename: filename,
             sha256: "a".repeat(64),
             sizeBytes: 512,

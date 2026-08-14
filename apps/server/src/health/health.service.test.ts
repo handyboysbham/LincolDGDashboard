@@ -1,8 +1,9 @@
 import type { Pool } from "@ldg/database";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { loadServerConfig, type ServerConfig } from "../config/server-config.js";
 import type { ServerConfigService } from "../config/server-config.service.js";
+import type { ObjectStorageService } from "../object-storage/object-storage.service.js";
 import { HealthService } from "./health.service.js";
 
 const environment: NodeJS.ProcessEnv = {
@@ -27,24 +28,24 @@ function configuration(overrides: Partial<ServerConfig["worker"]> = {}): ServerC
   };
 }
 
-afterEach(() => vi.unstubAllGlobals());
-
 describe("HealthService readiness", () => {
   it("reports a missing migration without exposing connection details", async () => {
     const pool = healthPool({ databaseRelease: null });
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
 
-    await expect(new HealthService(pool, configuration()).ready()).rejects.toMatchObject({
-      code: "SERVICE_NOT_READY",
-      details: { failed: ["migrations"] },
-    });
+    await expect(new HealthService(pool, configuration(), storage()).ready()).rejects.toMatchObject(
+      {
+        code: "SERVICE_NOT_READY",
+        details: { failed: ["migrations"] },
+      },
+    );
   });
 
   it("reports object-storage failure", async () => {
     const pool = healthPool();
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
 
-    await expect(new HealthService(pool, configuration()).ready()).rejects.toMatchObject({
+    await expect(
+      new HealthService(pool, configuration(), storage(false)).ready(),
+    ).rejects.toMatchObject({
       code: "SERVICE_NOT_READY",
       details: { failed: ["objectStorage"] },
     });
@@ -52,10 +53,8 @@ describe("HealthService readiness", () => {
 
   it("reports a missing required worker heartbeat", async () => {
     const pool = healthPool({ workerReady: false });
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-
     await expect(
-      new HealthService(pool, configuration({ readyRequiresHeartbeat: true })).ready(),
+      new HealthService(pool, configuration({ readyRequiresHeartbeat: true }), storage()).ready(),
     ).rejects.toMatchObject({
       code: "SERVICE_NOT_READY",
       details: { failed: ["worker"] },
@@ -64,10 +63,8 @@ describe("HealthService readiness", () => {
 
   it("reports a tenant queue whose dead letters exceed the threshold", async () => {
     const pool = healthPool({ deadLetters: 1 });
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-
     await expect(
-      new HealthService(pool, configuration({ readyMaxDeadLetterEvents: 0 })).ready(),
+      new HealthService(pool, configuration({ readyMaxDeadLetterEvents: 0 }), storage()).ready(),
     ).rejects.toMatchObject({
       code: "SERVICE_NOT_READY",
       details: { failed: ["queue"] },
@@ -106,7 +103,7 @@ function healthPool(
         return Promise.resolve({
           rows: [
             {
-              release: "databaseRelease" in overrides ? overrides.databaseRelease : "1.10.0-rc.2",
+              release: "databaseRelease" in overrides ? overrides.databaseRelease : "1.10.0-rc.3",
             },
           ],
         });
@@ -117,4 +114,12 @@ function healthPool(
       return Promise.resolve({ rows: [{ "?column?": 1 }] });
     }),
   } as unknown as Pool;
+}
+
+function storage(ready = true): ObjectStorageService {
+  return {
+    checkHealth: ready
+      ? vi.fn().mockResolvedValue(undefined)
+      : vi.fn().mockRejectedValue(new Error("unavailable")),
+  } as unknown as ObjectStorageService;
 }

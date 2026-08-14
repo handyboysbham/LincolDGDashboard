@@ -1,0 +1,25 @@
+{
+  "name": "@ldg/google-drive",
+  "version": "1.10.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf dist coverage",
+    "lint": "eslint src",
+    "recovery:decrypt": "node dist/backup-decrypt.js",
+    "production:backup-upload": "node dist/backup-upload.js",
+    "test": "vitest run src --passWithNoTests",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "vitest": "^4.1.10"
+  }
+}

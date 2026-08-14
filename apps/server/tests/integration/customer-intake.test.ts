@@ -97,6 +97,7 @@ describe("Sprint 1.3.0 customer intake", { concurrent: false }, () => {
         id: linkedDocumentId,
         mediaType: "application/pdf",
         objectKey: `tenants/${tenantId}/documents/${linkedDocumentId}`,
+        storageLocator: `tenants/${tenantId}/documents/${linkedDocumentId}`,
         originalFilename: "site-plan.pdf",
         sha256: "a".repeat(64),
         sizeBytes: 1024,

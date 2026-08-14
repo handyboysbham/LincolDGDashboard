@@ -54,6 +54,22 @@ Status: implementation complete; production approval pending.
 - [x] record local release-candidate evidence with no unresolved critical defects and explicit
       remote go/no-go gates
 
+## Phase 3 — Google Drive documents and off-site Supabase Free backups
+
+Status: implementation complete; provider provisioning and production evidence pending.
+
+- [x] add provider-neutral Document ownership and forward-only migration `0019`
+- [x] retain MinIO for local development and add Google Workspace Shared Drive production storage
+- [x] proxy Drive transfers through scoped expiring capabilities without public file permissions
+- [x] allocate retry-safe Drive file IDs, pin binary revisions, and persist revision ownership
+- [x] add Drive folder readiness and a private retained-revision release probe
+- [x] add a daily official Supabase CLI logical export workflow
+- [x] encrypt backups with authenticated AES-256-GCM before uploading to a separate Backups Shared
+      Drive and separate service account
+- [x] add backup decryption/authentication tooling and operator guidance
+- [ ] apply `0019`, provision both Shared Drives and identities, escrow the encryption key, dispatch
+      the first backup, and record a successful restore rehearsal
+
 ## Phase 1 acceptance
 
 1. A permitted owner lists Users and Roles, adds a company-controlled payment account, creates a
@@ -127,4 +143,18 @@ pnpm check
   before cleaning up only its uniquely named test versions.
 - The hosted release remains an automatic no-go: the database is at `1.10.0-rc.2` but has no tenant
   or Auth user, the Vercel production web variables await an API origin, and the API/worker host,
-  backup plan, and private versioned document bucket still require owner-approved provider choices.
+  Google Drive identities, first encrypted backup evidence, and production acceptance still require
+  operator execution.
+
+## Phase 3 closeout evidence
+
+- `pnpm check` passes formatting, lint, type checking, 238 unit tests, infrastructure validation,
+  and the API and web production builds.
+- `pnpm test:integration` passes 27 database and 39 server tests. The Document acceptance journey
+  now covers both local S3-compatible storage and the production Google Drive transfer proxy backed
+  by PostgreSQL, including retained revision metadata.
+- `pnpm api:check` confirms the private binary transfer routes are represented in OpenAPI and the
+  generated client; local forward migration reports current at `1.10.0-rc.3`.
+- Live migration `0019`, distinct Documents and Backups Shared Drives and service accounts, the
+  first encrypted scheduled backup and restore rehearsal, and the persistent API/worker host remain
+  operator closeout work. The release therefore remains **NO-GO**.

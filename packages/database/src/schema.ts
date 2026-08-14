@@ -633,6 +633,9 @@ export const documents = pgTable(
       .references(() => organizations.id, { onDelete: "restrict" }),
     status: varchar("status", { length: 30 }).notNull().default("pending"),
     objectKey: text("object_key").notNull(),
+    storageProvider: varchar("storage_provider", { length: 30 }).notNull().default("s3"),
+    storageLocator: text("storage_locator").notNull(),
+    storageRevision: text("storage_revision"),
     originalFilename: varchar("original_filename", { length: 255 }).notNull(),
     mediaType: varchar("media_type", { length: 255 }).notNull(),
     sizeBytes: bigint("size_bytes", { mode: "number" }),
@@ -643,11 +646,19 @@ export const documents = pgTable(
   (table) => [
     unique("documents_tenant_id_id_unique").on(table.tenantId, table.id),
     unique("documents_object_key_unique").on(table.objectKey),
+    unique("documents_storage_provider_locator_unique").on(
+      table.storageProvider,
+      table.storageLocator,
+    ),
     check(
       "documents_status_check",
       sql`${table.status} in ('pending', 'available', 'rejected', 'quarantined', 'deleted')`,
     ),
     check("documents_size_bytes_check", sql`${table.sizeBytes} is null or ${table.sizeBytes} >= 0`),
+    check(
+      "documents_storage_provider_check",
+      sql`${table.storageProvider} in ('s3', 'google_drive')`,
+    ),
     index("documents_tenant_status_idx").on(table.tenantId, table.status),
   ],
 );

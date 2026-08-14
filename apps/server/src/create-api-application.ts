@@ -9,6 +9,7 @@ import { ServerConfigService } from "./config/server-config.service.js";
 import { registerRequestContext } from "./context/register-request-context.js";
 import { RequestContextService } from "./context/request-context.service.js";
 import { registerRequestLogging } from "./observability/request-logging.js";
+import { supportedDocumentMediaTypes } from "./documents/document.dto.js";
 
 export interface ApiApplication {
   application: NestFastifyApplication;
@@ -31,18 +32,33 @@ export async function createApiApplication(): Promise<ApiApplication> {
     new ValidationPipe({ forbidNonWhitelisted: true, transform: true, whitelist: true }),
   );
   const configuration = application.get(ServerConfigService);
+  const fastify = application.getHttpAdapter().getInstance();
+  fastify.removeContentTypeParser([...supportedDocumentMediaTypes]);
+  fastify.addContentTypeParser(
+    [...supportedDocumentMediaTypes],
+    {
+      bodyLimit: configuration.value.objectStorage.maxUploadBytes,
+      parseAs: "buffer",
+    },
+    (_request, body, done) => {
+      done(null, body);
+    },
+  );
   application.enableCors({
-    allowedHeaders: ["authorization", "content-type", "idempotency-key", "x-request-id"],
+    allowedHeaders: [
+      "authorization",
+      "content-type",
+      "idempotency-key",
+      "x-document-upload-token",
+      "x-request-id",
+    ],
     exposedHeaders: ["x-request-id"],
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "OPTIONS"],
     origin: configuration.value.web.origin,
   });
-  registerRequestContext(
-    application.getHttpAdapter().getInstance(),
-    application.get(RequestContextService),
-  );
+  registerRequestContext(fastify, application.get(RequestContextService));
   if (configuration.value.observability.requestLoggingEnabled) {
-    registerRequestLogging(application.getHttpAdapter().getInstance());
+    registerRequestLogging(fastify);
   }
   await application.register(helmet);
 

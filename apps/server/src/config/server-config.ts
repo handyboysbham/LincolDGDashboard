@@ -41,17 +41,32 @@ export interface ServerConfig {
     requestLoggingEnabled: boolean;
   };
   objectStorage: {
-    accessKeyId: string;
-    bucket: string;
-    endpoint: string;
-    forcePathStyle: boolean;
-    healthUrl: string;
+    apiPublicOrigin: string;
+    googleDrive:
+      | {
+          apiBaseUrl: string;
+          documentFolderId: string;
+          privateKey: string;
+          serviceAccountEmail: string;
+          sharedDriveId: string;
+          tokenUrl: string;
+        }
+      | undefined;
     maxUploadBytes: number;
     presignExpiresSeconds: number;
+    provider: "google_drive" | "s3";
     publicLinkDefaultExpiresSeconds: number;
     publicLinkSigningKey: string;
-    region: string;
-    secretAccessKey: string;
+    s3:
+      | {
+          accessKeyId: string;
+          bucket: string;
+          endpoint: string;
+          forcePathStyle: boolean;
+          region: string;
+          secretAccessKey: string;
+        }
+      | undefined;
   };
   web: {
     origin: string;
@@ -110,7 +125,54 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
     requiredUuid("WORKER_TENANT_IDS", tenantId);
   }
 
-  const minioEndpoint = required("MINIO_ENDPOINT", environment.MINIO_ENDPOINT).replace(/\/$/, "");
+  const storageProvider = enumValue(
+    "DOCUMENT_STORAGE_PROVIDER",
+    environment.DOCUMENT_STORAGE_PROVIDER ?? "s3",
+    ["google_drive", "s3"] as const,
+  );
+  const s3 =
+    storageProvider === "s3"
+      ? {
+          accessKeyId: required("MINIO_APP_USER", environment.MINIO_APP_USER),
+          bucket: required("MINIO_BUCKET", environment.MINIO_BUCKET),
+          endpoint: requiredUrl("MINIO_ENDPOINT", environment.MINIO_ENDPOINT).replace(/\/$/, ""),
+          forcePathStyle: booleanValue(
+            "MINIO_FORCE_PATH_STYLE",
+            environment.MINIO_FORCE_PATH_STYLE ?? "true",
+          ),
+          region: environment.MINIO_REGION ?? "us-east-1",
+          secretAccessKey: required("MINIO_APP_PASSWORD", environment.MINIO_APP_PASSWORD),
+        }
+      : undefined;
+  const googleDrive =
+    storageProvider === "google_drive"
+      ? {
+          apiBaseUrl: requiredUrl(
+            "GOOGLE_DRIVE_API_BASE_URL",
+            environment.GOOGLE_DRIVE_API_BASE_URL ?? "https://www.googleapis.com",
+          ).replace(/\/$/, ""),
+          documentFolderId: required(
+            "GOOGLE_DRIVE_DOCUMENT_FOLDER_ID",
+            environment.GOOGLE_DRIVE_DOCUMENT_FOLDER_ID,
+          ),
+          privateKey: decodeBase64(
+            "GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64",
+            environment.GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64,
+          ),
+          serviceAccountEmail: required(
+            "GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL",
+            environment.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL,
+          ),
+          sharedDriveId: required(
+            "GOOGLE_DRIVE_SHARED_DRIVE_ID",
+            environment.GOOGLE_DRIVE_SHARED_DRIVE_ID,
+          ),
+          tokenUrl: requiredUrl(
+            "GOOGLE_DRIVE_TOKEN_URL",
+            environment.GOOGLE_DRIVE_TOKEN_URL ?? "https://oauth2.googleapis.com/token",
+          ),
+        }
+      : undefined;
   const emailProvider = enumValue(
     "NOTIFICATION_EMAIL_PROVIDER",
     environment.NOTIFICATION_EMAIL_PROVIDER ?? "capture",
@@ -133,7 +195,7 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
     databasePoolMax: integer("DATABASE_POOL_MAX", environment.DATABASE_POOL_MAX ?? "20", 1, 100),
     expectedDatabaseRelease: required(
       "EXPECTED_DATABASE_RELEASE",
-      environment.EXPECTED_DATABASE_RELEASE ?? "1.10.0-rc.2",
+      environment.EXPECTED_DATABASE_RELEASE ?? "1.10.0-rc.3",
     ),
     notifications: {
       emailApiKey:
@@ -183,14 +245,11 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
       ),
     },
     objectStorage: {
-      accessKeyId: required("MINIO_APP_USER", environment.MINIO_APP_USER),
-      bucket: required("MINIO_BUCKET", environment.MINIO_BUCKET),
-      endpoint: minioEndpoint,
-      forcePathStyle: booleanValue(
-        "MINIO_FORCE_PATH_STYLE",
-        environment.MINIO_FORCE_PATH_STYLE ?? "true",
-      ),
-      healthUrl: `${minioEndpoint}/minio/health/ready`,
+      apiPublicOrigin: requiredUrl(
+        "API_PUBLIC_ORIGIN",
+        environment.API_PUBLIC_ORIGIN ?? `http://127.0.0.1:${environment.API_PORT ?? "3001"}`,
+      ).replace(/\/$/, ""),
+      googleDrive,
       maxUploadBytes: integer(
         "DOCUMENT_MAX_UPLOAD_BYTES",
         environment.DOCUMENT_MAX_UPLOAD_BYTES ?? "20971520",
@@ -214,8 +273,8 @@ export function loadServerConfig(environment: NodeJS.ProcessEnv): ServerConfig {
         environment.DOCUMENT_PUBLIC_LINK_SIGNING_KEY,
         32,
       ),
-      region: environment.MINIO_REGION ?? "us-east-1",
-      secretAccessKey: required("MINIO_APP_PASSWORD", environment.MINIO_APP_PASSWORD),
+      provider: storageProvider,
+      s3,
     },
     web: {
       origin: required("WEB_ORIGIN", environment.WEB_ORIGIN),
@@ -289,6 +348,20 @@ function minimumLength(name: string, value: string | undefined, length: number):
     throw new Error(`${name} must contain at least ${length.toString()} characters`);
   }
   return parsed;
+}
+
+function decodeBase64(name: string, value: string | undefined): string {
+  const encoded = required(name, value);
+  let decoded: string;
+  try {
+    decoded = Buffer.from(encoded, "base64").toString("utf8");
+  } catch {
+    throw new Error(`${name} must be valid base64`);
+  }
+  if (!decoded.includes("-----BEGIN PRIVATE KEY-----")) {
+    throw new Error(`${name} must contain a base64-encoded PEM private key`);
+  }
+  return decoded;
 }
 
 function requiredUrl(name: string, value: string | undefined): string {

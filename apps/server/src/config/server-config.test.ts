@@ -25,6 +25,8 @@ describe("loadServerConfig", () => {
     expect(configuration.auth.mode).toBe("development");
     expect(configuration.worker.tenantIds).toEqual(["00000000-0000-4000-8000-000000000001"]);
     expect(configuration.api.port).toBe(3001);
+    expect(configuration.objectStorage.provider).toBe("s3");
+    expect(configuration.objectStorage.s3?.bucket).toBe("documents");
     expect(configuration.objectStorage.maxUploadBytes).toBe(20_971_520);
     expect(configuration.notifications).toMatchObject({
       emailProvider: "capture",
@@ -86,5 +88,33 @@ describe("loadServerConfig", () => {
     expect(() =>
       loadServerConfig({ ...baseEnvironment, NOTIFICATION_SMS_PROVIDER: "twilio" }),
     ).toThrow("NOTIFICATION_SMS_ACCOUNT_SID is required");
+  });
+
+  it("loads Google Drive credentials only for the Google Drive document provider", () => {
+    const privateKey = Buffer.from(
+      "-----BEGIN PRIVATE KEY-----\ntest-key\n-----END PRIVATE KEY-----\n",
+    ).toString("base64");
+    const configuration = loadServerConfig({
+      ...baseEnvironment,
+      DOCUMENT_STORAGE_PROVIDER: "google_drive",
+      GOOGLE_DRIVE_DOCUMENT_FOLDER_ID: "documents-folder",
+      GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL: "storage@example.iam.gserviceaccount.com",
+      GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY_BASE64: privateKey,
+      GOOGLE_DRIVE_SHARED_DRIVE_ID: "shared-drive",
+      MINIO_APP_PASSWORD: undefined,
+      MINIO_APP_USER: undefined,
+      MINIO_BUCKET: undefined,
+      MINIO_ENDPOINT: undefined,
+    });
+
+    expect(configuration.objectStorage).toMatchObject({
+      googleDrive: {
+        documentFolderId: "documents-folder",
+        serviceAccountEmail: "storage@example.iam.gserviceaccount.com",
+        sharedDriveId: "shared-drive",
+      },
+      provider: "google_drive",
+      s3: undefined,
+    });
   });
 });

@@ -2,8 +2,8 @@
 
 ## Candidate
 
-- release marker: `1.10.0-rc.2`
-- schema migration: `0018_release_readiness_reconciliation`
+- release marker: `1.10.0-rc.3`
+- schema migration: `0019_google_drive_document_storage`
 - API contract version: `1.10.0`
 - decision date: 2026-08-11
 - hosted database verification date: 2026-08-12
@@ -22,6 +22,8 @@
 - token-safe structured request completion logs and graceful worker drain
 - security response headers and a responsive accessible staff sign-in surface
 - custom-format logical backup, checksum verification, safe restore rehearsal, and cleanup
+- provider-neutral Document ownership, private Google Drive transfers, retained binary revisions,
+  and an encrypted daily Supabase CLI backup workflow using a separate Backups Shared Drive
 - restored-database acceptance for `MD-E2E-001` and `DTR-E2E-001`
 - Supabase security-advisor remediation for function search paths, operational-table grants,
   extension placement when owner privileges allow, and public security-definer execution
@@ -32,13 +34,13 @@
 
 - [x] local forward migration reports current
 - [x] server and web type checking passes
-- [x] 181 server, 46 web, and 1 generated-client unit tests pass
+- [x] 186 server, 46 web, 5 Google Drive/backup, and 1 generated-client unit tests pass
 - [x] restored canonical acceptance passes: 2 files, 5 tests
-- [x] database integration suite passes: 26 tests, including tenant-foundation provisioning,
+- [x] database integration suite passes: 27 tests, including tenant-foundation provisioning,
       first-owner authorization, tenant-isolation, exact replay, release-role enforcement, and
       competing-candidate concurrency coverage
-- [x] current server integration suite passes: 38 of 38 tests, including document-storage upload,
-      completion, download, and public-link journeys
+- [x] current server integration suite passes: 39 of 39 tests, including S3-compatible and private
+      Google Drive document upload, completion, download, and public-link journeys
 - [x] OpenAPI and generated client are current
 - [x] production route acceptance passes: 31 application routes and 3 production-auth boundaries
 - [x] complete `pnpm check` passes
@@ -47,7 +49,9 @@
       `2359933123236fe83e54e95086a02da7d0b50dad53a48c980ed6dc506a6851d5`
 - [x] performance-advisor information findings have a documented release disposition
 - [ ] deployed production environment values pass API, worker, web, and release-job validation
-- [ ] managed backup/PITR plan and private object-storage versioning are operator-confirmed
+- [ ] migration `0019` is applied and production reports `1.10.0-rc.3`
+- [ ] Documents and Backups Shared Drives, distinct service accounts, encryption-key escrow, live
+      storage probe, and first scheduled-backup evidence are operator-confirmed
 - [ ] initial tenant foundation and first owner Auth identity bootstraps are approved and recorded
 - [ ] release approver records go/no-go decision
 
@@ -91,16 +95,19 @@ chosen platform's secret manager:
 - production web and API HTTPS origins
 - Supabase Auth issuer, JWKS URL, public project URL, and publishable key
 - an isolated direct backup connection
-- versioned private S3-compatible object storage and production credentials
+- a Google Workspace Documents Shared Drive and document-only service-account credentials
+- a separate Backups Shared Drive, backup-only service account, and offline-escrowed encryption key
 - a production public-link signing key and Resend credentials
 - production readiness thresholds and logging/worker settings
 
-The Supabase organization is currently on the Free plan. That does not satisfy the managed-backup or
-PITR release gate: choose a paid backup/PITR posture or approve and automate an off-platform logical
-backup posture that meets the documented 24-hour recovery-point and four-hour recovery-time targets.
-The Vercel project and provisional web domain are now recorded. The persistent API/worker host and
-API domain, object-storage provider, and backup posture must still be recorded before deployment
-configuration can be completed.
+The Supabase organization is currently on the Free plan. The approved compensating design is a daily
+official Supabase CLI logical export encrypted before upload to a separate Google Workspace Shared
+Drive. The code and GitHub Actions schedule now exist, but the release gate remains open until an
+operator configures secrets, dispatches the first job, verifies its retained revision, and records a
+restore rehearsal that meets the documented recovery targets. The Vercel project and provisional web
+domain are now recorded. Google Drive is selected for Documents and encrypted off-site backups. The
+persistent API/worker host, API domain, Drive identities, and first backup evidence must still be
+recorded before deployment configuration can be completed.
 
 The live closeout audit on 2026-08-12 also confirmed that the hosted database reports release
 `1.10.0-rc.2` but contains zero Organizations, application Users, Supabase Auth users, and Storage
@@ -115,23 +122,22 @@ The recommended closeout posture is:
 - two persistent services on Railway Pro using the reviewed production Dockerfile: one API and one
   PostgreSQL-backed worker; Railway currently identifies Pro as its production plan with a $20
   monthly minimum usage commitment
-- a private AWS S3 document bucket with versioning, Block Public Access, encryption, and lifecycle
-  retention; Supabase Storage and Railway Buckets cannot pass the versioning probe
-- Supabase Pro daily backups with seven-day retention for the V1 24-hour RPO; PITR is optional for a
-  stricter RPO and currently starts near $100 per month for seven-day retention, in addition to the
-  paid plan and required compute
+- a paid Google Workspace Documents Shared Drive with Contributor-only service-account access,
+  private API proxy transfers, and pinned binary revisions
+- a separate Backups Shared Drive and service account for encrypted daily Supabase CLI exports; an
+  upgrade to Supabase Pro/PITR remains the preferred future reduction in recovery risk
 
-These are recommendations, not approved purchases. Until the owner approves the recurring-cost
-posture and authenticates the required provider dashboards, no infrastructure is provisioned and the
+This is the selected design, not evidence that Google Workspace or the API/worker host has been
+provisioned. Until the owner authenticates the provider dashboards and records the live probes, the
 candidate remains an automatic no-go.
 
 ## Current go/no-go decision
 
 - decision: **NO-GO**
 - decided at: 2026-08-12 production closeout audit
-- automatic reasons: API/worker host absent; Vercel production variables incomplete; managed backup
-  posture absent; private versioned object storage absent; production tenant/Auth owner absent;
-  production acceptance journey not yet executable
+- automatic reasons: API/worker host absent; Vercel production variables incomplete; migration
+  `0019` not yet applied; Drive identities and first encrypted backup evidence absent; production
+  tenant/Auth owner absent; production acceptance journey not yet executable
 - release approver: pending
 - approval evidence: pending
 

@@ -41,6 +41,8 @@
     "production:bootstrap-tenant": "pnpm --filter @ldg/database production:bootstrap-tenant",
     "production:verify-storage": "pnpm --filter @ldg/server production:verify-storage",
     "recovery:backup": "bash infra/recovery/create-backup.sh",
+    "recovery:backup:supabase-drive": "pnpm --filter @ldg/google-drive build && bash infra/recovery/create-supabase-drive-backup.sh",
+    "recovery:decrypt": "pnpm --filter @ldg/google-drive build && pnpm --filter @ldg/google-drive recovery:decrypt",
     "recovery:verify": "bash infra/recovery/verify-backup.sh",
     "recovery:rehearse": "bash infra/recovery/rehearse-restore.sh",
     "lint": "turbo run lint && eslint .",

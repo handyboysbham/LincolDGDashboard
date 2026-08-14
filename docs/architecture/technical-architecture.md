@@ -11,7 +11,8 @@ Use a TypeScript modular monolith with three runtime processes sharing one Postg
 Supporting services:
 
 - PostgreSQL
-- Private S3-compatible object storage
+- Private document storage (Google Workspace Shared Drive in production; S3-compatible MinIO
+  locally)
 - Email provider
 - Optional SMS provider
 - Optional map and payment-provider adapters
@@ -42,7 +43,7 @@ debugging without providing useful V1 value.
 - Drizzle ORM and reviewed SQL migrations
 - REST and OpenAPI
 - Vitest, PostgreSQL integration tests, and Playwright
-- S3-compatible object storage
+- Provider-neutral document storage with Google Drive and S3 adapters
 
 For V1 Intel macOS local development, PostgreSQL, MinIO, and Mailpit run as host-native processes
 from checksum-verified, project-local tool installations. Repository scripts own their state and
@@ -240,19 +241,24 @@ Workers claim with `FOR UPDATE SKIP LOCKED` and use provider idempotency where a
 
 ## Documents
 
-Use private object storage and database metadata.
+Use private provider storage and authoritative database metadata. Production stores each Document as
+a binary file in a Google Workspace Shared Drive. Local development retains MinIO so local tests do
+not require cloud credentials. `documents.storage_provider`, `storage_locator`, and
+`storage_revision` preserve the provider-owned identity and retained revision independently of the
+stable application object key.
 
 Upload flow:
 
 ```text
 Create pending Document
-→ return presigned upload URL
-→ upload directly to object storage
+→ return a short-lived provider upload target
+→ upload directly to MinIO locally or through the API's Drive capability endpoint in production
 → validate object
 → mark Available
 ```
 
-Customer access uses short-lived authorized download URLs.
+Customer access uses short-lived authorized download URLs. Google Drive files never receive `anyone`
+permissions; Drive bytes are streamed only through a scoped, expiring API capability.
 
 Pending uploads record the expected media type, byte size, and SHA-256. Completion reads the stored
 object and verifies all three values plus a supported content signature before changing the Document
@@ -263,6 +269,12 @@ versioned capability containing opaque identifiers and high-entropy HMAC-derived
 Only the token hash and a hashed creation-idempotency key are stored. Link resolution establishes
 the encoded tenant context, verifies the hash in constant time, and then checks purpose, expiration,
 revocation, and Document availability before issuing a new short-lived download URL.
+
+The production service account is a Contributor to the Documents Shared Drive and is not used for
+database backups. A generated Drive file ID makes upload retries converge on one file. Each
+successful upload pins the binary revision with `keepForever`, records that revision ID, and then
+runs the same media type, byte size, SHA-256, and signature validation as the S3 adapter. Completion
+and every later download read that recorded revision rather than the mutable Drive head.
 
 ## Authentication
 

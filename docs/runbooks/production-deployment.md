@@ -131,33 +131,38 @@ by the command in the release record, and remove migration credentials immediate
 the first owner can authenticate, link every subsequent identity through the administration API. Do
 not use SQL or dashboard table editing to change `public.users.external_subject`.
 
-## Object-storage verification
+## Google Drive document-storage verification
 
-The document bucket must be private and retain noncurrent object versions. Supabase Storage and
-Railway Buckets do not currently implement S3 object versioning, so they do not satisfy this release
-gate. Use a provider that supports the required S3 versioning operations, such as AWS S3, keep Block
-Public Access enabled, and grant the application only its document-prefix permissions.
+Production Documents use a Google Workspace Shared Drive, not personal My Drive and not Supabase
+Storage. Create a dedicated Documents Shared Drive and folder, enable the Google Drive API, and add
+the document service account as Contributor. Do not grant it Manager, Content manager, or membership
+in the separate Backups Shared Drive. No Document may have an `anyone` permission.
 
-After the operator confirms the bucket policy, encryption, lifecycle retention, and Block Public
-Access settings, run the live probe from an isolated release job:
+Set `DOCUMENT_STORAGE_PROVIDER=google_drive`, the API public origin, base64-encoded service-account
+private key, service-account email, Shared Drive ID, and Documents folder ID in the API/worker
+secret manager. Apply migration `0019` before deploying code that creates Drive Documents.
+
+After an operator independently confirms the Shared Drive and folder identities, run the live probe
+from an isolated release job:
 
 ```bash
 APP_ENV=production \
 LDG_PROCESS=release \
-OBJECT_STORAGE_VERIFY_CONFIRM=VERIFY_PRIVATE_VERSIONED_BUCKET \
+OBJECT_STORAGE_VERIFY_CONFIRM=VERIFY_PRIVATE_VERSIONED_DRIVE \
 pnpm production:verify-storage
 ```
 
-The probe checks bucket access and `Enabled` versioning, writes two versions of one unique
-`release-verification/` object, confirms both version IDs are retained, and removes only those exact
-test versions. Record its successful output in the release candidate. Never run the probe against a
-bucket whose identity has not been independently confirmed.
+The probe confirms the folder belongs to the configured Shared Drive and is writable, creates one
+uniquely named evidence file, pins its binary revision with `keepForever`, and rejects public
+permissions. The evidence file remains available for the release record. Never run the probe against
+a Drive whose identity has not been independently confirmed.
 
 ## Release order
 
-1. Confirm Supabase managed backups and private object-storage policy are healthy, then pass the
-   object-versioning probe.
-2. Create and verify a logical backup with `pnpm recovery:backup` and `pnpm recovery:verify`.
+1. Confirm the dedicated Documents and Backups Shared Drives, separate service accounts, and
+   owner-held encryption-key escrow.
+2. Run the Drive document-storage probe and manually dispatch the encrypted Supabase backup
+   workflow. Confirm both report retained revisions and private permissions.
 3. Run `pnpm db:migrate` through the direct migration connection. Applied migrations are
    forward-only.
 4. Run the Supabase security and performance advisors. Resolve every security warning; review
